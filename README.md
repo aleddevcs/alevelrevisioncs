@@ -21,11 +21,20 @@ paid services**, so it can be hosted free on GitHub Pages or opened straight fro
 | Light and dark themes, responsive layout, keyboard and screen-reader support | Everywhere |
 
 **Revision content is written only from the lessons** (slides, starters, interactive activities and exit
-tickets), one course topic at a time, and is **ordered by specification entry**. So far: **Unit 1, Topic 1
-(Hardware and communication)**, built from Lessons 1–4 and covering entries 1.1.1 to 1.8.1: 35 note sections,
-57 flashcards (including the Welsh key terms from the slides), 59 auto-marked practice questions, 15 exam-style
-questions (the lessons' exit tickets plus one per specification statement) and a register-tracker exercise.
-Students can revise the whole topic, one lesson, or one specification entry, and quiz on any of them.
+tickets), one course topic at a time, and is **ordered by specification entry**. So far, Unit 1 Topics 1–4:
+
+| Topic | Lessons | Spec entries | Notes | Flashcards | Questions | Exam-style | Tracing |
+|---|---|---|---|---|---|---|---|
+| 1 Hardware and communication | 1–4 | 1.1.1–1.8.1 | 35 | 57 | 59 | 15 | 1 |
+| 2 Logical operations | 1–4 | 2.1.1–2.1.3 | 17 | 25 | 33 | 8 | 2 |
+| 3 Data transmission | 1–2 | 3.1.1–3.2.3 | 15 | 23 | 23 | 8 | 0 |
+| 4 Data representation and data types | 1–3 | 4.1.1–4.4.5 | 20 | 27 | 43 | 9 | 3 |
+
+Flashcards include the Welsh key terms where the slides give them (terms marked as draft or “verify” on the
+slides are left out). Exam-style questions are original practice questions modelled on the lessons' exit
+tickets; past-paper questions are not copied. Students can revise the whole topic, one lesson, or one
+specification entry, and quiz on any of them. Lessons not yet uploaded (Topic 3 Lesson 3, Topic 4 Lesson 4)
+show as “coming soon”, and the A-level preview material in Topic 4 (shifts) is not included.
 
 Other topics show their lessons and resources, with revision marked “coming soon” until it is written.
 
@@ -256,7 +265,7 @@ If a page still looks out of date, a hard refresh (Ctrl + Shift + R, or Cmd + Sh
   stop). A correct answer written in an unexpected form (for example a different notation) may be marked
   wrong, so explanations always show the accepted answer.
 - Progress is per device and per browser (see above).
-- Revision content has only been written for Unit 1, Topic 1 so far. Other topics show their lessons and
+- Revision content has been written for Unit 1, Topics 1–4 so far. Other topics show their lessons and
   resources, with revision “coming soon”. The Unit 2 and Unit 5 practical components have no content yet.
 
 ## Still to be tested
