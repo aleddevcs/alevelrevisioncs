@@ -56,9 +56,11 @@
       ['exam', 'Exam-style', count('exam')],
       ['tracing', 'Tracing', count('traces')]
     ].filter(function (x) { return x[2] > 0; });
-    panel.appendChild(h('p', { class: 'muted' }, l
+    var codes = t.spec.filter(function (e) { return !l || e.lessons.indexOf(l.number) !== -1; }).map(function (e) { return e.code; });
+    panel.appendChild(h('p', { class: 'muted' }, (l
       ? 'Notes, flashcards and practice questions based on this lesson.'
-      : 'Notes, flashcards and practice questions based on the lessons in this topic.'));
+      : 'Notes, flashcards and practice questions based on the lessons in this topic, in specification order.') +
+      (codes.length ? ' Specification entries: ' + codes.join(' · ') + '.' : '')));
     panel.appendChild(h('ul', { class: 'revise-links', role: 'list' }, links.map(function (x) {
       return h('li', null, h('a', { class: 'btn', href: base + x[0] + q }, x[1], h('span', { class: 'revise-count' }, String(x[2]))));
     })));

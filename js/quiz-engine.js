@@ -26,13 +26,15 @@
     var opts = options || {};
     var wanted = opts.topics && opts.topics.length ? opts.topics : null;
     var skill = opts.skill && opts.skill !== 'all' ? opts.skill : null;
-    var lesson = Number(opts.lesson) || null; // only used with a single topic
+    var lesson = Number(opts.lesson) || null; // lesson and spec filters are used with a single topic
+    var spec = opts.spec || null;
     var onlyIds = opts.ids || null;
     var pool = RS.content.allQuestions().filter(function (q) {
       if (onlyIds) return onlyIds.indexOf(q.id) !== -1;
       if (wanted && wanted.indexOf(q.topicId) === -1) return false;
       if (skill && q.skill !== skill) return false;
       if (lesson && q.lesson !== lesson) return false;
+      if (spec && q.spec !== spec) return false;
       return true;
     }).map(function (q) { return q.id; });
     var shuffled = utils.shuffle(pool, opts.rng);

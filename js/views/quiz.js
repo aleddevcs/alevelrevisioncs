@@ -48,26 +48,37 @@
     });
     form.appendChild(skillFs);
 
-    // Lesson choice: available when exactly one topic is selected.
+    // Focus: a whole topic, one lesson or one specification entry (when exactly one topic is selected).
     var lessonSel = h('select', { id: 'q-lesson' });
-    var lessonField = h('div', { class: 'field field-inline', hidden: true }, h('label', { for: 'q-lesson' }, 'Lesson'), lessonSel);
+    var lessonField = h('div', { class: 'field field-inline', hidden: true }, h('label', { for: 'q-lesson' }, 'Focus'), lessonSel);
     form.appendChild(lessonField);
-    var wantedLesson = params.query.lesson || '';
+    var wantedFocus = params.query.lesson ? 'lesson=' + params.query.lesson : params.query.spec ? 'spec=' + params.query.spec : '';
     function refreshLessons() {
       var picked = topicBoxes.filter(function (b) { return b.checked; });
-      var ct = picked.length === 1 ? (function () { var t = RS.content.topic(picked[0].value); return RS.course.topic(t.unit, t.topic); })() : null;
-      var keep = lessonSel.value || wantedLesson;
+      var rev = picked.length === 1 ? RS.content.topic(picked[0].value) : null;
+      var ct = rev ? RS.course.topic(rev.unit, rev.topic) : null;
+      var keep = lessonSel.value || wantedFocus;
       lessonSel.innerHTML = '';
-      lessonSel.appendChild(h('option', { value: '' }, 'All lessons'));
+      lessonSel.appendChild(h('option', { value: '' }, 'Whole topic'));
       if (ct) {
-        var rev = RS.content.topic(picked[0].value);
-        ct.lessons.forEach(function (l) {
-          var n = RS.content.forLesson(rev, 'questions', l.number).length;
-          if (n) lessonSel.appendChild(h('option', { value: String(l.number), selected: String(l.number) === keep }, 'Lesson ' + l.number + ': ' + l.title + ' (' + n + ')'));
-        });
+        var byLesson = ct.lessons.map(function (l) {
+          var n = RS.content.select(rev, 'questions', { lesson: l.number }).length;
+          return n ? h('option', { value: 'lesson=' + l.number, selected: 'lesson=' + l.number === keep }, 'Lesson ' + l.number + ': ' + l.title + ' (' + n + ')') : null;
+        }).filter(Boolean);
+        var bySpec = ct.spec.map(function (e) {
+          var n = RS.content.select(rev, 'questions', { spec: e.code }).length;
+          return n ? h('option', { value: 'spec=' + e.code, selected: 'spec=' + e.code === keep }, e.code + ' (' + n + ')') : null;
+        }).filter(Boolean);
+        if (byLesson.length) lessonSel.appendChild(h('optgroup', { label: 'By lesson' }, byLesson));
+        if (bySpec.length) lessonSel.appendChild(h('optgroup', { label: 'By specification entry' }, bySpec));
       }
       lessonField.hidden = !ct || lessonSel.options.length < 2;
-      wantedLesson = '';
+      wantedFocus = '';
+    }
+    function focusValue(kind) {
+      if (lessonField.hidden || !lessonSel.value) return null;
+      var parts = lessonSel.value.split('=');
+      return parts[0] === kind ? parts[1] : null;
     }
 
     var countSel = h('select', { id: 'q-count' },
@@ -88,7 +99,8 @@
       return {
         topics: topicBoxes.filter(function (b) { return b.checked; }).map(function (b) { return b.value; }),
         skill: form.querySelector('input[name=skill]:checked').value,
-        lesson: lessonField.hidden ? null : Number(lessonSel.value) || null,
+        lesson: Number(focusValue('lesson')) || null,
+        spec: focusValue('spec'),
         count: Number(countSel.value)
       };
     }

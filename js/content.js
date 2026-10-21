@@ -48,9 +48,29 @@
     return topics.filter(function (t) { return t.unit === Number(unit) && t.topic === Number(topic); })[0] || null;
   }
 
-  /** Items of one kind ('notes', 'flashcards', 'questions', 'exam', 'traces') for a lesson (all lessons if none given). */
+  /**
+   * Items of one kind ('notes', 'flashcards', 'questions', 'exam', 'traces', 'misconceptions',
+   * 'examTips') matching a filter { lesson, spec }, in specification order. An empty filter
+   * returns everything.
+   */
+  function select(topic, kind, filter) {
+    var f = filter || {};
+    var lesson = Number(f.lesson) || null;
+    var courseTopic = RS.course ? RS.course.topic(topic.unit, topic.topic) : null;
+    var order = courseTopic ? courseTopic.spec.map(function (e) { return e.code; }) : [];
+    var rank = function (item) { var i = order.indexOf(item.spec); return i === -1 ? order.length : i; };
+    return (topic[kind] || [])
+      .map(function (item, i) { return { item: item, i: i }; })
+      .filter(function (x) {
+        return (!lesson || x.item.lesson === lesson) && (!f.spec || x.item.spec === f.spec);
+      })
+      .sort(function (a, b) { return (rank(a.item) - rank(b.item)) || (a.i - b.i); })
+      .map(function (x) { return x.item; });
+  }
+
+  /** Items of one kind for a lesson (all lessons if none given), in specification order. */
   function forLesson(topic, kind, lesson) {
-    return topic[kind].filter(function (item) { return !lesson || item.lesson === Number(lesson); });
+    return select(topic, kind, { lesson: lesson });
   }
 
   function lookup(kind, id) {
@@ -64,6 +84,7 @@
     topic: function (id) { return lookup('topics', id); },
     forCourseTopic: forCourseTopic,
     forLesson: forLesson,
+    select: select,
     question: function (id) { return lookup('questions', id); },
     flashcard: function (id) { return lookup('flashcards', id); },
     examQuestion: function (id) { return lookup('exam', id); },

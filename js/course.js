@@ -46,6 +46,7 @@
       t.unit = unit.number;
       t.lessons = t.lessons || [];
       t.resources = t.resources || [];
+      t.spec = t.spec || []; // specification entries in order: { code, text, lessons: [n] }
       t.folder = 'resources/unit' + unit.number + '/topic' + t.number + '/';
       t.resources.forEach(function (r) { r.path = t.folder + r.file; });
       t.lessons.forEach(function (l) {
@@ -95,6 +96,11 @@
     return u.topics.reduce(function (n, t) { return n + t.lessons.length; }, 0);
   }
 
+  /** A specification entry of a course topic by its code (for example '1.2.1'), or null. */
+  function specEntry(t, code) {
+    return (t && t.spec.filter(function (e) { return e.code === code; })[0]) || null;
+  }
+
   /** The revision content written for a course topic, or null if there is none yet. */
   function revisionFor(t) {
     return RS.content ? RS.content.forCourseTopic(t.unit, t.number) : null;
@@ -113,6 +119,7 @@
     url: url,
     allLessons: allLessons,
     countLessons: countLessons,
-    revisionFor: revisionFor
+    revisionFor: revisionFor,
+    specEntry: specEntry
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1,7 +1,9 @@
 /*
  * Revision: Unit 1, Topic 1 – Hardware and communication.
- * Written from the Topic 1 lessons (resources/unit1/topic1/lesson1–4).
- * Every item has a `lesson` number so students can revise one lesson at a time.
+ * Written only from the Topic 1 lesson resources (resources/unit1/topic1/lesson1–4):
+ * the slides, starters, interactive activities and exit tickets.
+ * Items are in specification order. Every item has `spec` (the entry it covers, as listed in
+ * data/course/unit1.js) and `lesson` (the lesson that teaches it).
  */
 RS.content.registerTopic({
   id: 'u1-t1',
@@ -13,192 +15,255 @@ RS.content.registerTopic({
   summary: 'Hardware and connections, CPU architecture and Von Neumann, memory and caching, parallel processing, the fetch-execute cycle, input and output, secondary storage, fragmentation, networks, standards, protocols, handshaking and the internet.',
   keywords: ['motherboard', 'CPU', 'ALU', 'control unit', 'register', 'PC', 'MAR', 'MDR', 'CIR', 'ACC', 'bus', 'Von Neumann', 'bottleneck', 'cache', 'RAM', 'ROM', 'virtual memory', 'parallel processing', 'fetch-execute', 'input', 'output', 'HDD', 'SSD', 'tape', 'cloud', 'fragmentation', 'defragmentation', 'PAN', 'LAN', 'WAN', 'client-server', 'peer-to-peer', 'switch', 'router', 'MAC address', 'IP address', 'standards', 'protocol', 'HTTP', 'FTP', 'SMTP', 'IMAP', 'TCP/IP', 'DHCP', 'UDP', 'Wi-Fi', 'Bluetooth', 'handshaking', 'internet'],
   specRefs: [
-    'Lesson 1 – 1.1.1 hardware and communication elements; 1.2.1 computer architecture and Von Neumann; 1.2.2 types of memory and caching',
-    'Lesson 2 – 1.2.3 parallel processing; 1.3.1 the fetch-execute cycle; 1.4.1 and 1.4.2 input and output methods and devices',
-    'Lesson 3 – 1.5.1 secondary storage; 1.6.1 fragmentation and defragmentation; 1.7.1 networks and how they communicate',
-    'Lesson 4 – 1.7.1 network devices, addressing and media; 1.7.2 networking standards; 1.7.3 protocols; 1.7.4 handshaking; 1.8.1 the internet'
+    'Lesson 1 – 1.1.1 · 1.2.1 · 1.2.2',
+    'Lesson 2 – 1.2.3 · 1.3.1 · 1.4.1 · 1.4.2',
+    'Lesson 3 – 1.5.1 · 1.6.1 · 1.7.1',
+    'Lesson 4 – 1.7.1 · 1.7.2 · 1.7.3 · 1.7.4 · 1.8.1'
   ],
 
+  /* =================================================================== NOTES */
   notes: [
-    /* ---------- Lesson 1: Inside the box ---------- */
+    /* ---------- 1.1.1 ---------- */
     {
-      lesson: 1,
-      heading: 'The motherboard is the hub (1.1.1)',
-      html: '<p>Everything connects to the motherboard, either directly (a socket or slot) or through a port, and communicates over buses and interfaces.</p>' +
+      spec: '1.1.1', lesson: 1,
+      heading: 'The motherboard is the hub',
+      html: '<p>Everything connects to the motherboard – directly (socket, slot) or through a port – and talks over buses and interfaces.</p>' +
         '<table><thead><tr><th scope="col">Component</th><th scope="col">Job</th><th scope="col">Connects through</th></tr></thead><tbody>' +
-        '<tr><td>CPU</td><td>Executes instructions (control unit, ALU, registers, cache)</td><td>CPU socket → system bus</td></tr>' +
-        '<tr><td>RAM</td><td>Volatile working memory for running programs and data</td><td>DIMM slots → memory bus</td></tr>' +
-        '<tr><td>ROM</td><td>Non-volatile firmware (BIOS/UEFI) used to boot</td><td>On the motherboard</td></tr>' +
-        '<tr><td>SSD / HDD</td><td>Non-volatile long-term storage</td><td>SATA or NVMe (PCIe)</td></tr>' +
-        '<tr><td>GPU</td><td>Dedicated processor for images, video and 3D, with its own memory (VRAM)</td><td>PCIe slot</td></tr>' +
-        '<tr><td>Sound card</td><td>Processes audio: a DSP, a DAC (digital → analogue, out) and an ADC (analogue → digital, in)</td><td>On-board, PCIe or USB</td></tr>' +
-        '<tr><td>NIC / Wi-Fi</td><td>Joins the network, wired (Ethernet) or wireless</td><td>PCIe or on-board</td></tr>' +
-        '<tr><td>Input / output devices</td><td>Keyboard, mouse, monitor, printer…</td><td>USB, HDMI, DisplayPort, Bluetooth</td></tr>' +
-        '<tr><td>PSU</td><td>Converts mains AC to the DC the components need</td><td>Power cables (power only, no data)</td></tr>' +
+        '<tr><td>CPU</td><td>Executes instructions (CU, ALU, registers, cache)</td><td>CPU socket → system bus</td></tr>' +
+        '<tr><td>RAM</td><td>Volatile working memory</td><td>DIMM slots → memory bus</td></tr>' +
+        '<tr><td>ROM</td><td>Firmware (BIOS/UEFI) for booting</td><td>On the motherboard</td></tr>' +
+        '<tr><td>SSD / HDD</td><td>Non-volatile long-term storage</td><td>SATA · NVMe (PCIe)</td></tr>' +
+        '<tr><td>GPU</td><td>Renders graphics</td><td>PCIe</td></tr>' +
+        '<tr><td>Sound card</td><td>DSP, DAC, ADC for audio</td><td>On-board · PCIe · USB</td></tr>' +
+        '<tr><td>NIC / Wi-Fi</td><td>Joins the network</td><td>PCIe · on-board</td></tr>' +
+        '<tr><td>Input / output</td><td>Keyboard, mouse, monitor, printer…</td><td>USB · HDMI · DisplayPort · Bluetooth</td></tr>' +
+        '<tr><td>PSU</td><td>Converts and supplies power</td><td>Power cables (no data)</td></tr>' +
         '</tbody></table>'
     },
     {
-      lesson: 1,
-      heading: 'Communication elements (1.1.1)',
+      spec: '1.1.1', lesson: 1,
+      heading: 'The core: processing, memory, storage',
       points: [
-        'The <strong>system bus</strong> links the CPU, memory and input/output: the <strong>data bus</strong> carries the data, the <strong>address bus</strong> says where, and the <strong>control bus</strong> carries commands such as read, write and interrupt.',
-        '<strong>Controllers and interfaces</strong>: input/output controllers (for example USB and SATA controllers) manage traffic between the CPU and devices; USB, Thunderbolt and Bluetooth connect peripherals.',
-        'The <strong>network interface card (NIC)</strong> connects the computer to a network, wired (Ethernet) or wireless (Wi-Fi), and talks to switches and routers using TCP/IP.'
+        '<strong>CPU</strong> – executes instructions; the “brain”. The control unit (CU) directs operations; the arithmetic logic unit (ALU) does maths and logic; registers are tiny, fastest storage inside the CPU; cache is high-speed memory for frequent data.',
+        '<strong>Memory</strong> – RAM is volatile working memory for running programs; ROM is non-volatile and holds the BIOS/UEFI firmware; cache sits on or near the CPU and cuts latency.',
+        '<strong>Storage</strong> – an HDD uses magnetic platters (high capacity, mechanical); an SSD uses flash memory (no moving parts, faster). Both are non-volatile: they keep data with the power off.'
       ]
     },
     {
-      lesson: 1,
-      heading: 'Inside the CPU (1.2.1)',
+      spec: '1.1.1', lesson: 1,
+      heading: 'Around the core: I/O, graphics, sound, power',
       points: [
-        '<strong>Control unit (CU)</strong>: fetches and decodes instructions and coordinates everything else, telling the other components what to do.',
-        '<strong>Arithmetic logic unit (ALU)</strong>: carries out arithmetic (add, subtract), comparisons and logic (AND, OR, NOT).',
-        '<strong>Registers</strong>: tiny, very fast storage locations inside the CPU, each with one job.',
-        '<strong>Cache</strong>: keeps frequently used instructions and data close to the cores (L1, L2, L3).'
+        '<strong>Input and output</strong> – input: keyboard, mouse, scanner, microphone; output: monitor, printer, speakers. They connect through USB, HDMI, DisplayPort or Bluetooth.',
+        '<strong>GPU</strong> – a dedicated processor for images, video and 3D, with its own memory (VRAM). Connects through a PCIe slot.',
+        '<strong>Sound card</strong> – a DSP processes audio; a DAC converts digital → analogue (out); an ADC converts analogue → digital (in). Integrated on-board, or PCIe or USB.',
+        '<strong>PSU</strong> – converts mains AC to the DC the parts need, and powers the motherboard, drives and GPU through cables. Power only, no data.'
       ]
     },
     {
-      lesson: 1,
-      heading: 'The five registers (1.2.1)',
+      spec: '1.1.1', lesson: 1,
+      heading: 'Communication elements',
+      points: [
+        '<strong>The system bus</strong> – the data bus carries the data; the address bus says where; the control bus carries commands (read, write, interrupt).',
+        '<strong>Controllers and interfaces</strong> – I/O controllers (USB, SATA) manage traffic between the CPU and devices; USB, Thunderbolt and Bluetooth connect peripherals.',
+        '<strong>Network interface (NIC)</strong> – wired (Ethernet) or wireless (Wi-Fi), PCIe or on-board. It talks to routers and switches using TCP/IP.'
+      ]
+    },
+
+    /* ---------- 1.2.1 ---------- */
+    {
+      spec: '1.2.1', lesson: 1,
+      heading: 'Inside the CPU',
+      points: [
+        '<strong>Control unit (CU)</strong> – fetches, decodes and coordinates; tells everything else what to do.',
+        '<strong>ALU</strong> – add, subtract, compare, AND/OR/NOT.',
+        '<strong>Registers</strong> – tiny, fastest storage; each has one job.',
+        '<strong>Cache</strong> – keeps frequently used data close to the cores (L1 · L2 · L3).'
+      ]
+    },
+    {
+      spec: '1.2.1', lesson: 1,
+      heading: 'The five registers – what each one holds',
       html: '<table><thead><tr><th scope="col">Register</th><th scope="col">What it holds</th></tr></thead><tbody>' +
-        '<tr><td>Program counter (PC)</td><td>The <em>address</em> of the <em>next</em> instruction to fetch. It increments after each fetch (unless a jump changes it).</td></tr>' +
-        '<tr><td>Memory address register (MAR)</td><td>The address in memory being read from or written to. It is sent out on the address bus.</td></tr>' +
-        '<tr><td>Memory data register (MDR)</td><td>The data just read from, or about to be written to, memory: a buffer between the CPU and RAM.</td></tr>' +
-        '<tr><td>Current instruction register (CIR)</td><td>The instruction being executed now, split into opcode and operand for decoding.</td></tr>' +
-        '<tr><td>Accumulator (ACC)</td><td>Intermediate results from the ALU.</td></tr>' +
-        '</tbody></table><p>PC → MAR → MDR → CIR → ACC is the order they are used in a fetch-execute cycle.</p>'
+        '<tr><td>PC – Program Counter</td><td>Address of the NEXT instruction to fetch. Increments after each fetch (unless a jump).</td></tr>' +
+        '<tr><td>MAR – Memory Address Register</td><td>The address in memory being read from or written to. Sent out on the address bus.</td></tr>' +
+        '<tr><td>MDR – Memory Data Register</td><td>The data just read from, or about to be written to, memory. Buffer between CPU and RAM.</td></tr>' +
+        '<tr><td>CIR – Current Instruction Register</td><td>The instruction being executed right now, split into opcode and operand for decoding.</td></tr>' +
+        '<tr><td>ACC – Accumulator</td><td>Intermediate results from the ALU.</td></tr>' +
+        '</tbody></table><p>PC → MAR → MDR → CIR → ACC is the order they appear in a fetch.</p>'
     },
     {
-      lesson: 1,
-      heading: 'The three buses and their direction (1.2.1)',
+      spec: '1.2.1', lesson: 1,
+      heading: 'Three buses – what travels, and which way',
       points: [
-        '<strong>Data bus</strong>: carries the data itself, in <strong>both directions</strong> between the CPU and memory or input/output.',
-        '<strong>Address bus</strong>: carries <em>where</em> in memory (from the MAR). It goes from the CPU to memory <strong>only</strong>; memory never sends the CPU an address.',
-        '<strong>Control bus</strong>: carries control signals such as read, write, interrupt and the clock, in <strong>both directions</strong>.',
-        'Exam favourite: the address bus is unidirectional.'
+        '<strong>Data bus</strong> – carries the data itself; both ways.',
+        '<strong>Address bus</strong> – carries where in memory (from the MAR); CPU → memory only.',
+        '<strong>Control bus</strong> – carries read · write · interrupt · clock; both ways.',
+        'Exam favourite: the address bus is unidirectional – memory never tells the CPU an address.'
       ]
     },
     {
-      lesson: 1,
-      heading: 'Von Neumann architecture (1.2.1)',
+      spec: '1.2.1', lesson: 1,
+      heading: 'Von Neumann architecture (1945)',
       points: [
-        'Four defining features: <strong>one memory</strong> for both instructions and data; <strong>sequential</strong> execution, one instruction at a time in order; a <strong>control unit</strong> drives the fetch and execute; the <strong>stored program</strong> concept, so you change the program, not the hardware.',
-        'Instructions and data share the same memory and the same bus.',
-        'Advantages: simple to design and build; flexible (update the program, keep the hardware); cost-effective (one memory, one bus).',
-        '<strong>The Von Neumann bottleneck</strong>: instructions and data must squeeze through the same bus. The CPU is faster than memory, so it waits, and memory bandwidth becomes the limit.',
-        'Working around it: Harvard architecture (separate instruction and data memory, used in embedded systems); cache hierarchies (L1/L2/L3); multi-core, pipelining and out-of-order execution.'
+        'Four defining features: <strong>one memory</strong> for instructions AND data; <strong>sequential</strong> – one instruction at a time, in order; a <strong>control unit</strong> drives fetch and execute; <strong>stored program</strong> – change the program, not the hardware.',
+        'Instructions and data share the same memory and the same bus.'
       ]
     },
     {
-      lesson: 1,
-      heading: 'The memory hierarchy (1.2.2)',
-      html: '<table><thead><tr><th scope="col">Level</th><th scope="col">Where and what</th></tr></thead><tbody>' +
+      spec: '1.2.1', lesson: 1,
+      heading: 'Why it won – and where it hurts',
+      points: [
+        '<strong>Advantages</strong> – simple to design and build; flexible (update the program, keep the hardware); cost-effective (one memory, one bus).',
+        '<strong>The Von Neumann bottleneck</strong> – instructions AND data must squeeze through the same bus; the CPU is faster than memory, so it waits; memory bandwidth becomes the limit.',
+        '<strong>Working around it</strong> – Harvard architecture (separate instruction and data memory, used in embedded systems); cache hierarchies (L1/L2/L3); multi-core, pipelining and out-of-order execution.'
+      ]
+    },
+
+    /* ---------- 1.2.2 ---------- */
+    {
+      spec: '1.2.2', lesson: 1,
+      heading: 'The memory hierarchy',
+      html: '<table><thead><tr><th scope="col">Level</th><th scope="col">Details</th></tr></thead><tbody>' +
         '<tr><td>Registers</td><td>Inside the CPU · CPU speed · bytes</td></tr>' +
-        '<tr><td>L1 · L2 · L3 cache</td><td>On the CPU · KB to MB · SRAM</td></tr>' +
+        '<tr><td>L1 · L2 · L3 cache</td><td>On the CPU · KB–MB · SRAM</td></tr>' +
         '<tr><td>RAM</td><td>Main memory · GB · DRAM · volatile</td></tr>' +
-        '<tr><td>Virtual memory</td><td>Disk space used as if it were RAM · slow</td></tr>' +
+        '<tr><td>Virtual memory</td><td>Disk pretending to be RAM · slow</td></tr>' +
         '<tr><td>SSD · HDD · flash</td><td>Secondary storage · TB · non-volatile</td></tr>' +
         '</tbody></table>' +
-        '<p>Going up: faster, smaller and more costly per byte. Going down: slower, larger and cheaper per byte. ROM sits outside the ladder: non-volatile firmware on the motherboard, read at boot.</p>'
+        '<p>↑ Faster · smaller · costlier per byte. ↓ Slower · larger · cheaper per byte. ROM sits outside the ladder: non-volatile firmware on the motherboard, read at boot.</p>'
     },
     {
-      lesson: 1,
-      heading: 'Types of memory (1.2.2)',
+      spec: '1.2.2', lesson: 1,
+      heading: 'Types of memory – the ones the exam names',
       points: [
-        '<strong>RAM</strong>: volatile and fast; holds running programs and data. DRAM is used for main memory; SRAM is used for cache.',
-        '<strong>ROM</strong>: non-volatile; written at manufacture (or by a firmware update); holds the BIOS/UEFI used to boot.',
-        '<strong>Cache</strong>: small and very fast, next to the cores. L1 is the smallest and fastest; L3 is the largest and is shared.',
-        '<strong>Virtual memory</strong>: part of the disk used as an extension of RAM when RAM is full. It lets more or bigger programs run, but slowly.',
-        '<strong>Flash</strong>: non-volatile solid-state memory (USB sticks, SSDs, memory cards); faster than an HDD and needs no power to keep data.',
-        '<strong>Registers</strong>: tiny and CPU-speed, inside the processor. <strong>Secondary storage</strong> (HDD/SSD): non-volatile, large and slow.'
+        '<strong>RAM</strong> – volatile; fast; holds running programs and data. DRAM (main memory) · SRAM (cache).',
+        '<strong>ROM</strong> – non-volatile; written at manufacture or by a firmware update. BIOS/UEFI – used to boot.',
+        '<strong>Cache</strong> – small, very fast, next to the cores. L1 smallest/fastest → L3 largest, shared.',
+        '<strong>Virtual memory</strong> – part of the disk used as an extension of RAM when it is full. Lets more or bigger programs run – slowly.',
+        '<strong>Flash</strong> – non-volatile solid state: USB sticks, SSDs, cards. Faster than an HDD; no power needed to keep data.',
+        '<strong>Registers and secondary storage</strong> – registers: CPU-speed, tiny, inside the processor. Secondary (HDD/SSD): non-volatile, large, slow.'
       ]
     },
     {
-      lesson: 1,
-      heading: 'Caching (1.2.2)',
+      spec: '1.2.2', lesson: 1,
+      heading: 'Caching: keep what you need next, closer',
       points: [
-        'The CPU looks for data in L1, then L2, then L3, then RAM, then disk. A <strong>hit</strong> means it is found, so the search stops; a <strong>miss</strong> means drop down a level and try again. Each step down is slower.',
-        '<strong>CPU cache</strong> holds frequently used instructions and data: L1 per core, L2 per core or shared, L3 shared by all cores. It reduces time spent waiting on RAM.',
-        '<strong>Disk cache</strong>: RAM (or a buffer on the drive) holding frequently read blocks, speeding up reads and writes to an HDD or SSD.',
-        'Analogy: desk (registers) → drawer (cache) → filing cabinet (RAM) → archive (disk). You don’t fetch from the archive if it’s already in your drawer.'
+        'The CPU asks L1? → L2? → L3? → RAM → disk. A <strong>hit</strong> stops the search there; a <strong>miss</strong> drops down a level and tries again. Each step down is slower.',
+        '<strong>CPU cache</strong> – holds frequently used instructions and data. L1 per core · L2 per core or shared · L3 shared by all cores. Reduces the time waiting on RAM.',
+        '<strong>Disk cache</strong> – RAM (or a buffer on the drive) holding frequently read blocks. Speeds up reads and writes to an HDD or SSD.',
+        'Analogy: desk (registers) → drawer (cache) → filing cabinet (RAM) → archive (disk). You don’t fetch from the archive if it’s in your drawer.'
       ]
     },
 
-    /* ---------- Lesson 2: Many hands, one cycle ---------- */
+    /* ---------- 1.2.3 ---------- */
     {
-      lesson: 2,
-      heading: 'Parallel processing (1.2.3)',
+      spec: '1.2.3', lesson: 2,
+      heading: 'One queue, or many at once?',
       points: [
-        '<strong>Sequential</strong>: one core; tasks queue and run one after another, so the total time is the sum of every task.',
-        '<strong>Parallel</strong>: several cores; tasks are divided and run at the same time, so the total time shrinks towards the length of the longest single task.',
-        'The catch: dividing the work, coordinating the cores and combining the results all take time too. Parallel processing isn’t free.',
-        'Four ideas: <strong>task division</strong> (break a big job into smaller independent pieces); <strong>concurrency</strong> (pieces genuinely running at the same time on separate cores); <strong>coordination</strong> (cores communicate and stay in step so results combine correctly); <strong>scalability</strong> (add more cores to handle more work, up to a point).',
-        'Welsh: parallel processing – <em>prosesu cyfochrog</em>; core / multi-core – <em>craidd / amlgraidd</em>; synchronisation – <em>cydamseru</em>.'
+        '<strong>Sequential</strong> – one core. Tasks queue and run one after another; the total time is the sum of every task.',
+        '<strong>Parallel</strong> – several cores. Tasks are divided and run at the same time; the total time shrinks towards the length of the longest single task.',
+        'The catch: dividing the work, coordinating the cores and combining results all cost time too – parallel isn’t free.',
+        'Key vocabulary: parallel processing – <em>prosesu cyfochrog</em>; core / multi-core – <em>craidd / amlgraidd</em>; synchronisation – <em>cydamseru</em>.'
       ]
     },
     {
-      lesson: 2,
-      heading: 'Parallel processing: advantages, challenges and uses (1.2.3)',
+      spec: '1.2.3', lesson: 2,
+      heading: 'Four ideas behind parallel processing',
       points: [
-        '<strong>Advantages</strong>: increased speed; efficiency (more done per second); scalability; handles large data sets.',
-        '<strong>Challenges</strong>: task dependency (some steps must wait for others); synchronisation overhead; resource contention (cores competing for shared resources); added complexity.',
-        '<strong>Where it is used</strong>: supercomputers, graphics processing (GPUs), search engines and machine learning.'
+        '<strong>Task division</strong> – break a big job into smaller independent pieces that can run separately.',
+        '<strong>Concurrency</strong> – multiple pieces genuinely running at the same time, on separate cores.',
+        '<strong>Coordination</strong> – cores must communicate and stay in step so results combine correctly.',
+        '<strong>Scalability</strong> – add more cores, handle more work – up to a point.'
       ]
     },
     {
-      lesson: 2,
-      heading: 'The fetch-execute cycle (1.3.1)',
+      spec: '1.2.3', lesson: 2,
+      heading: 'Why bother – and where it bites',
+      points: [
+        '<strong>Advantages</strong> – increased speed; efficiency (more done per second); scalability; handles large data sets.',
+        '<strong>Challenges</strong> – task dependency (some steps must wait for others); synchronisation overhead; resource contention; added complexity.',
+        '<strong>Where it’s used</strong> – supercomputers; graphics processing (GPUs); search engines; machine learning.'
+      ]
+    },
+
+    /* ---------- 1.3.1 ---------- */
+    {
+      spec: '1.3.1', lesson: 2,
+      heading: 'The five registers – quick recap',
+      html: '<table><thead><tr><th scope="col">Register</th><th scope="col">Cymraeg</th><th scope="col">Holds</th></tr></thead><tbody>' +
+        '<tr><td>PC – Program Counter</td><td><em>Cyfrif Rhaglen</em></td><td>Address of the next instruction</td></tr>' +
+        '<tr><td>MAR – Memory Address Register</td><td><em>Cofrestr Cyfeiriad Cof</em></td><td>The address currently being accessed</td></tr>' +
+        '<tr><td>MDR – Memory Data Register</td><td><em>Cofrestr Data Cof</em></td><td>Data just read from, or about to be written to, memory</td></tr>' +
+        '<tr><td>CIR – Current Instruction Register</td><td><em>Cofrestr Cyfarwyddyd Cyfredol</em></td><td>The instruction being decoded / executed</td></tr>' +
+        '<tr><td>ACC – Accumulator</td><td><em>Cronnwr</em></td><td>Intermediate results from the ALU</td></tr>' +
+        '</tbody></table>'
+    },
+    {
+      spec: '1.3.1', lesson: 2,
+      heading: 'The fetch-execute cycle',
       html: '<ol>' +
-        '<li><strong>PC → MAR</strong>: the address of the next instruction is copied from the PC into the MAR.</li>' +
-        '<li><strong>MAR → RAM</strong>: the MAR sends that address out on the address bus.</li>' +
-        '<li><strong>RAM → MDR</strong>: the instruction stored at that address is copied into the MDR.</li>' +
-        '<li><strong>MDR → CIR</strong>: the instruction moves into the CIR to be decoded.</li>' +
-        '<li><strong>Decode</strong>: the control unit splits the instruction in the CIR into opcode and operand.</li>' +
-        '<li><strong>Execute</strong>: the ALU carries out the operation and the result goes to the ACC.</li>' +
+        '<li><strong>PC → MAR</strong> – the address of the next instruction is copied into the MAR.</li>' +
+        '<li><strong>MAR → RAM</strong> – the MAR sends that address out on the address bus.</li>' +
+        '<li><strong>RAM → MDR</strong> – the instruction stored there is copied into the MDR.</li>' +
+        '<li><strong>MDR → CIR</strong> – the instruction moves into the CIR to be decoded.</li>' +
+        '<li><strong>Decode</strong> – the control unit splits the CIR into opcode + operand.</li>' +
+        '<li><strong>Execute</strong> – the ALU runs the operation; the result goes to the ACC.</li>' +
         '</ol>' +
-        '<p>Fetch (steps 1–4) · Decode (step 5) · Execute (step 6), then the cycle repeats from the new PC. The PC is incremented once the instruction has been fetched, so it is already pointing at the next instruction while the current one is decoded and executed.</p>' +
-        '<p>Welsh: fetch – <em>cyrchu</em>; decode – <em>datgodio</em>; execute – <em>gweithredu</em>; register – <em>cofrestr</em>; instruction – <em>cyfarwyddyd</em>.</p>'
+        '<p>Fetch (1–4) · Decode (5) · Execute (6) – then the cycle repeats from the new PC.<br>' +
+        '<em>Cyrchu</em> (1–4) · <em>Datgodio</em> (5) · <em>Gweithredu</em> (6). Register – <em>cofrestr</em>; instruction – <em>cyfarwyddyd</em>.</p>'
     },
     {
-      lesson: 2,
-      heading: 'Where the cycle catches people out (1.3.1)',
+      spec: '1.3.1', lesson: 2,
+      heading: 'Where the cycle catches people out',
       points: [
-        '<strong>MAR vs MDR</strong>: the MAR holds an <em>address</em> (where to look); the MDR holds the <em>data</em> (what was found there).',
-        '<strong>When does the PC increment?</strong> After the instruction is fetched, not after it is executed.',
-        'Register names in Welsh: PC – <em>Cyfrif Rhaglen</em>; MAR – <em>Cofrestr Cyfeiriad Cof</em>; MDR – <em>Cofrestr Data Cof</em>; CIR – <em>Cofrestr Cyfarwyddyd Cyfredol</em>; ACC – <em>Cronnwr</em>.'
+        '<strong>MAR vs MDR</strong> – the MAR holds an ADDRESS (where to look); the MDR holds the DATA (what was found there). They are easy to mix up: both are four-letter registers that look similar on the diagram.',
+        '<strong>When does the PC increment?</strong> After the instruction is fetched – not after it is executed. So the PC is already pointing at the NEXT instruction while the current one is still being decoded and executed.'
       ]
-    },
-    {
-      lesson: 2,
-      heading: 'Input and output devices, and their suitability (1.4.1, 1.4.2)',
-      html: '<table><thead><tr><th scope="col">Device</th><th scope="col">Type</th><th scope="col">Best suited to…</th></tr></thead><tbody>' +
-        '<tr><td>Touchscreen</td><td>Input</td><td>Kiosks and tablets: intuitive and needs no extra hardware, but imprecise for detailed work</td></tr>' +
-        '<tr><td>Keyboard and mouse</td><td>Input</td><td>Precise text entry and navigation: desktop and office work</td></tr>' +
-        '<tr><td>Barcode / QR scanner</td><td>Input</td><td>Retail and stock control: fast, with a low error rate on repetitive data</td></tr>' +
-        '<tr><td>Microphone (voice input)</td><td>Input</td><td>Hands-free or accessibility contexts, such as driving or mobility impairment</td></tr>' +
-        '<tr><td>Monitor</td><td>Output</td><td>General visual output in most contexts</td></tr>' +
-        '<tr><td>3D / laser printer</td><td>Output</td><td>Physical documents, or prototyping and manufacture</td></tr>' +
-        '<tr><td>Speakers</td><td>Output</td><td>Audio feedback; accessibility for visually impaired users</td></tr>' +
-        '<tr><td>Braille display</td><td>Output</td><td>Tactile output for blind or low-vision users</td></tr>' +
-        '</tbody></table>' +
-        '<p>Suitability means matching the device to the user, the task and the environment. Welsh: input device – <em>dyfais fewnbwn</em>; output device – <em>dyfais allbwn</em>; suitable – <em>addas</em>.</p>'
     },
 
-    /* ---------- Lesson 3: Storage, fragmentation and networks ---------- */
+    /* ---------- 1.4.1 ---------- */
     {
-      lesson: 3,
-      heading: 'Six contemporary storage devices (1.5.1)',
+      spec: '1.4.1', lesson: 2,
+      heading: 'Contemporary input and output devices',
       points: [
-        '<strong>HDD</strong>: magnetic platters and a moving read/write head. Cheap per byte and large capacity, but slower than an SSD.',
-        '<strong>SSD</strong>: flash memory with no moving parts. Fast access, but more expensive per byte than an HDD.',
-        '<strong>Optical (CD/DVD/Blu-ray)</strong>: discs read by a laser. Cheap and portable, but limited capacity and easily damaged.',
-        '<strong>Magnetic tape</strong>: serial access and very cheap per byte. Slow, but reliable for large-scale archival backup.',
-        '<strong>Flash / USB drive</strong>: small, portable solid-state storage. Fast and convenient, with limited capacity.',
-        '<strong>Cloud storage</strong>: data stored on remote servers over a network. Accessible anywhere; speed depends on the network.'
+        '<strong>Input devices</strong> (<em>dyfais fewnbwn</em>) – touchscreen; keyboard and mouse; barcode / QR scanner; microphone (voice input); scanner.',
+        '<strong>Output devices</strong> (<em>dyfais allbwn</em>) – monitor; 3D / laser printer; speakers; Braille display.',
+        'They connect to the computer through USB, HDMI, DisplayPort or Bluetooth.'
+      ]
+    },
+
+    /* ---------- 1.4.2 ---------- */
+    {
+      spec: '1.4.2', lesson: 2,
+      heading: 'Device, and where it’s the right choice',
+      html: '<table><thead><tr><th scope="col">Device</th><th scope="col">Type</th><th scope="col">Best suited to…</th></tr></thead><tbody>' +
+        '<tr><td>Touchscreen</td><td>Input</td><td>Kiosks, tablets – intuitive, no extra hardware, but imprecise for detailed work</td></tr>' +
+        '<tr><td>Keyboard and mouse</td><td>Input</td><td>Precise text entry and navigation – desktop / office work</td></tr>' +
+        '<tr><td>Barcode / QR scanner</td><td>Input</td><td>Retail and stock control – fast, low error rate on repetitive data</td></tr>' +
+        '<tr><td>Microphone (voice input)</td><td>Input</td><td>Hands-free or accessibility contexts – driving, mobility impairment</td></tr>' +
+        '<tr><td>Monitor</td><td>Output</td><td>General visual output – most contexts</td></tr>' +
+        '<tr><td>3D / laser printer</td><td>Output</td><td>Physical documents, or prototyping and manufacture</td></tr>' +
+        '<tr><td>Speakers</td><td>Output</td><td>Audio feedback, accessibility for visually impaired users</td></tr>' +
+        '<tr><td>Braille display</td><td>Output</td><td>Accessibility – tactile output for blind or low-vision users</td></tr>' +
+        '</tbody></table><p>Suitable / appropriate – <em>addas</em>.</p>'
+    },
+
+    /* ---------- 1.5.1 ---------- */
+    {
+      spec: '1.5.1', lesson: 3,
+      heading: 'Six contemporary storage devices',
+      points: [
+        '<strong>HDD</strong> – magnetic platters, moving read/write head. Cheap per byte, large capacity, slower than SSD.',
+        '<strong>SSD</strong> – no moving parts, flash memory. Fast access, more expensive per byte than HDD.',
+        '<strong>Optical (CD/DVD/Blu-ray)</strong> – laser-read discs. Cheap, portable, limited capacity, easily damaged.',
+        '<strong>Magnetic tape</strong> – serial access, very cheap per byte. Slow, but reliable for large-scale archival backup.',
+        '<strong>Flash / USB drive</strong> – small, portable solid-state storage. Fast, convenient, limited capacity.',
+        '<strong>Cloud storage</strong> – data stored on remote servers over a network. Accessible anywhere, depends on network speed.'
       ]
     },
     {
-      lesson: 3,
-      heading: 'Comparing storage devices (1.5.1)',
+      spec: '1.5.1', lesson: 3,
+      heading: 'Comparing them on the same characteristics',
       html: '<table><thead><tr><th scope="col">Device</th><th scope="col">Speed of access</th><th scope="col">Cost per unit</th><th scope="col">Portability</th><th scope="col">Typical capacity</th></tr></thead><tbody>' +
         '<tr><td>HDD</td><td>Fast (but slower than SSD)</td><td>Low</td><td>Low–medium</td><td>Large (TBs)</td></tr>' +
         '<tr><td>SSD</td><td>Very fast</td><td>Higher</td><td>Medium</td><td>Medium–large</td></tr>' +
@@ -207,677 +272,906 @@ RS.content.registerTopic({
         '<tr><td>Flash / USB</td><td>Fast</td><td>Low–medium</td><td>Very high</td><td>Small–medium</td></tr>' +
         '<tr><td>Cloud storage</td><td>Depends on network</td><td>Ongoing (subscription)</td><td>Accessible anywhere</td><td>Scalable / very large</td></tr>' +
         '</tbody></table>' +
-        '<p>A “compare” answer trades characteristics against each other: for example, tape is cheap and huge but far too slow for daily access; an SSD is fast but costs more per byte. Durability matters too: no moving parts makes solid-state storage more robust.</p>'
+        '<p>A “compare” answer always trades characteristics against each other – e.g. tape is cheap and huge but far too slow for daily access; SSD is fast but costs more per byte.</p>'
     },
+
+    /* ---------- 1.6.1 ---------- */
     {
-      lesson: 3,
-      heading: 'How fragmentation happens (1.6.1)',
+      spec: '1.6.1', lesson: 3,
+      heading: 'How data gets fragmented on an HDD',
       points: [
-        'On an HDD, data is stored on a spinning magnetic platter, in tracks and sectors. A read/write head moves across the disk to reach each sector.',
-        'A file doesn’t always fit in one contiguous space, so it is split and stored in whatever free sectors are available, often scattered across the disk.',
+        '<strong>The physical picture</strong> – data is stored on a spinning magnetic platter, in tracks and sectors. A read/write head moves across the disk to reach each sector.',
+        '<strong>Where fragmentation comes from</strong> – a file doesn’t always fit in one contiguous space. It gets split and stored in whatever free sectors are available – often scattered across the disk.',
         'The more the disk fills and empties over time, the more fragmented it becomes.'
       ]
     },
     {
-      lesson: 3,
-      heading: 'Consequences, and what defragmentation does (1.6.1)',
+      spec: '1.6.1', lesson: 3,
+      heading: 'Consequences, and what defragmentation does',
       points: [
-        '<strong>Consequences</strong>: the read/write head must move to several different positions to read one file. Each move takes time, so access is slower overall. More fragmentation means more head movement, and more wear.',
-        '<strong>Defragmentation</strong> physically rearranges fragmented data so each file’s parts sit together. There are fewer positions for the head to move between, so access speeds improve.',
-        '<strong>SSDs don’t need defragmenting</strong>: they have no moving head, so reading any location takes the same time and scattered data isn’t slower to read. SSDs use a different maintenance process (TRIM) instead.'
-      ]
-    },
-    {
-      lesson: 3,
-      heading: 'Types of network (1.7.1)',
-      html: '<table><thead><tr><th scope="col">Network</th><th scope="col">What it is</th><th scope="col">Typical range</th></tr></thead><tbody>' +
-        '<tr><td>PAN – personal area network</td><td>One person’s own devices, such as a phone to a smartwatch or wireless earbuds</td><td>Metres</td></tr>' +
-        '<tr><td>LAN – local area network</td><td>One site, such as a school or office building</td><td>One building or site</td></tr>' +
-        '<tr><td>WLAN – wireless LAN</td><td>A LAN using wireless connections instead of cables</td><td>One building or site</td></tr>' +
-        '<tr><td>WAN – wide area network</td><td>Connects LANs across a large area; the internet is the largest WAN</td><td>Cities, countries, global</td></tr>' +
-        '</tbody></table>'
-    },
-    {
-      lesson: 3,
-      heading: 'Client-server and peer-to-peer (1.7.1)',
-      points: [
-        '<strong>Client-server</strong>: clients send requests; a central server provides the resource or service, such as a website or a file share.',
-        '<strong>Peer-to-peer</strong>: every device can act as both client and server, sharing directly with each other with no central server.'
+        '<strong>Consequences</strong> – the read/write head must move to several different positions to read one file. Each move takes time, so access is slower overall. More fragmentation → more head movement → more wear.',
+        '<strong>What defragmentation does</strong> – physically rearranges fragmented data so each file’s parts sit closer together. Fewer positions for the head to move between, so access speeds improve.',
+        '<strong>Common exam mix-up: SSDs don’t need defragmenting</strong> – an SSD has no moving head, so random access to any location costs the same and scattered data isn’t slower to read. SSDs use a different maintenance process (TRIM) instead.'
       ]
     },
 
-    /* ---------- Lesson 4: Standards, protocols, handshaking and the internet ---------- */
+    /* ---------- 1.7.1 ---------- */
     {
-      lesson: 4,
-      heading: 'The hardware that builds a network (1.7.1)',
-      points: [
-        '<strong>NIC</strong>: hardware inside a device that lets it connect to a network, wired (Ethernet) or wireless. Every networked device needs one.',
-        '<strong>Switch</strong>: connects multiple devices within a LAN and sends data only to the device it is addressed to.',
-        '<strong>Router</strong>: connects different networks together (for example a LAN to the internet) and directs data between networks using addresses.',
-        '<strong>Hub</strong>: an older, simpler way to connect devices in a LAN. It broadcasts data to every device, so it is far less efficient than a switch.',
-        '<strong>Wireless access point</strong>: lets wireless devices join a wired network.',
-        '<strong>Modem</strong>: connects a network to an external line (for example from an ISP), converting between the network’s signals and the line’s signal.'
-      ]
-    },
-    {
-      lesson: 4,
-      heading: 'Addressing: MAC and IP (1.7.1)',
-      points: [
-        '<strong>MAC address</strong>: a unique physical address built into a device’s network hardware (its NIC). It doesn’t change and identifies the physical device. It is used to deliver data to the right device within a local network.',
-        '<strong>IP address</strong>: a logical address assigned to a device on a network. It can change: it is assigned automatically (DHCP) or set manually. It is used to route data between networks, including across the internet.',
-        'Both are needed: the IP address gets data to the right network; the MAC address gets it to the right device on that network.'
-      ]
-    },
-    {
-      lesson: 4,
-      heading: 'Transmission media, and networked vs standalone (1.7.1)',
-      html: '<table><thead><tr><th scope="col">Medium</th><th scope="col">Examples</th><th scope="col">Advantage</th><th scope="col">Disadvantage</th></tr></thead><tbody>' +
-        '<tr><td>Copper / twisted pair</td><td>Ethernet cables, telephone wiring</td><td>Cheap and simple to install</td><td>Limited distance and bandwidth; prone to interference</td></tr>' +
-        '<tr><td>Fibre optic</td><td>High-speed backbone and broadband links</td><td>Very high bandwidth, long distance, resistant to interference</td><td>More expensive to buy and install</td></tr>' +
-        '<tr><td>Wireless (radio)</td><td>Wi-Fi, Bluetooth, cellular</td><td>No cables needed, so devices can move freely</td><td>Usually slower and less secure than wired; prone to interference</td></tr>' +
-        '</tbody></table>' +
-        '<p><strong>Advantages of networking</strong>: share resources (printers, files, internet connections); centralised management of updates, backups and security; easy communication. <strong>Disadvantages</strong>: a bigger security risk (more points of attack); if the network goes down, every connected device can be affected; more expensive to set up and maintain than standalone computers.</p>'
-    },
-    {
-      lesson: 4,
-      heading: 'Why networking standards matter (1.7.2)',
-      points: [
-        '<strong>Interoperability</strong>: hardware and software from different vendors can work together. Without shared standards, building networks that share information easily would be difficult or impossible.',
-        '<strong>No vendor lock-in</strong>: customers aren’t forced to buy every device from one company, so they have a genuine choice of suppliers.',
-        '<strong>Competition and price</strong>: open standards promote competition between vendors, which helps hold prices down.',
-        '<strong>Easier development</strong>: hardware and software can be developed one layer at a time; developers build to the standard, not to every possible device.'
-      ]
-    },
-    {
-      lesson: 4,
-      heading: 'Protocols that run the internet (1.7.3)',
-      html: '<p>A protocol is an agreed set of rules for how data is communicated.</p>' +
-        '<table><thead><tr><th scope="col">Protocol</th><th scope="col">What it does</th><th scope="col">Why it matters</th></tr></thead><tbody>' +
-        '<tr><td>HTTP</td><td>Transfers web pages between a server and a browser</td><td>Any browser can request and display pages the way the author intended</td></tr>' +
-        '<tr><td>FTP</td><td>Transfers files between computers over a network</td><td>Errors are detected and data is re-sent, so files arrive intact</td></tr>' +
-        '<tr><td>SMTP</td><td>Sends email from a client to a server, or from server to server</td><td>A standard way of passing email between different mail servers</td></tr>' +
-        '<tr><td>IMAP</td><td>Retrieves and syncs email, keeping messages on the server</td><td>The same inbox on every device, without using up local storage</td></tr>' +
-        '<tr><td>TCP/IP</td><td>The core protocol suite of the internet: breaks data into packets and routes them</td><td>The basic, shared language every device on the internet uses</td></tr>' +
-        '<tr><td>DHCP</td><td>Automatically assigns IP addresses to devices joining a network</td><td>Returns addresses no longer in use to the pool for reallocation</td></tr>' +
-        '<tr><td>UDP</td><td>Sends data fast, with very little error recovery</td><td>Suits video and audio streaming, where speed matters more than the odd lost packet</td></tr>' +
+      spec: '1.7.1', lesson: 3,
+      heading: 'From personal to worldwide',
+      html: '<table><thead><tr><th scope="col">Network</th><th scope="col">What it is</th><th scope="col">Typical range</th></tr></thead><tbody>' +
+        '<tr><td>PAN – Personal Area Network</td><td>A single person’s own devices – e.g. phone to smartwatch or wireless earbuds</td><td>Metres</td></tr>' +
+        '<tr><td>LAN – Local Area Network</td><td>One site – e.g. a school or office building</td><td>One building / site</td></tr>' +
+        '<tr><td>WLAN – Wireless LAN</td><td>A LAN using wireless connections instead of cables</td><td>One building / site</td></tr>' +
+        '<tr><td>WAN – Wide Area Network</td><td>Connects LANs across a large area – the internet is the largest WAN</td><td>Cities / countries / global</td></tr>' +
         '</tbody></table>'
     },
     {
-      lesson: 4,
-      heading: 'Wireless communication protocols (1.7.3)',
+      spec: '1.7.1', lesson: 3,
+      heading: 'How devices on a network communicate',
       points: [
-        '<strong>Wi-Fi (802.11)</strong>: wireless local area networking, connecting devices to a router within a building or site; used for most home and office wireless internet access.',
-        '<strong>Bluetooth</strong>: short-range, low-power, device-to-device connections such as headphones, keyboards and wearables. It forms a wireless PAN, not a full network.',
-        '<strong>Cellular (4G/5G)</strong>: wide-area mobile data over the phone network, giving internet access without a fixed Wi-Fi connection. 5G adds higher speed and lower latency than 4G.'
+        '<strong>Client-server</strong> – clients request; a central server provides the resource or service, e.g. a website or a file share.',
+        '<strong>Peer-to-peer</strong> – every device can act as both client and server, sharing directly with each other, with no central server.'
       ]
     },
     {
-      lesson: 4,
-      heading: 'Handshaking (1.7.4)',
+      spec: '1.7.1', lesson: 4,
+      heading: 'The hardware that builds a network',
       points: [
-        'Handshaking is when a computer system establishes a device’s readiness to communicate. It happens <strong>before</strong> any real data is sent.',
-        'It confirms that both devices are ready and agree on how to communicate, which avoids data being sent to a device that isn’t listening, or can’t understand it.',
-        'The usual three steps: <strong>1. Request</strong> – device A signals it wants to communicate; <strong>2. Acknowledge</strong> – device B responds that it is ready and how it can communicate; <strong>3. Confirm</strong> – device A confirms, and data transfer begins.',
-        'Order is the whole point: if data is sent before the handshake completes, the receiving device may not be ready, and data is lost or misread.'
+        '<strong>NIC</strong> – hardware inside a device that lets it connect to a network. Every networked device needs one – wired (Ethernet) or wireless.',
+        '<strong>Switch</strong> – connects multiple devices within a LAN. Sends data only to the device it’s addressed to, not every device.',
+        '<strong>Router</strong> – connects different networks together, e.g. a LAN to the internet. Directs data between networks using addresses.',
+        '<strong>Hub</strong> – an older, simpler way to connect devices in a LAN. Broadcasts data to every device – far less efficient than a switch.',
+        '<strong>Wireless access point</strong> – lets wireless devices join a wired network; turns Wi-Fi signals into a form the wired network understands.',
+        '<strong>Modem</strong> – connects a network to an external line, e.g. from an ISP; converts between the network’s signals and the line’s signal.'
       ]
     },
     {
-      lesson: 4,
-      heading: 'The internet: a network of networks (1.8.1)',
+      spec: '1.7.1', lesson: 4,
+      heading: 'Addressing: finding the right device',
       points: [
-        'Each LAN (school, office, home, college, business) is its own network. The internet connects them all together.',
-        'It is a world-wide communications infrastructure built from many smaller networks, not one single network.',
-        'Routers, standards and shared protocols (TCP/IP) are what let all these separate networks communicate.'
+        '<strong>MAC address</strong> – a unique physical address built into a device’s network hardware (its NIC). Doesn’t change – it identifies the physical device itself. Used to deliver data to the right device within a local network.',
+        '<strong>IP address</strong> – a logical address assigned to a device on a network. Can change – assigned automatically (DHCP) or set manually. Used to route data between networks, including across the internet.',
+        'Both are needed: the IP address gets data to the right network, the MAC address gets it to the right device on that network.'
+      ]
+    },
+    {
+      spec: '1.7.1', lesson: 4,
+      heading: 'Transmission media: wired and wireless',
+      html: '<table><thead><tr><th scope="col">Medium</th><th scope="col">Examples</th><th scope="col">Advantage</th><th scope="col">Disadvantage</th></tr></thead><tbody>' +
+        '<tr><td>Copper / twisted pair</td><td>Ethernet cables, telephone wiring</td><td>Cheap and simple to install</td><td>Limited distance and bandwidth, prone to interference</td></tr>' +
+        '<tr><td>Fibre optic</td><td>High-speed backbone and broadband links</td><td>Very high bandwidth, long distance, resistant to interference</td><td>More expensive to buy and install</td></tr>' +
+        '<tr><td>Wireless (radio)</td><td>Wi-Fi, Bluetooth, cellular</td><td>No cables needed – devices can move freely</td><td>Usually slower and less secure than wired, prone to interference</td></tr>' +
+        '</tbody></table>'
+    },
+    {
+      spec: '1.7.1', lesson: 4,
+      heading: 'Networked vs standalone',
+      points: [
+        '<strong>Advantages of networking</strong> – share resources (printers, files, internet connections); centralised management (updates, backups and security controlled from one place); easy communication between devices and users.',
+        '<strong>Disadvantages of networking</strong> – a bigger security risk (more points where an attacker could get in); if the network goes down, every connected device can be affected; costs more to set up and maintain than standalone computers.'
+      ]
+    },
+
+    /* ---------- 1.7.2 ---------- */
+    {
+      spec: '1.7.2', lesson: 4,
+      heading: 'Why networking standards matter',
+      points: [
+        '<strong>Interoperability</strong> – hardware and software from different vendors can work together. Without shared standards, building networks that easily share information would be difficult or impossible.',
+        '<strong>No vendor lock-in</strong> – customers aren’t forced to buy every device from one company; standards mean genuine choice between suppliers.',
+        '<strong>Competition and price</strong> – open standards promote competition between vendors, and more competition helps hold prices down.',
+        '<strong>Easier development</strong> – software and hardware can be developed one layer at a time; developers build to the standard, not to every possible device.'
+      ]
+    },
+
+    /* ---------- 1.7.3 ---------- */
+    {
+      spec: '1.7.3', lesson: 4,
+      heading: 'Protocols that run the internet',
+      html: '<table><thead><tr><th scope="col">Protocol</th><th scope="col">What it does</th><th scope="col">Why it matters</th></tr></thead><tbody>' +
+        '<tr><td>HTTP</td><td>Transfers web pages between a server and a browser</td><td>Lets any browser request and display pages the way the author intended</td></tr>' +
+        '<tr><td>FTP</td><td>Transfers files between computers over a network</td><td>Errors are checked for, and data is re-transmitted if something goes wrong</td></tr>' +
+        '<tr><td>SMTP</td><td>Sends email from a client to a server, or server to server</td><td>A standard way of passing email between different mail servers</td></tr>' +
+        '<tr><td>IMAP</td><td>Retrieves and syncs email, keeping messages on the server</td><td>Same inbox on every device, without using up local storage</td></tr>' +
+        '<tr><td>TCP/IP</td><td>The core protocol suite the internet runs on – breaks data into packets and routes them</td><td>The basic, shared language every device on the internet uses</td></tr>' +
+        '<tr><td>DHCP</td><td>Automatically assigns IP addresses to devices joining a network</td><td>Frees addresses no longer in use back to the pool for reallocation</td></tr>' +
+        '<tr><td>UDP</td><td>Sends data fast, with very little error recovery</td><td>Suits video/audio streaming, where speed matters more than the odd lost packet</td></tr>' +
+        '</tbody></table><p>Learn why each one matters – not just what it stands for.</p>'
+    },
+    {
+      spec: '1.7.3', lesson: 4,
+      heading: 'Wireless communication protocols',
+      points: [
+        '<strong>Wi-Fi (802.11)</strong> – wireless local area networking. Connects devices to a router within a building or site; used for most home and office wireless internet access.',
+        '<strong>Bluetooth</strong> – short-range, low-power connections. Device-to-device: headphones, keyboards, wearables. A wireless PAN, not a full network.',
+        '<strong>Cellular (4G / 5G)</strong> – wide-area mobile data over the phone network. Internet access without a fixed Wi-Fi connection; 5G adds higher speed and lower latency than 4G.'
+      ]
+    },
+
+    /* ---------- 1.7.4 ---------- */
+    {
+      spec: '1.7.4', lesson: 4,
+      heading: 'Handshaking: agreeing to talk before talking',
+      points: [
+        '<strong>What it is</strong> – when a computer system establishes a device’s readiness to communicate. It happens before any real data is sent.',
+        '<strong>Why it matters</strong> – it confirms both devices are ready and agree on how to communicate, and avoids data being sent to a device that isn’t listening, or can’t understand it.',
+        '<strong>1. Request</strong> – device A signals it wants to communicate. <strong>2. Acknowledge</strong> – device B responds: I’m ready, here’s how I can communicate. <strong>3. Confirm</strong> – device A confirms: agreed, data transfer begins.',
+        'Order is the whole point: if a device sends data before the handshake completes, the receiving device may not be ready – data gets lost or misread.'
+      ]
+    },
+
+    /* ---------- 1.8.1 ---------- */
+    {
+      spec: '1.8.1', lesson: 4,
+      heading: 'A network of networks',
+      points: [
+        'Each LAN – school, office, home, college, business – is its own network.',
+        'The internet connects them all together: a world-wide infrastructure built from smaller networks, not one single network.'
       ]
     }
   ],
 
+  /* ===================================================== MISCONCEPTIONS (from the slides) */
   misconceptions: [
-    { lesson: 1, wrong: 'Cache is a type of RAM.', right: 'Cache is SRAM on or next to the CPU. RAM is main memory (DRAM) on the motherboard.' },
-    { lesson: 1, wrong: 'A faster clock means a faster computer.', right: 'Cache size, cores, bus width and memory speed all matter; the bottleneck is usually memory.' },
-    { lesson: 1, wrong: 'ROM is old storage.', right: 'ROM is non-volatile firmware (BIOS/UEFI) used to boot, not somewhere you save files.' },
-    { lesson: 1, wrong: 'Virtual memory is extra RAM.', right: 'It is disk space used as if it were RAM. It works, but it is slow.' },
-    { lesson: 2, wrong: 'The MAR and MDR hold the same kind of thing.', right: 'The MAR holds an address (where to look); the MDR holds the data (what was found there).' },
-    { lesson: 2, wrong: 'The PC increments after the instruction has been executed.', right: 'The PC increments after the instruction is fetched, so it already points to the next instruction during decode and execute.' },
-    { lesson: 3, wrong: 'SSDs need defragmenting, just like HDDs.', right: 'SSDs have no moving head, so scattered data is no slower to read. They use TRIM instead.' },
-    { lesson: 4, wrong: 'A hub and a switch do the same job.', right: 'A hub broadcasts data to every device; a switch sends it only to the device it is addressed to.' }
+    { spec: '1.2.1', lesson: 1, wrong: 'Faster clock = faster computer.', right: 'Cache size, cores, bus width and memory speed all matter – the bottleneck is usually memory.' },
+    { spec: '1.2.2', lesson: 1, wrong: 'Cache is a type of RAM.', right: 'Cache is SRAM on/next to the CPU. RAM is main memory (DRAM) on the motherboard.' },
+    { spec: '1.2.2', lesson: 1, wrong: 'ROM is old storage.', right: 'ROM is non-volatile firmware (BIOS/UEFI) used to boot – not somewhere you save files.' },
+    { spec: '1.2.2', lesson: 1, wrong: 'Virtual memory is extra RAM.', right: 'It’s disk space used as if it were RAM. It works, but it’s slow.' },
+    { spec: '1.3.1', lesson: 2, wrong: 'The MAR and MDR hold the same kind of thing.', right: 'The MAR holds an ADDRESS – where to look. The MDR holds the DATA – what was found there.' },
+    { spec: '1.3.1', lesson: 2, wrong: 'The PC increments after the instruction is executed.', right: 'It increments after the instruction is fetched, so it already points at the next instruction during decode and execute.' },
+    { spec: '1.6.1', lesson: 3, wrong: 'SSDs need defragmenting, like HDDs.', right: 'An SSD has no moving head, so scattered data isn’t slower to read. SSDs use TRIM instead.' }
   ],
 
+  /* ===================================================== EXAM TECHNIQUE (from the slides) */
   examTips: [
-    { lesson: 1, text: 'When asked about buses, always say what each one carries <em>and</em> its direction. “The address bus is unidirectional” is a frequent mark.' },
-    { lesson: 2, text: 'Describe the fetch-execute cycle as a sequence of register transfers (PC → MAR → MDR → CIR), naming each register and what it holds.' },
-    { lesson: 2, text: 'For suitability questions, link the device to the situation: “a barcode scanner, because it is fast with a low error rate on repetitive data”.' },
-    { lesson: 3, text: 'A “compare” answer must trade characteristics against each other for both devices, for example speed against cost per byte.' },
-    { lesson: 4, text: 'For protocols, say what each one does <em>and</em> why it matters. Just expanding the acronym rarely earns marks.' }
+    { spec: '1.2.1', lesson: 1, text: 'Exam favourite: the address bus is unidirectional – memory never tells the CPU an address.' },
+    { spec: '1.3.1', lesson: 2, text: 'Learn the cycle as six steps: Fetch (1–4: PC → MAR, MAR → RAM, RAM → MDR, MDR → CIR) · Decode (5) · Execute (6).' },
+    { spec: '1.5.1', lesson: 3, text: 'A “compare” answer always trades characteristics against each other – e.g. tape is cheap and huge but far too slow for daily access; SSD is fast but costs more per byte.' },
+    { spec: '1.6.1', lesson: 3, text: 'Common exam mix-up: SSDs don’t need defragmenting – say why (no moving head).' },
+    { spec: '1.7.3', lesson: 4, text: 'For each protocol, know why it matters – not just what it stands for.' }
   ],
 
+  /* ============================================================== FLASHCARDS */
   flashcards: [
-    /* Lesson 1 */
-    { id: 'u1t1-fc1', lesson: 1, front: 'What does the control unit (CU) do?', back: 'Fetches and decodes instructions and coordinates the other components, telling them what to do.' },
-    { id: 'u1t1-fc2', lesson: 1, front: 'What does the ALU do?', back: 'Arithmetic (add, subtract), comparisons and logic (AND, OR, NOT).' },
-    { id: 'u1t1-fc3', lesson: 1, front: 'What does the program counter (PC) hold?', back: 'The address of the next instruction to fetch.' },
-    { id: 'u1t1-fc4', lesson: 1, front: 'What does the MAR hold?', back: 'The address in memory being read from or written to. It is sent out on the address bus.' },
-    { id: 'u1t1-fc5', lesson: 1, front: 'What does the MDR hold?', back: 'The data just read from, or about to be written to, memory: a buffer between the CPU and RAM.' },
-    { id: 'u1t1-fc6', lesson: 1, front: 'What does the CIR hold?', back: 'The instruction being executed now, split into opcode and operand for decoding.' },
-    { id: 'u1t1-fc7', lesson: 1, front: 'Which bus is unidirectional, and why?', back: 'The address bus: addresses only go from the CPU to memory. Memory never tells the CPU an address.' },
-    { id: 'u1t1-fc8', lesson: 1, front: 'Name the four defining features of Von Neumann architecture.', back: 'One memory for instructions and data; sequential execution; a control unit drives fetch and execute; the stored program concept.' },
-    { id: 'u1t1-fc9', lesson: 1, front: 'What is the Von Neumann bottleneck?', back: 'Instructions and data share the same bus, and the CPU is faster than memory, so it waits. Memory bandwidth becomes the limit.' },
-    { id: 'u1t1-fc10', lesson: 1, front: 'Give two ways of working around the Von Neumann bottleneck.', back: 'Any two of: Harvard architecture (separate instruction and data memory); cache hierarchies; multi-core; pipelining; out-of-order execution.' },
-    { id: 'u1t1-fc11', lesson: 1, front: 'What is ROM used for?', back: 'Non-volatile firmware (BIOS/UEFI) used to boot the computer.' },
-    { id: 'u1t1-fc12', lesson: 1, front: 'What is virtual memory?', back: 'Part of the disk used as an extension of RAM when RAM is full. It lets more programs run, but slowly.' },
-    { id: 'u1t1-fc13', lesson: 1, front: 'What is a cache hit and a cache miss?', back: 'Hit: the data is found at that level, so the search stops. Miss: drop down a level (L1 → L2 → L3 → RAM → disk) and try again.' },
-    { id: 'u1t1-fc14', lesson: 1, front: 'What does a sound card’s DAC and ADC do?', back: 'DAC: digital → analogue (sound out). ADC: analogue → digital (sound in).' },
-    /* Lesson 2 */
-    { id: 'u1t1-fc15', lesson: 2, front: 'Parallel processing <br><span class="muted">(prosesu cyfochrog)</span>', back: 'Dividing a task between several cores so that the pieces run at the same time.' },
-    { id: 'u1t1-fc16', lesson: 2, front: 'Name the four ideas behind parallel processing.', back: 'Task division, concurrency, coordination and scalability.' },
-    { id: 'u1t1-fc17', lesson: 2, front: 'Give two challenges of parallel processing.', back: 'Any two of: task dependency; synchronisation overhead; resource contention; added complexity.' },
-    { id: 'u1t1-fc18', lesson: 2, front: 'Synchronisation <br><span class="muted">(cydamseru)</span>', back: 'Keeping cores in step so their results combine correctly. It adds overhead to parallel processing.' },
-    { id: 'u1t1-fc19', lesson: 2, front: 'Put the fetch stage in order: CIR, MAR, MDR, PC.', back: 'PC → MAR → (RAM) → MDR → CIR.' },
-    { id: 'u1t1-fc20', lesson: 2, front: 'What happens during decode?', back: 'The control unit splits the instruction in the CIR into opcode and operand.' },
-    { id: 'u1t1-fc21', lesson: 2, front: 'When is the PC incremented?', back: 'After the instruction is fetched, not after it is executed.' },
-    { id: 'u1t1-fc22', lesson: 2, front: 'Fetch, decode, execute in Welsh?', back: '<em>Cyrchu</em>, <em>datgodio</em>, <em>gweithredu</em>.' },
-    { id: 'u1t1-fc23', lesson: 2, front: 'Accumulator <br><span class="muted">(cronnwr)</span>', back: 'The register that holds intermediate results from the ALU.' },
-    { id: 'u1t1-fc24', lesson: 2, front: 'When is a touchscreen a good choice, and when is it not?', back: 'Good: kiosks and tablets (intuitive, no extra hardware). Poor: detailed, precise work.' },
-    { id: 'u1t1-fc25', lesson: 2, front: 'Why is a barcode scanner suitable for retail?', back: 'It is fast, with a low error rate on repetitive data.' },
-    /* Lesson 3 */
-    { id: 'u1t1-fc26', lesson: 3, front: 'Which storage is best for large-scale archival backup, and why?', back: 'Magnetic tape: very cheap per byte and reliable, with very large capacity. Its slow serial access doesn’t matter for rarely used archives.' },
-    { id: 'u1t1-fc27', lesson: 3, front: 'SSD vs HDD in one line each?', back: 'SSD: flash, no moving parts, very fast, more expensive per byte. HDD: magnetic platters and a moving head, cheaper per byte, larger, slower.' },
-    { id: 'u1t1-fc28', lesson: 3, front: 'One advantage and one disadvantage of cloud storage?', back: 'Advantage: accessible anywhere and scalable. Disadvantage: depends on network speed, with ongoing subscription costs.' },
-    { id: 'u1t1-fc29', lesson: 3, front: 'What is fragmentation?', back: 'When a file is split and stored in scattered, non-contiguous sectors because it does not fit in one free space.' },
-    { id: 'u1t1-fc30', lesson: 3, front: 'Why does fragmentation slow down an HDD?', back: 'The read/write head must move to several positions to read one file, and each move takes time.' },
-    { id: 'u1t1-fc31', lesson: 3, front: 'What does defragmentation do?', back: 'Rearranges the data so each file’s parts sit together, reducing head movement and improving access speed.' },
-    { id: 'u1t1-fc32', lesson: 3, front: 'Why don’t SSDs need defragmenting?', back: 'No moving head: every location takes the same time to read, so scattered data is no slower. SSDs use TRIM instead.' },
-    { id: 'u1t1-fc33', lesson: 3, front: 'PAN, LAN, WLAN, WAN?', back: 'PAN: one person’s devices (metres). LAN: one site. WLAN: a wireless LAN. WAN: connects LANs over a large area; the internet is the largest.' },
-    { id: 'u1t1-fc34', lesson: 3, front: 'Client-server vs peer-to-peer?', back: 'Client-server: clients request, a central server provides. Peer-to-peer: every device is both client and server, with no central server.' },
-    /* Lesson 4 */
-    { id: 'u1t1-fc35', lesson: 4, front: 'Switch vs hub?', back: 'A switch sends data only to the device it is addressed to; a hub broadcasts to every device, so it is less efficient.' },
-    { id: 'u1t1-fc36', lesson: 4, front: 'What does a router do?', back: 'Connects different networks (for example a LAN to the internet) and directs data between them using addresses.' },
-    { id: 'u1t1-fc37', lesson: 4, front: 'MAC address vs IP address?', back: 'MAC: fixed physical address built into the NIC, used within a local network. IP: logical address that can change, used to route data between networks.' },
-    { id: 'u1t1-fc38', lesson: 4, front: 'Give two reasons networking standards matter.', back: 'Any two of: interoperability between vendors; no vendor lock-in; competition keeps prices down; easier development one layer at a time.' },
-    { id: 'u1t1-fc39', lesson: 4, front: 'SMTP vs IMAP?', back: 'SMTP sends email (client to server, server to server). IMAP retrieves and syncs email, keeping it on the server.' },
-    { id: 'u1t1-fc40', lesson: 4, front: 'What does DHCP do?', back: 'Automatically assigns IP addresses to devices joining a network, and returns unused addresses to the pool.' },
-    { id: 'u1t1-fc41', lesson: 4, front: 'Why does streaming use UDP?', back: 'UDP is fast with very little error recovery; for video and audio, speed matters more than the odd lost packet.' },
-    { id: 'u1t1-fc42', lesson: 4, front: 'Wi-Fi vs Bluetooth vs cellular?', back: 'Wi-Fi: wireless LAN within a site. Bluetooth: short-range, low-power device-to-device (a PAN). Cellular (4G/5G): wide-area mobile data.' },
-    { id: 'u1t1-fc43', lesson: 4, front: 'What is handshaking?', back: 'Establishing a device’s readiness to communicate, and agreeing how, before any data is sent: request, acknowledge, confirm.' },
-    { id: 'u1t1-fc44', lesson: 4, front: 'Describe the internet in one sentence.', back: 'A world-wide communications infrastructure: a network of networks connecting many separate LANs.' }
+    /* 1.1.1 */
+    { id: 'u1t1-111-fc1', spec: '1.1.1', lesson: 1, front: 'What does everything in a PC connect to?', back: 'The motherboard – directly (socket, slot) or through a port – talking over buses and interfaces.' },
+    { id: 'u1t1-111-fc2', spec: '1.1.1', lesson: 1, front: 'How do RAM, storage and a GPU connect to the motherboard?', back: 'RAM: DIMM slots → memory bus. SSD/HDD: SATA or NVMe (PCIe). GPU: PCIe slot.' },
+    { id: 'u1t1-111-fc3', spec: '1.1.1', lesson: 1, front: 'What do a sound card’s DSP, DAC and ADC do?', back: 'DSP processes audio; DAC converts digital → analogue (out); ADC converts analogue → digital (in).' },
+    { id: 'u1t1-111-fc4', spec: '1.1.1', lesson: 1, front: 'What does the PSU do?', back: 'Converts mains AC to the DC the parts need. Power only – no data.' },
+    /* 1.2.1 */
+    { id: 'u1t1-121-fc1', spec: '1.2.1', lesson: 1, front: 'Name the four parts inside the CPU.', back: 'Control unit (fetches, decodes, coordinates), ALU (arithmetic and logic), registers (tiny, fastest storage), cache (frequently used data).' },
+    { id: 'u1t1-121-fc2', spec: '1.2.1', lesson: 1, front: 'PC', back: 'Program Counter: address of the NEXT instruction to fetch. Increments after each fetch (unless a jump).' },
+    { id: 'u1t1-121-fc3', spec: '1.2.1', lesson: 1, front: 'MAR', back: 'Memory Address Register: the address in memory being read from or written to. Sent out on the address bus.' },
+    { id: 'u1t1-121-fc4', spec: '1.2.1', lesson: 1, front: 'MDR', back: 'Memory Data Register: the data just read from, or about to be written to, memory. Buffer between CPU and RAM.' },
+    { id: 'u1t1-121-fc5', spec: '1.2.1', lesson: 1, front: 'CIR', back: 'Current Instruction Register: the instruction being executed right now, split into opcode and operand.' },
+    { id: 'u1t1-121-fc6', spec: '1.2.1', lesson: 1, front: 'ACC', back: 'Accumulator: intermediate results from the ALU.' },
+    { id: 'u1t1-121-fc7', spec: '1.2.1', lesson: 1, front: 'Which way does each bus carry signals?', back: 'Data bus: both ways. Address bus: CPU → memory only. Control bus: both ways.' },
+    { id: 'u1t1-121-fc8', spec: '1.2.1', lesson: 1, front: 'Four defining features of Von Neumann architecture?', back: 'One memory for instructions and data; sequential; a control unit drives fetch and execute; stored program.' },
+    { id: 'u1t1-121-fc9', spec: '1.2.1', lesson: 1, front: 'The Von Neumann bottleneck?', back: 'Instructions AND data squeeze through the same bus; the CPU is faster than memory, so it waits.' },
+    /* 1.2.2 */
+    { id: 'u1t1-122-fc1', spec: '1.2.2', lesson: 1, front: 'Put in hierarchy order: RAM, registers, secondary storage, cache, virtual memory.', back: 'Registers → cache → RAM → virtual memory → secondary storage (faster/smaller → slower/larger).' },
+    { id: 'u1t1-122-fc2', spec: '1.2.2', lesson: 1, front: 'DRAM or SRAM: which is main memory and which is cache?', back: 'DRAM is main memory; SRAM is cache.' },
+    { id: 'u1t1-122-fc3', spec: '1.2.2', lesson: 1, front: 'What is ROM used for?', back: 'Non-volatile firmware (BIOS/UEFI) used to boot.' },
+    { id: 'u1t1-122-fc4', spec: '1.2.2', lesson: 1, front: 'What is virtual memory?', back: 'Part of the disk used as an extension of RAM when it’s full – lets more or bigger programs run, slowly.' },
+    { id: 'u1t1-122-fc5', spec: '1.2.2', lesson: 1, front: 'Cache hit vs cache miss?', back: 'Hit: found at this level, stop. Miss: drop down a level (L1 → L2 → L3 → RAM → disk) and try again.' },
+    { id: 'u1t1-122-fc6', spec: '1.2.2', lesson: 1, front: 'What is a disk cache?', back: 'RAM (or a buffer on the drive) holding frequently read blocks, speeding up reads and writes to an HDD or SSD.' },
+    /* 1.2.3 */
+    { id: 'u1t1-123-fc1', spec: '1.2.3', lesson: 2, front: 'Parallel processing<br><span class="muted">prosesu cyfochrog</span>', back: 'Tasks are divided and run at the same time on several cores.' },
+    { id: 'u1t1-123-fc2', spec: '1.2.3', lesson: 2, front: 'Four ideas behind parallel processing?', back: 'Task division, concurrency, coordination, scalability.' },
+    { id: 'u1t1-123-fc3', spec: '1.2.3', lesson: 2, front: 'Four challenges of parallel processing?', back: 'Task dependency, synchronisation overhead, resource contention, added complexity.' },
+    { id: 'u1t1-123-fc4', spec: '1.2.3', lesson: 2, front: 'Where is parallel processing used?', back: 'Supercomputers, graphics processing (GPUs), search engines, machine learning.' },
+    { id: 'u1t1-123-fc5', spec: '1.2.3', lesson: 2, front: 'Core / multi-core; synchronisation – in Welsh?', back: '<em>Craidd / amlgraidd</em>; <em>cydamseru</em>.' },
+    /* 1.3.1 */
+    { id: 'u1t1-131-fc1', spec: '1.3.1', lesson: 2, front: 'The four fetch steps, in order?', back: 'PC → MAR; MAR → RAM; RAM → MDR; MDR → CIR.' },
+    { id: 'u1t1-131-fc2', spec: '1.3.1', lesson: 2, front: 'What happens at decode and execute?', back: 'Decode: the CU splits the CIR into opcode + operand. Execute: the ALU runs the operation; the result goes to the ACC.' },
+    { id: 'u1t1-131-fc3', spec: '1.3.1', lesson: 2, front: 'When does the PC increment?', back: 'After the instruction is fetched – not after it’s executed.' },
+    { id: 'u1t1-131-fc4', spec: '1.3.1', lesson: 2, front: 'Fetch, decode, execute – in Welsh?', back: '<em>Cyrchu</em>, <em>datgodio</em>, <em>gweithredu</em>.' },
+    { id: 'u1t1-131-fc5', spec: '1.3.1', lesson: 2, front: 'PC, MAR, MDR, CIR, ACC – in Welsh?', back: '<em>Cyfrif Rhaglen</em>, <em>Cofrestr Cyfeiriad Cof</em>, <em>Cofrestr Data Cof</em>, <em>Cofrestr Cyfarwyddyd Cyfredol</em>, <em>Cronnwr</em>.' },
+    /* 1.4.1 / 1.4.2 */
+    { id: 'u1t1-141-fc1', spec: '1.4.1', lesson: 2, front: 'Name four input and four output devices.', back: 'Input: touchscreen, keyboard and mouse, barcode/QR scanner, microphone. Output: monitor, 3D/laser printer, speakers, Braille display.' },
+    { id: 'u1t1-142-fc1', spec: '1.4.2', lesson: 2, front: 'Touchscreen: when right, when wrong?', back: 'Right: kiosks, tablets (intuitive, no extra hardware). Wrong: detailed work – it’s imprecise.' },
+    { id: 'u1t1-142-fc2', spec: '1.4.2', lesson: 2, front: 'Why a barcode / QR scanner for retail and stock control?', back: 'Fast, with a low error rate on repetitive data.' },
+    { id: 'u1t1-142-fc3', spec: '1.4.2', lesson: 2, front: 'Which devices suit accessibility needs?', back: 'Microphone (hands-free, mobility impairment); speakers (visually impaired users); Braille display (blind or low-vision users).' },
+    /* 1.5.1 */
+    { id: 'u1t1-151-fc1', spec: '1.5.1', lesson: 3, front: 'HDD vs SSD?', back: 'HDD: magnetic platters, moving head, cheap per byte, large, slower. SSD: flash, no moving parts, very fast, more expensive per byte.' },
+    { id: 'u1t1-151-fc2', spec: '1.5.1', lesson: 3, front: 'Why is magnetic tape used for archives?', back: 'Very cheap per byte and very large – slow serial access barely matters if the data is rarely read.' },
+    { id: 'u1t1-151-fc3', spec: '1.5.1', lesson: 3, front: 'Optical discs: strengths and weaknesses?', back: 'Cheap and portable, but limited capacity and easily damaged; slow.' },
+    { id: 'u1t1-151-fc4', spec: '1.5.1', lesson: 3, front: 'Cloud storage: strength and weakness?', back: 'Accessible anywhere and scalable – but depends on network speed and has an ongoing subscription cost.' },
+    { id: 'u1t1-151-fc5', spec: '1.5.1', lesson: 3, front: 'Which characteristics do you compare storage on?', back: 'Speed of access, cost per unit, portability, capacity (and durability).' },
+    /* 1.6.1 */
+    { id: 'u1t1-161-fc1', spec: '1.6.1', lesson: 3, front: 'Why do files become fragmented on an HDD?', back: 'A file doesn’t fit in one contiguous space, so it’s split across whatever free sectors are available.' },
+    { id: 'u1t1-161-fc2', spec: '1.6.1', lesson: 3, front: 'Consequence of fragmentation?', back: 'The read/write head must move to several positions to read one file → slower access, more wear.' },
+    { id: 'u1t1-161-fc3', spec: '1.6.1', lesson: 3, front: 'What does defragmentation do?', back: 'Physically rearranges data so each file’s parts sit closer together – fewer head positions, faster access.' },
+    { id: 'u1t1-161-fc4', spec: '1.6.1', lesson: 3, front: 'Why don’t SSDs need defragmenting?', back: 'No moving head – any location costs the same to access. SSDs use TRIM instead.' },
+    /* 1.7.1 */
+    { id: 'u1t1-171-fc1', spec: '1.7.1', lesson: 3, front: 'PAN, LAN, WLAN, WAN?', back: 'PAN: one person’s devices (metres). LAN: one site. WLAN: a LAN using wireless. WAN: connects LANs over a large area – the internet is the largest.' },
+    { id: 'u1t1-171-fc2', spec: '1.7.1', lesson: 3, front: 'Client-server vs peer-to-peer?', back: 'Client-server: clients request, a central server provides. Peer-to-peer: every device is both client and server, no central server.' },
+    { id: 'u1t1-171-fc3', spec: '1.7.1', lesson: 4, front: 'Switch vs hub?', back: 'A switch sends data only to the device it’s addressed to; a hub broadcasts to every device – far less efficient.' },
+    { id: 'u1t1-171-fc4', spec: '1.7.1', lesson: 4, front: 'Router, wireless access point, modem?', back: 'Router: connects different networks. WAP: lets wireless devices join a wired network. Modem: connects a network to an external line (e.g. ISP).' },
+    { id: 'u1t1-171-fc5', spec: '1.7.1', lesson: 4, front: 'MAC address vs IP address?', back: 'MAC: physical, built into the NIC, doesn’t change – right device on a local network. IP: logical, can change (DHCP) – routes data between networks.' },
+    { id: 'u1t1-171-fc6', spec: '1.7.1', lesson: 4, front: 'Copper vs fibre optic vs wireless?', back: 'Copper: cheap, limited distance/bandwidth. Fibre: very high bandwidth, long distance, more expensive. Wireless: no cables, but slower, less secure, interference.' },
+    { id: 'u1t1-171-fc7', spec: '1.7.1', lesson: 4, front: 'One advantage and one disadvantage of networking?', back: 'Advantage: share resources / centralised management / easy communication. Disadvantage: bigger security risk / network down affects everyone / higher cost.' },
+    /* 1.7.2 */
+    { id: 'u1t1-172-fc1', spec: '1.7.2', lesson: 4, front: 'Four reasons networking standards matter?', back: 'Interoperability; no vendor lock-in; competition and price; easier development.' },
+    /* 1.7.3 */
+    { id: 'u1t1-173-fc1', spec: '1.7.3', lesson: 4, front: 'HTTP and FTP?', back: 'HTTP transfers web pages between server and browser. FTP transfers files between computers.' },
+    { id: 'u1t1-173-fc2', spec: '1.7.3', lesson: 4, front: 'SMTP vs IMAP?', back: 'SMTP sends email (client → server, server → server). IMAP retrieves and syncs email, keeping it on the server.' },
+    { id: 'u1t1-173-fc3', spec: '1.7.3', lesson: 4, front: 'TCP/IP, DHCP, UDP?', back: 'TCP/IP: core suite – breaks data into packets and routes them. DHCP: assigns IP addresses automatically. UDP: fast, little error recovery – streaming.' },
+    { id: 'u1t1-173-fc4', spec: '1.7.3', lesson: 4, front: 'Wi-Fi vs Bluetooth vs cellular?', back: 'Wi-Fi (802.11): wireless LAN. Bluetooth: short-range, low-power, device-to-device (a PAN). Cellular (4G/5G): wide-area mobile data.' },
+    /* 1.7.4 */
+    { id: 'u1t1-174-fc1', spec: '1.7.4', lesson: 4, front: 'What is handshaking?', back: 'Establishing a device’s readiness to communicate, before any real data is sent.' },
+    { id: 'u1t1-174-fc2', spec: '1.7.4', lesson: 4, front: 'The three handshake steps?', back: 'Request → acknowledge → confirm; then data transfer begins.' },
+    /* 1.8.1 */
+    { id: 'u1t1-181-fc1', spec: '1.8.1', lesson: 4, front: 'Describe the internet in one sentence.', back: 'A network of networks: a world-wide infrastructure connecting many separate LANs, not one single network.' }
   ],
 
+  /* =============================================================== QUESTIONS */
   questions: [
-    /* ---------- Lesson 1 ---------- */
+    /* ---------- 1.1.1 ---------- */
     {
-      id: 'u1t1-q1', lesson: 1, type: 'mcq', skill: 'recall',
-      question: 'Through which interface does a graphics card (GPU) usually connect to the motherboard?',
-      options: ['PCIe slot', 'DIMM slot', 'SATA', 'The CPU socket'],
+      id: 'u1t1-111-q1', spec: '1.1.1', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'Through which interface does a GPU connect to the motherboard?',
+      options: ['PCIe', 'DIMM slots', 'SATA', 'CPU socket'],
       answer: 0,
-      feedback: ['', 'DIMM slots hold RAM modules.', 'SATA connects storage drives such as HDDs and SSDs.', 'The CPU socket holds the CPU.'],
-      explanation: 'GPUs connect through a PCIe slot. RAM uses DIMM slots; storage uses SATA or NVMe.'
+      feedback: ['', 'DIMM slots hold RAM.', 'SATA connects storage (SSD/HDD).', 'The CPU socket holds the CPU.'],
+      explanation: 'The connection map: GPU → PCIe; RAM → DIMM slots; SSD/HDD → SATA or NVMe; CPU → CPU socket.'
     },
     {
-      id: 'u1t1-q2', lesson: 1, type: 'mcq', skill: 'recall',
-      question: 'Which register holds the address of the next instruction to be fetched?',
-      options: ['Program counter (PC)', 'Memory address register (MAR)', 'Current instruction register (CIR)', 'Accumulator (ACC)'],
+      id: 'u1t1-111-q2', spec: '1.1.1', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'Which component converts mains AC to the DC the parts need, and carries no data?',
+      options: ['PSU', 'NIC', 'Sound card', 'GPU'],
       answer: 0,
-      feedback: ['', 'The MAR holds the address currently being accessed, which is not necessarily the next instruction.', 'The CIR holds the instruction currently being executed, not an address.', 'The ACC holds results from the ALU.'],
-      explanation: 'The PC holds the address of the next instruction to fetch, and increments after each fetch.'
+      feedback: ['', 'The NIC joins the network.', 'The sound card processes audio (DSP, DAC, ADC).', 'The GPU renders graphics.'],
+      explanation: 'The PSU converts and supplies power through power cables – no data.'
     },
     {
-      id: 'u1t1-q3', lesson: 1, type: 'mcq', skill: 'recall',
-      question: 'Which statement about the three buses is correct?',
-      options: ['The address bus carries addresses from the CPU to memory only', 'The data bus only carries data from memory to the CPU', 'The control bus carries memory addresses', 'All three buses carry data in one direction only'],
+      id: 'u1t1-111-q3', spec: '1.1.1', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'On a sound card, what does the ADC do?',
+      options: ['Converts analogue → digital (sound in)', 'Converts digital → analogue (sound out)', 'Processes audio signals', 'Connects the card to the motherboard'],
       answer: 0,
-      feedback: ['', 'The data bus works in both directions: data is read from and written to memory.', 'The control bus carries signals such as read, write, interrupt and clock.', 'The data and control buses are both two-directional.'],
-      explanation: 'The address bus is unidirectional: memory never tells the CPU an address.'
+      feedback: ['', 'That is the DAC.', 'That is the DSP.', 'The card connects on-board, through PCIe or USB.'],
+      explanation: 'DSP processes audio; DAC: digital → analogue (out); ADC: analogue → digital (in).'
     },
     {
-      id: 'u1t1-q4', lesson: 1, type: 'mcq', skill: 'recall',
-      question: 'Which of these is <strong>not</strong> a defining feature of Von Neumann architecture?',
-      options: ['Separate memories for instructions and data', 'One memory for both instructions and data', 'Instructions are executed sequentially', 'The stored program concept'],
+      id: 'u1t1-111-q4', spec: '1.1.1', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'On the system bus, which bus “says where”?',
+      options: ['The address bus', 'The data bus', 'The control bus', 'The memory bus'],
       answer: 0,
-      feedback: ['', 'This is a defining feature of Von Neumann architecture.', 'This is a defining feature of Von Neumann architecture.', 'This is a defining feature of Von Neumann architecture.'],
-      explanation: 'Separate instruction and data memory is Harvard architecture, one way of working around the Von Neumann bottleneck.'
-    },
-    {
-      id: 'u1t1-q5', lesson: 1, type: 'mcq', skill: 'application',
-      question: 'A processor often waits for instructions and data to arrive from memory because they share one bus. What is this problem called?',
-      options: ['The Von Neumann bottleneck', 'A cache hit', 'Virtual memory', 'Resource contention between cores'],
-      answer: 0,
-      feedback: ['', 'A cache hit is when data is found in cache, which reduces waiting.', 'Virtual memory is disk space used as RAM.', 'Resource contention is a challenge of parallel processing with several cores.'],
-      explanation: 'Instructions and data squeeze through the same bus, and the CPU is faster than memory, so it waits.'
-    },
-    {
-      id: 'u1t1-q6', lesson: 1, type: 'mcq', skill: 'recall',
-      question: 'Which list is in order from fastest and smallest to slowest and largest?',
-      options: ['Registers, cache, RAM, secondary storage', 'Cache, registers, RAM, secondary storage', 'RAM, cache, registers, secondary storage', 'Registers, RAM, cache, secondary storage'],
-      answer: 0,
-      feedback: ['', 'Registers are inside the CPU and are faster than cache.', 'RAM is slower and larger than both cache and registers.', 'Cache is faster and smaller than RAM.'],
-      explanation: 'The memory hierarchy: registers → L1/L2/L3 cache → RAM → (virtual memory) → secondary storage.'
-    },
-    {
-      id: 'u1t1-q7', lesson: 1, type: 'mcq', skill: 'application',
-      question: 'The CPU needs a value. It is not in L1 or L2 cache, but it is in L3. What happens?',
-      options: ['A miss at L1 and L2, then a hit at L3, so the value is read from L3', 'The CPU reads the value from RAM straight away', 'The CPU waits until the value is copied to the registers by the user', 'The value is fetched from the hard disk'],
-      answer: 0,
-      feedback: ['', 'RAM is only searched if L3 also misses.', 'Data movement between levels is automatic, not done by the user.', 'The disk is only reached after misses at every faster level.'],
-      explanation: 'The CPU checks L1, then L2, then L3, then RAM, then disk; the search stops at the first hit.'
-    },
-    {
-      id: 'u1t1-q8', lesson: 1, type: 'mcq', skill: 'recall',
-      question: 'What is virtual memory?',
-      options: ['Part of the disk used as an extension of RAM when RAM is full', 'Extra RAM chips that are switched on when needed', 'Memory stored in the cloud', 'A type of cache inside the CPU'],
-      answer: 0,
-      feedback: ['', 'Virtual memory is not extra RAM; it is disk space used as if it were RAM.', 'It uses the computer’s own secondary storage, not the cloud.', 'Cache is fast SRAM; virtual memory is slow disk space.'],
-      explanation: 'Virtual memory lets more or bigger programs run, but slowly, because the disk is much slower than RAM.'
-    },
-    {
-      id: 'u1t1-q9', lesson: 1, type: 'mcq', skill: 'recall',
-      question: 'Why is cache made from SRAM while main memory uses DRAM?',
-      options: ['SRAM is faster, which matters most for the small amount of cache next to the cores', 'SRAM is cheaper, so it is used where lots of memory is needed', 'SRAM is non-volatile, so cache keeps data when switched off', 'DRAM cannot be placed on the motherboard'],
-      answer: 0,
-      feedback: ['', 'SRAM is more expensive per byte, which is why only small amounts are used.', 'Both SRAM and DRAM are volatile.', 'DRAM is exactly what sits in the DIMM slots on the motherboard.'],
-      explanation: 'Speed is what cache is for, so the faster, more expensive SRAM is used in small amounts.'
-    },
-    {
-      id: 'u1t1-q10', lesson: 1, type: 'mcq', skill: 'technique',
-      question: 'A question asks: “Describe the role of the address bus. [2 marks]”. Which answer gains both marks?',
-      options: ['It carries the memory address (from the MAR) to memory, and it is unidirectional, from the CPU to memory only.', 'It is a bus.', 'It carries data around the computer.', 'It connects things together in both directions.'],
-      answer: 0,
-      feedback: ['', 'This gives no detail about what the bus carries.', 'Data is carried by the data bus.', 'The address bus is one-directional, and this does not say what it carries.'],
-      explanation: 'Two marks: what it carries, and its direction. Precise wording such as “unidirectional” earns marks.'
+      feedback: ['', 'The data bus carries the data.', 'The control bus carries commands (read, write, interrupt).', 'The memory bus links the DIMM slots; the system bus is made of data, address and control buses.'],
+      explanation: 'Data bus carries the data · address bus says where · control bus carries commands.'
     },
 
-    /* ---------- Lesson 2 ---------- */
+    /* ---------- 1.2.1 ---------- */
     {
-      id: 'u1t1-q11', lesson: 2, type: 'mcq', skill: 'recall',
-      question: 'Which of the four ideas behind parallel processing means “breaking a big job into smaller independent pieces”?',
-      options: ['Task division', 'Concurrency', 'Coordination', 'Scalability'],
+      id: 'u1t1-121-q1', spec: '1.2.1', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'Which part of the CPU fetches, decodes and coordinates – telling everything else what to do?',
+      options: ['Control unit (CU)', 'ALU', 'Registers', 'Cache'],
       answer: 0,
-      feedback: ['', 'Concurrency is pieces genuinely running at the same time on separate cores.', 'Coordination is cores communicating and staying in step.', 'Scalability is handling more work by adding more cores.'],
-      explanation: 'Task division comes first: the job must be split before pieces can run in parallel.'
+      feedback: ['', 'The ALU does add, subtract, compare and AND/OR/NOT.', 'Registers are tiny, fastest storage; each has one job.', 'Cache keeps frequently used data close to the cores.'],
+      explanation: 'The control unit directs and coordinates; the ALU does arithmetic and logic.'
     },
     {
-      id: 'u1t1-q12', lesson: 2, type: 'mcq', skill: 'application',
-      question: 'Four tasks take 4 s, 3 s, 2 s and 1 s. Ignoring overheads, roughly how long do they take on one core, and on four cores (one task per core)?',
-      options: ['10 s on one core; about 4 s on four cores', '10 s on one core; 2.5 s on four cores', '4 s on one core; 1 s on four cores', '10 s on both'],
-      answer: 0,
-      feedback: ['', 'With one task per core, the total is set by the longest single task (4 s), not an even share.', 'Sequential time is the sum of all the tasks, not the longest one.', 'Running at the same time on four cores reduces the total.'],
-      explanation: 'Sequential: 4 + 3 + 2 + 1 = 10 s. Parallel: the total shrinks towards the longest single task, 4 s.'
+      id: 'u1t1-121-q2', spec: '1.2.1', lesson: 1, type: 'input', skill: 'recall',
+      question: 'Which register holds the address of the next instruction to be fetched? Give its abbreviation or full name.',
+      accept: ['PC', 'program counter', 'the program counter'],
+      explanation: 'The Program Counter (PC) holds the address of the NEXT instruction to fetch, and increments after each fetch.'
     },
     {
-      id: 'u1t1-q13', lesson: 2, type: 'mcq', skill: 'recall',
+      id: 'u1t1-121-q3', spec: '1.2.1', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'Which register holds the instruction being executed right now, split into opcode and operand?',
+      options: ['CIR', 'MDR', 'MAR', 'ACC'],
+      answer: 0,
+      feedback: ['', 'The MDR holds data just read from, or about to be written to, memory.', 'The MAR holds the address being read from or written to.', 'The ACC holds intermediate results from the ALU.'],
+      explanation: 'Current Instruction Register: the instruction being executed, split into opcode and operand for decoding.'
+    },
+    {
+      id: 'u1t1-121-q4', spec: '1.2.1', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'Which bus is unidirectional?',
+      options: ['Address bus – CPU → memory only', 'Data bus – CPU → memory only', 'Control bus – memory → CPU only', 'All three are unidirectional'],
+      answer: 0,
+      feedback: ['', 'The data bus carries data both ways.', 'The control bus carries read, write, interrupt and clock signals both ways.', 'Only the address bus is unidirectional.'],
+      explanation: 'Exam favourite: the address bus is unidirectional – memory never tells the CPU an address.'
+    },
+    {
+      id: 'u1t1-121-q5', spec: '1.2.1', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'Which is <strong>not</strong> one of the four defining features of Von Neumann architecture?',
+      options: ['Separate memories for instructions and data', 'One memory for instructions AND data', 'Sequential – one instruction at a time, in order', 'Stored program – change the program, not the hardware'],
+      answer: 0,
+      feedback: ['', 'This is a defining feature.', 'This is a defining feature.', 'This is a defining feature.'],
+      explanation: 'Separate instruction and data memory is Harvard architecture – one way of working around the Von Neumann bottleneck.'
+    },
+    {
+      id: 'u1t1-121-q6', spec: '1.2.1', lesson: 1, type: 'mcq', skill: 'application',
+      question: 'Why does a Von Neumann CPU often have to wait?',
+      options: ['Instructions and data must squeeze through the same bus, and the CPU is faster than memory', 'The control unit can only decode one instruction per day', 'The ALU has to wait for the PSU', 'ROM has to be read before every instruction'],
+      answer: 0,
+      feedback: ['', 'The CU decodes instructions continuously; this is not the limit.', 'The PSU supplies power, not data.', 'ROM is only read at boot.'],
+      explanation: 'This is the Von Neumann bottleneck: memory bandwidth becomes the limit.'
+    },
+    {
+      id: 'u1t1-121-q7', spec: '1.2.1', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'Which of these is a way of working around the Von Neumann bottleneck?',
+      options: ['Cache hierarchies (L1/L2/L3)', 'Using a single bus for everything', 'Removing the control unit', 'Running instructions out of the hard disk'],
+      answer: 0,
+      feedback: ['', 'A single shared bus is the cause of the bottleneck.', 'Every Von Neumann CPU needs a control unit.', 'The disk is far slower than memory, so this would make things worse.'],
+      explanation: 'Work-arounds: Harvard architecture, cache hierarchies, and multi-core, pipelining and out-of-order execution.'
+    },
+    {
+      id: 'u1t1-121-q8', spec: '1.2.1', lesson: 1, type: 'mcq', skill: 'technique',
+      question: 'A question asks you to “Describe the role of the address bus. [2 marks]”. Which answer would gain both marks?',
+      options: ['It carries where in memory – the address from the MAR – and it is unidirectional, CPU → memory only.', 'It is one of the buses.', 'It carries data around the computer.', 'It carries signals both ways between CPU and memory.'],
+      answer: 0,
+      feedback: ['', 'Too vague: what does it carry, and which way?', 'The data bus carries the data.', 'The address bus is one-way.'],
+      explanation: 'Two marks: what it carries, and its direction – the “exam favourite”.'
+    },
+
+    /* ---------- 1.2.2 ---------- */
+    {
+      id: 'u1t1-122-q1', spec: '1.2.2', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'Which list is in memory hierarchy order, from fastest and smallest to slowest and largest?',
+      options: ['Registers → cache → RAM → virtual memory → secondary storage', 'Cache → registers → RAM → secondary storage → virtual memory', 'RAM → cache → registers → virtual memory → secondary storage', 'Registers → RAM → cache → secondary storage → virtual memory'],
+      answer: 0,
+      feedback: ['', 'Registers are inside the CPU, at CPU speed – faster than cache.', 'RAM is slower and larger than cache and registers.', 'Cache sits between registers and RAM.'],
+      explanation: '↑ faster · smaller · costlier per byte; ↓ slower · larger · cheaper per byte.'
+    },
+    {
+      id: 'u1t1-122-q2', spec: '1.2.2', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'Cache is…',
+      options: ['SRAM on or next to the CPU', 'a type of main memory (DRAM) on the motherboard', 'part of the disk used as RAM', 'non-volatile firmware used to boot'],
+      answer: 0,
+      feedback: ['', 'That is RAM. “Cache is a type of RAM” is one of the four things people get wrong.', 'That is virtual memory.', 'That is ROM.'],
+      explanation: 'Cache is SRAM on/next to the CPU. RAM is main memory (DRAM) on the motherboard.'
+    },
+    {
+      id: 'u1t1-122-q3', spec: '1.2.2', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'What is ROM used for?',
+      options: ['Non-volatile firmware (BIOS/UEFI) used to boot', 'Saving your files', 'Holding running programs and data', 'Extending RAM when it is full'],
+      answer: 0,
+      feedback: ['', 'ROM is not somewhere you save files – “ROM is old storage” is a common mistake.', 'That is RAM.', 'That is virtual memory.'],
+      explanation: 'ROM is non-volatile, written at manufacture or by a firmware update, and read at boot.'
+    },
+    {
+      id: 'u1t1-122-q4', spec: '1.2.2', lesson: 1, type: 'mcq', skill: 'application',
+      question: 'The CPU needs some data. It isn’t in L1 or L2, but it is in L3. What happens?',
+      options: ['Miss at L1, miss at L2, hit at L3 – the search stops there', 'The CPU goes straight to RAM', 'The CPU fetches it from the disk', 'The data is copied to ROM first'],
+      answer: 0,
+      feedback: ['', 'RAM is only checked after a miss at L3.', 'The disk is only reached after misses at every faster level.', 'ROM holds boot firmware; it is not part of caching.'],
+      explanation: 'L1? L2? L3? RAM? Disk? – hit → stop here; miss → drop down a level and try again.'
+    },
+    {
+      id: 'u1t1-122-q5', spec: '1.2.2', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'Which statement about virtual memory is correct?',
+      options: ['It is disk space used as if it were RAM – it works, but it’s slow', 'It is extra RAM that switches on when needed', 'It is a faster type of cache', 'It is stored in ROM'],
+      answer: 0,
+      feedback: ['', '“Virtual memory is extra RAM” is one of the four things people get wrong.', 'It is much slower than cache.', 'It uses part of the disk.'],
+      explanation: 'Virtual memory lets more or bigger programs run when RAM is full – slowly.'
+    },
+    {
+      id: 'u1t1-122-q6', spec: '1.2.2', lesson: 1, type: 'mcq', skill: 'recall',
+      question: 'What is a disk cache?',
+      options: ['RAM (or a buffer on the drive) holding frequently read blocks', 'The L3 cache inside the CPU', 'A spare hard disk', 'A backup of the disk in the cloud'],
+      answer: 0,
+      feedback: ['', 'L3 is CPU cache.', 'A spare disk is not a cache.', 'A cloud backup is not a cache.'],
+      explanation: 'A disk cache speeds up reads and writes to an HDD or SSD.'
+    },
+
+    /* ---------- 1.2.3 ---------- */
+    {
+      id: 'u1t1-123-q1', spec: '1.2.3', lesson: 2, type: 'input', skill: 'application',
+      question: 'Four tasks take 4 s, 3 s, 2 s and 1 s. How many seconds do they take in total on <strong>one core</strong> (sequentially)?',
+      accept: ['10', '10s', '10 s', '10 seconds'],
+      explanation: 'Sequentially, the total time is the sum of every task: 4 + 3 + 2 + 1 = 10 s. In parallel it shrinks towards the longest single task (4 s).'
+    },
+    {
+      id: 'u1t1-123-q2', spec: '1.2.3', lesson: 2, type: 'mcq', skill: 'recall',
+      question: 'Which of the four ideas means “multiple pieces genuinely running at the same time, on separate cores”?',
+      options: ['Concurrency', 'Task division', 'Coordination', 'Scalability'],
+      answer: 0,
+      feedback: ['', 'Task division is breaking a big job into smaller independent pieces.', 'Coordination is cores communicating and staying in step.', 'Scalability is adding more cores to handle more work.'],
+      explanation: 'Task division · concurrency · coordination · scalability.'
+    },
+    {
+      id: 'u1t1-123-q3', spec: '1.2.3', lesson: 2, type: 'mcq', skill: 'recall',
       question: 'Which is a <strong>challenge</strong> of parallel processing?',
-      options: ['Task dependency: some steps must wait for others', 'Handling large data sets', 'Increased speed', 'Scalability'],
+      options: ['Synchronisation overhead', 'Increased speed', 'Handles large data sets', 'Scalability'],
       answer: 0,
-      feedback: ['', 'This is an advantage of parallel processing.', 'This is an advantage of parallel processing.', 'This is an advantage of parallel processing.'],
-      explanation: 'Challenges: task dependency, synchronisation overhead, resource contention and added complexity.'
+      feedback: ['', 'This is an advantage.', 'This is an advantage.', 'This is an advantage.'],
+      explanation: 'Challenges: task dependency, synchronisation overhead, resource contention, added complexity.'
     },
     {
-      id: 'u1t1-q14', lesson: 2, type: 'mcq', skill: 'recall',
+      id: 'u1t1-123-q4', spec: '1.2.3', lesson: 2, type: 'mcq', skill: 'application',
+      question: 'Adding more cores makes a job faster “up to a point”. Why isn’t parallel processing free?',
+      options: ['Dividing the work, coordinating the cores and combining results all cost time too', 'Each extra core slows the clock down', 'Cores cannot share any data', 'Parallel processing only works on supercomputers'],
+      answer: 0,
+      feedback: ['', 'Clock speed is not what limits it here.', 'Cores do communicate – that is coordination.', 'It is also used in GPUs, search engines and machine learning.'],
+      explanation: 'The catch: dividing, coordinating and combining all take time.'
+    },
+
+    /* ---------- 1.3.1 ---------- */
+    {
+      id: 'u1t1-131-q1', spec: '1.3.1', lesson: 2, type: 'mcq', skill: 'recall',
       question: 'What is the first step of the fetch-execute cycle?',
-      options: ['The address in the PC is copied into the MAR', 'The instruction is copied from the MDR into the CIR', 'The control unit decodes the instruction', 'The ALU stores a result in the ACC'],
+      options: ['PC → MAR', 'MDR → CIR', 'RAM → MDR', 'Decode'],
       answer: 0,
-      feedback: ['', 'This is step 4, after the instruction has arrived in the MDR.', 'Decoding is step 5.', 'This happens during execute, step 6.'],
-      explanation: 'PC → MAR → RAM → MDR → CIR, then decode, then execute.'
+      feedback: ['', 'This is step 4.', 'This is step 3.', 'Decode is step 5.'],
+      explanation: '1 PC → MAR · 2 MAR → RAM · 3 RAM → MDR · 4 MDR → CIR · 5 Decode · 6 Execute.'
     },
     {
-      id: 'u1t1-q15', lesson: 2, type: 'mcq', skill: 'application',
-      question: 'During a fetch, the MAR contains 25. What does this tell you?',
-      options: ['The instruction is being fetched from memory address 25', 'The instruction being fetched has the value 25', 'The result of the last calculation was 25', 'There are 25 instructions left to run'],
+      id: 'u1t1-131-q2', spec: '1.3.1', lesson: 2, type: 'mcq', skill: 'recall',
+      question: 'MAR and MDR are easy to mix up. Which one holds the actual data, not the address?',
+      options: ['MDR', 'MAR', 'PC', 'CIR'],
       answer: 0,
-      feedback: ['', 'The MAR holds an address, not data. The data would be in the MDR.', 'Results from the ALU go to the ACC.', 'The MAR holds a single memory address.'],
-      explanation: 'The MAR holds an address (where to look); the MDR holds what was found there.'
+      feedback: ['', 'The other way round – the MAR holds the ADDRESS to look up.', 'The PC holds the address of the next instruction.', 'The CIR holds the instruction being decoded or executed.'],
+      explanation: 'MAR holds where to look; MDR holds what was found there.'
     },
     {
-      id: 'u1t1-q16', lesson: 2, type: 'mcq', skill: 'recall',
-      question: 'When is the program counter incremented?',
-      options: ['After the instruction is fetched', 'After the instruction is executed', 'Before the PC is copied to the MAR', 'Only when a jump instruction is executed'],
+      id: 'u1t1-131-q3', spec: '1.3.1', lesson: 2, type: 'mcq', skill: 'recall',
+      question: 'When does the Program Counter increment?',
+      options: ['After the instruction is fetched', 'After the instruction is executed', 'Before it is copied into the MAR', 'Only when the program ends'],
       answer: 0,
-      feedback: ['', 'This is the common mistake: the PC has already moved on during decode and execute.', 'The current address must be copied to the MAR first.', 'A jump changes the PC, but it is also incremented after every normal fetch.'],
-      explanation: 'The PC is already pointing at the next instruction while the current one is decoded and executed.'
+      feedback: ['', 'A common mix-up – by then the PC is already pointing at the next instruction.', 'Its value must be copied to the MAR first.', 'It increments every cycle.'],
+      explanation: 'The PC increments right after fetch, so it already points at the next instruction during decode and execute.'
     },
     {
-      id: 'u1t1-q17', lesson: 2, type: 'mcq', skill: 'recall',
+      id: 'u1t1-131-q4', spec: '1.3.1', lesson: 2, type: 'mcq', skill: 'recall',
       question: 'During decode, what does the control unit do?',
-      options: ['Splits the instruction in the CIR into opcode and operand', 'Copies the instruction from RAM into the MDR', 'Adds the two operands in the ALU', 'Increments the MAR'],
+      options: ['Splits the CIR into opcode + operand', 'Copies the PC into the MAR', 'Sends the result to the ACC', 'Copies the instruction from RAM into the MDR'],
       answer: 0,
-      feedback: ['', 'This is part of the fetch.', 'This is execute.', 'The MAR is loaded, not incremented; the PC is the register that increments.'],
-      explanation: 'Decode: the CU works out what the instruction means by splitting it into opcode and operand.'
+      feedback: ['', 'That is step 1 of the fetch.', 'That is execute.', 'That is step 3 of the fetch.'],
+      explanation: 'Decode (step 5): the CU splits the instruction into opcode and operand.'
     },
     {
-      id: 'u1t1-q18', lesson: 2, type: 'mcq', skill: 'application',
-      question: 'A supermarket wants to record items quickly at the till with very few errors. Which input device is most suitable?',
-      options: ['Barcode scanner', 'Microphone', 'Touchscreen keyboard', 'Braille display'],
+      id: 'u1t1-131-q5', spec: '1.3.1', lesson: 2, type: 'mcq', skill: 'recall',
+      question: 'Put these stages in order.',
+      options: ['Fetch → Decode → Execute', 'Decode → Fetch → Execute', 'Fetch → Execute → Decode', 'Execute → Fetch → Decode'],
       answer: 0,
-      feedback: ['', 'Voice input would be slow and error-prone in a noisy shop.', 'Typing codes is slower and more error-prone than scanning.', 'A Braille display is an output device.'],
-      explanation: 'Barcode scanners are fast, with a low error rate on repetitive data.'
+      feedback: ['', 'An instruction must be fetched before it can be decoded.', 'It must be decoded before it can be executed.', 'Nothing can be executed before it has been fetched.'],
+      explanation: '<em>Cyrchu</em> (1–4) · <em>Datgodio</em> (5) · <em>Gweithredu</em> (6) – then the cycle repeats from the new PC.'
+    },
+
+    /* ---------- 1.4.1 ---------- */
+    {
+      id: 'u1t1-141-q1', spec: '1.4.1', lesson: 2, type: 'mcq', skill: 'recall',
+      question: 'Which of these is an <strong>output</strong> device?',
+      options: ['Braille display', 'Barcode / QR scanner', 'Touchscreen used to select options', 'Microphone'],
+      answer: 0,
+      feedback: ['', 'A scanner reads codes in – input.', 'Selecting options on a touchscreen is input.', 'A microphone captures sound – input.'],
+      explanation: 'A Braille display gives tactile output for blind or low-vision users.'
+    },
+
+    /* ---------- 1.4.2 ---------- */
+    {
+      id: 'u1t1-142-q1', spec: '1.4.2', lesson: 2, type: 'mcq', skill: 'application',
+      question: 'A warehouse needs to scan hundreds of items a minute with a very low error rate. Best input device?',
+      options: ['Barcode scanner', 'Touchscreen', 'Microphone', 'Keyboard and mouse'],
+      answer: 0,
+      feedback: ['', 'Touchscreens are intuitive, but slower and imprecise for this.', 'Voice input would be slow and error-prone here.', 'Typing codes would be slow and error-prone.'],
+      explanation: 'Barcode / QR scanners: fast, low error rate on repetitive data.'
     },
     {
-      id: 'u1t1-q19', lesson: 2, type: 'mcq', skill: 'application',
-      question: 'A user with a mobility impairment needs to control a computer hands-free. Which input method is most suitable?',
-      options: ['Voice input through a microphone', 'Keyboard and mouse', 'Touchscreen', 'Barcode scanner'],
+      id: 'u1t1-142-q2', spec: '1.4.2', lesson: 2, type: 'mcq', skill: 'application',
+      question: 'Why would a touchscreen be a POOR choice for detailed spreadsheet entry?',
+      options: ['It’s imprecise for detailed work', 'It requires no extra hardware', 'It’s intuitive for casual use', 'It is an output device'],
+      answer: 0,
+      feedback: ['', 'That is an advantage, not a problem.', 'That is an advantage, not a problem.', 'A touchscreen is used as an input device here.'],
+      explanation: 'Touchscreens suit kiosks and tablets, but are imprecise for detailed, structured entry.'
+    },
+    {
+      id: 'u1t1-142-q3', spec: '1.4.2', lesson: 2, type: 'mcq', skill: 'application',
+      question: 'A user with a mobility impairment needs to control a computer hands-free. Which is most suitable?',
+      options: ['Microphone (voice input)', 'Keyboard and mouse', 'Touchscreen', 'Barcode scanner'],
       answer: 0,
       feedback: ['', 'These need precise hand movements.', 'A touchscreen still needs hand movement.', 'A barcode scanner reads codes; it cannot control the computer.'],
-      explanation: 'Voice input suits hands-free and accessibility contexts.'
-    },
-    {
-      id: 'u1t1-q20', lesson: 2, type: 'mcq', skill: 'technique',
-      question: 'A question asks you to “Describe the fetch-execute cycle, showing how data is read from RAM into registers. [4 marks]”. Which approach is best?',
-      options: ['Give the steps in order, naming each register and what moves into it (PC → MAR → MDR → CIR, decode, execute)', 'Write one sentence: “the CPU gets instructions and runs them”', 'List the five registers with no explanation', 'Describe how cache works'],
-      answer: 0,
-      feedback: ['', 'Too vague for more than one mark.', 'A list does not show how data moves.', 'Cache is not what the question asks about.'],
-      explanation: 'Each mark is usually one precise transfer step. Keep them in order.'
+      explanation: 'Voice input suits hands-free or accessibility contexts – driving, mobility impairment.'
     },
 
-    /* ---------- Lesson 3 ---------- */
+    /* ---------- 1.5.1 ---------- */
     {
-      id: 'u1t1-q21', lesson: 3, type: 'mcq', skill: 'application',
-      question: 'A large company must keep 10 years of financial records. They are rarely accessed but must never be lost. Which storage is most suitable?',
+      id: 'u1t1-151-q1', spec: '1.5.1', lesson: 3, type: 'mcq', skill: 'application',
+      question: 'A company must keep 10 years of financial records. They are rarely opened but must never be lost, and the archive keeps growing. Best storage?',
       options: ['Magnetic tape', 'SSD', 'Optical disc', 'USB flash drive'],
       answer: 0,
-      feedback: ['', 'SSDs are fast, but cost more per byte; speed is not needed for rarely accessed archives.', 'Optical discs have small capacity and are easily damaged.', 'Flash drives have limited capacity and are easily lost.'],
-      explanation: 'Tape is very cheap per byte, very large and reliable for archival backup; slow serial access does not matter here.'
+      feedback: ['', 'Fast, but that speed is wasted on data you’ll almost never touch – and it costs far more per byte.', 'Capacity is small next to a growing archive.', 'Limited capacity – fine for a few files, not an archive.'],
+      explanation: 'Tape: very cheap per byte and very large; slow serial access barely matters if you almost never read it back.'
     },
     {
-      id: 'u1t1-q22', lesson: 3, type: 'mcq', skill: 'recall',
-      question: 'Which statement compares an SSD with an HDD correctly?',
-      options: ['An SSD has faster access but costs more per byte', 'An SSD is cheaper per byte but slower', 'An SSD has moving parts, so it is less robust', 'An SSD stores data on magnetic platters'],
+      id: 'u1t1-151-q2', spec: '1.5.1', lesson: 3, type: 'mcq', skill: 'application',
+      question: 'A video editor needs the fastest possible read and write speeds to scrub through huge 4K files. Best storage?',
+      options: ['SSD', 'HDD', 'Magnetic tape', 'Cloud storage'],
       answer: 0,
-      feedback: ['', 'HDDs are the cheaper per byte, slower option.', 'SSDs have no moving parts; that makes them more robust.', 'Magnetic platters are used in HDDs; SSDs use flash memory.'],
-      explanation: 'SSD: flash, no moving parts, very fast, higher cost per byte. HDD: cheap per byte, large, slower.'
+      feedback: ['', 'Its mechanical read/write head makes it noticeably slower – footage would stutter.', 'Built for cheap bulk archive, not fast access.', 'Speed depends on the network, which adds lag.'],
+      explanation: 'No moving parts means very fast access – speed of access is everything here.'
     },
     {
-      id: 'u1t1-q23', lesson: 3, type: 'mcq', skill: 'application',
-      question: 'A student wants to access their coursework from home, school and their phone. Which storage fits best?',
-      options: ['Cloud storage', 'Magnetic tape', 'An internal HDD in the home computer', 'Blu-ray discs'],
+      id: 'u1t1-151-q3', spec: '1.5.1', lesson: 3, type: 'mcq', skill: 'application',
+      question: 'A student moves a handful of coursework files between library PCs and a laptop, plugging into whatever PC is free. Best storage?',
+      options: ['Flash / USB drive', 'Optical disc', 'External HDD', 'Magnetic tape'],
       answer: 0,
-      feedback: ['', 'Tape is for archival backup and is far too slow for everyday access.', 'An internal drive can only be reached from that computer.', 'Discs would have to be rewritten and carried around.'],
-      explanation: 'Cloud storage is accessible anywhere with a network connection.'
+      feedback: ['', 'Many laptops don’t have a disc drive any more.', 'It would work, but it’s bulkier than needed for a few files.', 'Tape is for archives.'],
+      explanation: 'Portability is the deciding factor – small, works in any USB port, no network needed.'
     },
     {
-      id: 'u1t1-q24', lesson: 3, type: 'mcq', skill: 'recall',
-      question: 'Why does a file become fragmented on an HDD?',
-      options: ['It doesn’t fit in one contiguous space, so it is split across whatever free sectors are available', 'The read/write head damages the platter over time', 'Files are deliberately split to make them load faster', 'The SSD controller moves files around'],
+      id: 'u1t1-151-q4', spec: '1.5.1', lesson: 3, type: 'mcq', skill: 'application',
+      question: 'A family wants to view thousands of photos from a phone, a laptop or a tablet, wherever they are, and doesn’t mind a monthly fee. Best storage?',
+      options: ['Cloud storage', 'HDD', 'Optical disc', 'Magnetic tape'],
       answer: 0,
-      feedback: ['', 'Wear is a consequence of extra head movement, not the cause of fragmentation.', 'Fragmentation makes files load more slowly on an HDD.', 'This is about HDDs, not SSDs.'],
-      explanation: 'As the disk fills and empties over time, free space becomes scattered, so files are stored in pieces.'
+      feedback: ['', 'A disk at home can’t be reached from every device, anywhere.', 'Discs would have to be carried around.', 'Tape is far too slow for everyday viewing.'],
+      explanation: 'Cloud storage is accessible anywhere; its cost is an ongoing subscription.'
     },
     {
-      id: 'u1t1-q25', lesson: 3, type: 'mcq', skill: 'recall',
-      question: 'What is the main consequence of fragmentation on an HDD?',
-      options: ['Slower access, because the head must move to several positions to read one file', 'Files are lost permanently', 'The disk’s capacity is reduced by half', 'The CPU runs at a lower clock speed'],
+      id: 'u1t1-151-q5', spec: '1.5.1', lesson: 3, type: 'mcq', skill: 'technique',
+      question: 'A question asks you to “Compare tape and SSD for backing up data. [4 marks]”. Which style of answer is best?',
+      options: ['Trade characteristics against each other: “tape is cheap and huge but far too slow for daily access; an SSD is fast but costs more per byte”', 'Describe how an SSD works', 'List four facts about tape', 'Say SSD is better because it is newer'],
       answer: 0,
-      feedback: ['', 'The data is still there; it is just scattered.', 'Fragmentation does not change the disk’s capacity.', 'Fragmentation affects disk access, not the CPU clock.'],
-      explanation: 'More head movement means slower access, and more wear.'
-    },
-    {
-      id: 'u1t1-q26', lesson: 3, type: 'mcq', skill: 'application',
-      question: 'Why is it unnecessary to defragment an SSD?',
-      options: ['It has no moving head, so reading scattered data is no slower', 'SSDs never store files in pieces', 'SSDs are too small to become fragmented', 'Defragmentation would erase the SSD'],
-      answer: 0,
-      feedback: ['', 'Files can be scattered on an SSD; it just does not slow access.', 'Size has nothing to do with it.', 'Defragmenting does not erase data.'],
-      explanation: 'SSD access time is the same for any location. SSDs use TRIM instead.'
-    },
-    {
-      id: 'u1t1-q27', lesson: 3, type: 'mcq', skill: 'recall',
-      question: 'A phone connected to a smartwatch and wireless earbuds forms which type of network?',
-      options: ['PAN', 'LAN', 'WAN', 'WLAN'],
-      answer: 0,
-      feedback: ['', 'A LAN covers one site such as a school.', 'A WAN connects LANs across a large area.', 'A WLAN is a wireless LAN covering a building or site.'],
-      explanation: 'A personal area network covers one person’s own devices, over a few metres.'
-    },
-    {
-      id: 'u1t1-q28', lesson: 3, type: 'mcq', skill: 'recall',
-      question: 'Which describes a peer-to-peer network?',
-      options: ['Every device can act as both client and server, sharing directly with no central server', 'Clients request resources from a central server', 'Devices connect only through a hub', 'Only one device can communicate at a time'],
-      answer: 0,
-      feedback: ['', 'This is client-server.', 'Peer-to-peer is about roles, not the connecting hardware.', 'Peer-to-peer does not limit communication in this way.'],
-      explanation: 'In peer-to-peer, devices share directly with each other.'
-    },
-    {
-      id: 'u1t1-q29', lesson: 3, type: 'mcq', skill: 'technique',
-      question: 'A question asks you to “Compare magnetic tape and SSDs for backing up a company’s data. [4 marks]”. Which answer style is best?',
-      options: ['Trade characteristics against each other for both, for example “tape is much cheaper per byte than an SSD, but far slower to access”', 'Describe how an SSD works in detail', 'List four facts about tape', 'Say SSDs are better because they are newer'],
-      answer: 0,
-      feedback: ['', 'Describing one device is not a comparison.', 'Facts about one device do not compare them.', 'This gives no characteristics or reasons.'],
-      explanation: 'Compare answers weigh the same characteristic (speed, cost, capacity, portability, durability) for both devices.'
+      feedback: ['', 'Describing one device is not a comparison.', 'Facts about one device do not compare them.', 'No characteristics or reasons are given.'],
+      explanation: 'A “compare” answer always trades characteristics against each other.'
     },
 
-    /* ---------- Lesson 4 ---------- */
+    /* ---------- 1.6.1 ---------- */
     {
-      id: 'u1t1-q30', lesson: 4, type: 'mcq', skill: 'recall',
-      question: 'Which device connects a school LAN to the internet and directs data between networks?',
-      options: ['Router', 'Switch', 'Hub', 'NIC'],
+      id: 'u1t1-161-q1', spec: '1.6.1', lesson: 3, type: 'mcq', skill: 'recall',
+      question: 'Why does a fragmented file take longer to read on an HDD?',
+      options: ['The read/write head has to move to several different positions to collect all its parts', 'The file becomes corrupted the more it is split up', 'The CPU has to decode each fragment separately', 'Fragmented files are automatically compressed'],
       answer: 0,
-      feedback: ['', 'A switch connects devices within a LAN.', 'A hub connects devices within a LAN by broadcasting to all of them.', 'A NIC connects a single device to a network.'],
-      explanation: 'Routers connect different networks and direct data between them using addresses.'
+      feedback: ['', 'Fragmentation doesn’t corrupt data – the parts are just scattered.', 'The slowdown is physical head movement, not decoding.', 'Fragmentation has nothing to do with compression.'],
+      explanation: 'Each move to a new position takes time – the more scattered the file, the more moves.'
     },
     {
-      id: 'u1t1-q31', lesson: 4, type: 'mcq', skill: 'recall',
-      question: 'Why is a switch more efficient than a hub?',
-      options: ['A switch sends data only to the device it is addressed to; a hub broadcasts to every device', 'A switch connects to the internet; a hub cannot', 'A switch is wireless; a hub is wired', 'A switch converts signals for the phone line'],
+      id: 'u1t1-161-q2', spec: '1.6.1', lesson: 3, type: 'mcq', skill: 'recall',
+      question: 'What does defragmentation actually do?',
+      options: ['Physically rearranges data so each file’s parts are stored closer together', 'Deletes files that haven’t been opened in a long time', 'Compresses every file to save space', 'Increases the total capacity of the disk'],
       answer: 0,
-      feedback: ['', 'Connecting to the internet is the job of a router.', 'Both can be wired; a wireless access point provides wireless access.', 'That is a modem.'],
-      explanation: 'Broadcasting to every device wastes bandwidth, so switches have replaced hubs.'
+      feedback: ['', 'Defragmentation doesn’t delete anything.', 'It doesn’t shrink files.', 'It doesn’t create space.'],
+      explanation: 'Fewer positions for the head to move between, so access speeds improve.'
     },
     {
-      id: 'u1t1-q32', lesson: 4, type: 'mcq', skill: 'recall',
+      id: 'u1t1-161-q3', spec: '1.6.1', lesson: 3, type: 'mcq', skill: 'application',
+      question: 'After years of use, an HDD’s free space is in lots of small, scattered gaps. What is most likely to happen when a fairly large new file is saved?',
+      options: ['It will be split across several of the small gaps, becoming fragmented', 'It will automatically be stored in one contiguous block', 'It will be refused', 'It will be saved to a different disk'],
+      answer: 0,
+      feedback: ['', 'There is no single gap big enough for the whole file.', 'The disk stores it in pieces rather than refusing it.', 'It is saved on the same disk, in pieces.'],
+      explanation: 'A file doesn’t always fit in one contiguous space, so it is split across whatever free sectors are available.'
+    },
+    {
+      id: 'u1t1-161-q4', spec: '1.6.1', lesson: 3, type: 'mcq', skill: 'recall',
+      question: 'Why don’t SSDs need defragmenting the way an HDD does?',
+      options: ['They have no moving read/write head, so any location costs the same to access', 'They never run out of free space', 'They automatically delete old files', 'They can only store one file at a time'],
+      answer: 0,
+      feedback: ['', 'SSDs can fill up like any drive.', 'SSDs don’t delete files on their own.', 'SSDs store many files.'],
+      explanation: 'Common exam mix-up: no moving head means scattered data isn’t slower to read. SSDs use TRIM instead.'
+    },
+
+    /* ---------- 1.7.1 ---------- */
+    {
+      id: 'u1t1-171-q1', spec: '1.7.1', lesson: 3, type: 'input', skill: 'recall',
+      question: 'A phone connected to a smartwatch and wireless earbuds forms which type of network? Give the abbreviation.',
+      accept: ['PAN', 'personal area network'],
+      explanation: 'A Personal Area Network: a single person’s own devices, over a range of metres.'
+    },
+    {
+      id: 'u1t1-171-q2', spec: '1.7.1', lesson: 3, type: 'mcq', skill: 'recall',
+      question: 'What specifically makes a WLAN different from a standard LAN?',
+      options: ['It uses wireless connections instead of cables', 'It spans multiple countries', 'It can only connect one device at a time', 'It doesn’t need any addressing'],
+      answer: 0,
+      feedback: ['', 'That would be a WAN.', 'A WLAN connects many devices.', 'Wireless devices still need addresses.'],
+      explanation: 'The “W” is the whole difference: a WLAN is a LAN using wireless connections.'
+    },
+    {
+      id: 'u1t1-171-q3', spec: '1.7.1', lesson: 3, type: 'mcq', skill: 'recall',
+      question: 'What is true of a peer-to-peer network that ISN’T true of a client-server network?',
+      options: ['Every device can act as both a client and a server', 'A central server provides resources', 'It needs dedicated server hardware', 'Access is controlled from one central server'],
+      answer: 0,
+      feedback: ['', 'That is client-server.', 'Peer-to-peer has no central server.', 'That describes client-server.'],
+      explanation: 'Peer-to-peer: devices share directly with each other, with no central server.'
+    },
+    {
+      id: 'u1t1-171-q4', spec: '1.7.1', lesson: 4, type: 'mcq', skill: 'application',
+      question: 'Forty desktops on one office floor are wired into a single LAN. Data should go only to the machine it’s addressed to. Which device?',
+      options: ['Switch', 'Hub', 'Router', 'Wireless access point'],
+      answer: 0,
+      feedback: ['', 'A hub broadcasts every signal to every device – the opposite of what is needed.', 'A router connects different networks; this is one LAN.', 'These are wired desktops, not wireless devices.'],
+      explanation: 'A switch connects devices within a LAN and sends data only to the device it’s addressed to.'
+    },
+    {
+      id: 'u1t1-171-q5', spec: '1.7.1', lesson: 4, type: 'mcq', skill: 'application',
+      question: 'A new laptop can’t reach the network at all. Nothing else will work until one piece of hardware inside it is fitted and enabled. Which one?',
+      options: ['NIC', 'Switch', 'Router', 'Modem'],
+      answer: 0,
+      feedback: ['', 'A switch connects devices already on the network.', 'A router assumes the laptop can already get onto a network.', 'A modem deals with the external line, not one laptop.'],
+      explanation: 'A NIC is what lets a device connect to a network at all – wired or wireless.'
+    },
+    {
+      id: 'u1t1-171-q6', spec: '1.7.1', lesson: 4, type: 'mcq', skill: 'recall',
       question: 'Which statement about MAC and IP addresses is correct?',
-      options: ['A MAC address is fixed in the NIC; an IP address can change and is used to route data between networks', 'An IP address is fixed in the NIC; a MAC address is assigned by DHCP', 'Both always change every time the device restarts', 'Only one of them is needed to deliver data'],
+      options: ['A MAC address is built into the NIC and doesn’t change; an IP address can change and routes data between networks', 'An IP address is built into the NIC; a MAC address is assigned by DHCP', 'Both change every time the device restarts', 'Only the IP address is needed to deliver data'],
       answer: 0,
-      feedback: ['', 'This is reversed.', 'MAC addresses do not change.', 'Both are needed: IP to reach the right network, MAC to reach the right device on it.'],
+      feedback: ['', 'This is the wrong way round.', 'A MAC address doesn’t change.', 'Both are needed: IP gets data to the right network, MAC to the right device on it.'],
       explanation: 'The IP address gets data to the right network; the MAC address gets it to the right device on that network.'
     },
     {
-      id: 'u1t1-q33', lesson: 4, type: 'mcq', skill: 'application',
-      question: 'A business needs a very high-bandwidth link between two buildings 2 km apart, with no interference. Which medium is most suitable?',
-      options: ['Fibre optic', 'Copper twisted pair', 'Bluetooth', 'A USB cable'],
+      id: 'u1t1-171-q7', spec: '1.7.1', lesson: 4, type: 'mcq', skill: 'recall',
+      question: 'Which transmission medium has very high bandwidth over long distances and resists interference, but is more expensive to install?',
+      options: ['Fibre optic', 'Copper / twisted pair', 'Wireless (radio)', 'Bluetooth'],
       answer: 0,
-      feedback: ['', 'Copper has limited distance and bandwidth and is prone to interference.', 'Bluetooth is short-range, for personal devices.', 'USB is for connecting peripherals over very short distances.'],
-      explanation: 'Fibre optic: very high bandwidth, long distance and resistant to interference, but more expensive.'
+      feedback: ['', 'Copper is cheap but limited in distance and bandwidth, and prone to interference.', 'Wireless is usually slower and prone to interference.', 'Bluetooth is short-range.'],
+      explanation: 'Fibre optic is used for high-speed backbone and broadband links.'
     },
     {
-      id: 'u1t1-q34', lesson: 4, type: 'mcq', skill: 'recall',
-      question: 'Which is an importance of networking standards?',
-      options: ['Hardware and software from different vendors can work together (interoperability)', 'They make every device cost the same', 'They let one company control all network hardware', 'They remove the need for protocols'],
+      id: 'u1t1-171-q8', spec: '1.7.1', lesson: 4, type: 'mcq', skill: 'recall',
+      question: 'Which is a <strong>disadvantage</strong> of networking computers rather than leaving them standalone?',
+      options: ['If the network goes down, every connected device can be affected', 'Resources such as printers can be shared', 'Backups can be managed from one place', 'Users can communicate easily'],
       answer: 0,
-      feedback: ['', 'Standards encourage competition, which helps hold prices down, but prices are not made equal.', 'Standards prevent vendor lock-in; they do the opposite.', 'Protocols are themselves standards.'],
-      explanation: 'Standards give interoperability, no vendor lock-in, competition and easier development.'
-    },
-    {
-      id: 'u1t1-q35', lesson: 4, type: 'mcq', skill: 'recall',
-      question: 'Which protocol keeps emails on the server so the same inbox appears on every device?',
-      options: ['IMAP', 'SMTP', 'FTP', 'DHCP'],
-      answer: 0,
-      feedback: ['', 'SMTP sends email; it does not retrieve it.', 'FTP transfers files.', 'DHCP assigns IP addresses.'],
-      explanation: 'IMAP retrieves and syncs email, keeping messages on the server.'
-    },
-    {
-      id: 'u1t1-q36', lesson: 4, type: 'mcq', skill: 'recall',
-      question: 'Which protocol automatically gives a laptop an IP address when it joins a network?',
-      options: ['DHCP', 'HTTP', 'UDP', 'SMTP'],
-      answer: 0,
-      feedback: ['', 'HTTP transfers web pages.', 'UDP is a fast transport protocol with little error recovery.', 'SMTP sends email.'],
-      explanation: 'DHCP assigns IP addresses and returns unused ones to the pool.'
-    },
-    {
-      id: 'u1t1-q37', lesson: 4, type: 'mcq', skill: 'application',
-      question: 'Why is UDP suited to a live video stream?',
-      options: ['Speed matters more than the occasional lost packet', 'It guarantees every packet arrives in order', 'It encrypts the video automatically', 'It is the only protocol that can carry video'],
-      answer: 0,
-      feedback: ['', 'UDP has very little error recovery, so it does not guarantee delivery or order.', 'UDP does not provide encryption.', 'Video can also be sent with TCP; UDP is chosen for speed.'],
-      explanation: 'UDP sends data fast with very little error recovery.'
-    },
-    {
-      id: 'u1t1-q38', lesson: 4, type: 'mcq', skill: 'recall',
-      question: 'Which wireless protocol is short-range and low-power, used for headphones and wearables?',
-      options: ['Bluetooth', 'Wi-Fi (802.11)', '5G', 'TCP/IP'],
-      answer: 0,
-      feedback: ['', 'Wi-Fi is for wireless local area networks within a building or site.', '5G is wide-area cellular data.', 'TCP/IP is the internet’s core protocol suite, not a wireless protocol.'],
-      explanation: 'Bluetooth forms a wireless PAN for device-to-device connections.'
-    },
-    {
-      id: 'u1t1-q39', lesson: 4, type: 'mcq', skill: 'application',
-      question: 'What are the three steps of a handshake, in order?',
-      options: ['Request, acknowledge, confirm', 'Acknowledge, request, confirm', 'Confirm, request, acknowledge', 'Request, confirm, acknowledge'],
-      answer: 0,
-      feedback: ['', 'Device B cannot acknowledge before device A has made a request.', 'Confirmation comes last, once both sides are ready.', 'Device A can only confirm after device B has acknowledged.'],
-      explanation: 'Device A requests, device B acknowledges it is ready, device A confirms, then data transfer begins.'
-    },
-    {
-      id: 'u1t1-q40', lesson: 4, type: 'mcq', skill: 'recall',
-      question: 'Which best describes the internet?',
-      options: ['A world-wide network of networks connecting many separate LANs', 'A single network owned by one company', 'The same thing as the World Wide Web', 'A type of LAN'],
-      answer: 0,
-      feedback: ['', 'The internet is built from many networks owned by many organisations.', 'The web is a service that runs over the internet.', 'The internet is the largest WAN, connecting LANs.'],
-      explanation: 'The internet is a world-wide communications infrastructure built from smaller networks.'
-    },
-    {
-      id: 'u1t1-q41', lesson: 4, type: 'mcq', skill: 'technique',
-      question: 'A question asks: “Describe the importance of the SMTP protocol. [2 marks]”. Which answer gains both marks?',
-      options: ['SMTP sends email from a client to a server, or between servers, giving a standard way of passing email between different mail servers.', 'Simple Mail Transfer Protocol.', 'It is used for email.', 'It retrieves email so it appears on all your devices.'],
-      answer: 0,
-      feedback: ['', 'Expanding the acronym does not describe what it does or why it matters.', 'Too vague for two marks.', 'That describes IMAP.'],
-      explanation: 'Say what the protocol does and why it matters.'
+      feedback: ['', 'This is an advantage of networking.', 'This is an advantage (centralised management).', 'This is an advantage.'],
+      explanation: 'Disadvantages: a bigger security risk; network failure affects everyone; higher set-up and maintenance cost.'
     },
 
-    /* ---------- Typed answers ---------- */
+    /* ---------- 1.7.2 ---------- */
     {
-      id: 'u1t1-q42', lesson: 2, type: 'input', skill: 'application',
-      question: 'Four tasks take 4 s, 3 s, 2 s and 1 s. How many seconds do they take in total when run <strong>sequentially</strong> on one core?',
-      accept: ['10', '10s', '10 s', '10 seconds'],
-      explanation: 'Sequentially, the total time is the sum of every task: 4 + 3 + 2 + 1 = 10 s. On four cores it would shrink towards the longest single task, 4 s.'
+      id: 'u1t1-172-q1', spec: '1.7.2', lesson: 4, type: 'mcq', skill: 'recall',
+      question: 'What does “interoperability” mean as a reason for networking standards?',
+      options: ['Hardware and software from different vendors can work together', 'Every device must come from one company', 'Prices are fixed by law', 'Networks no longer need protocols'],
+      answer: 0,
+      feedback: ['', 'Standards mean the opposite – no vendor lock-in.', 'Standards promote competition, which helps hold prices down, but don’t fix them.', 'Protocols are themselves standards.'],
+      explanation: 'Interoperability · no vendor lock-in · competition and price · easier development.'
     },
     {
-      id: 'u1t1-q43', lesson: 1, type: 'input', skill: 'recall',
-      question: 'Which register holds the address of the next instruction to fetch? Give its abbreviation or full name.',
-      accept: ['PC', 'program counter', 'the program counter'],
-      explanation: 'The program counter (PC) holds the address of the next instruction and increments after each fetch.'
+      id: 'u1t1-172-q2', spec: '1.7.2', lesson: 4, type: 'mcq', skill: 'recall',
+      question: 'How do open networking standards help keep prices down?',
+      options: ['They promote competition between vendors', 'They force vendors to sell at cost', 'They remove the need for hardware', 'They let one vendor supply every device'],
+      answer: 0,
+      feedback: ['', 'Standards don’t set prices.', 'Hardware is still needed.', 'That is vendor lock-in, which standards prevent.'],
+      explanation: 'More competition helps hold prices down.'
+    },
+
+    /* ---------- 1.7.3 ---------- */
+    {
+      id: 'u1t1-173-q1', spec: '1.7.3', lesson: 4, type: 'mcq', skill: 'recall',
+      question: 'Which protocol sends email from a client to a server, or server to server?',
+      options: ['SMTP', 'IMAP', 'HTTP', 'DHCP'],
+      answer: 0,
+      feedback: ['', 'IMAP retrieves and syncs email.', 'HTTP transfers web pages.', 'DHCP assigns IP addresses.'],
+      explanation: 'SMTP: a standard way of passing email between different mail servers.'
     },
     {
-      id: 'u1t1-q44', lesson: 3, type: 'input', skill: 'recall',
-      question: 'Give the abbreviation for the type of network that connects one person’s own devices, such as a phone, a smartwatch and wireless earbuds.',
-      accept: ['PAN', 'personal area network'],
-      explanation: 'A personal area network (PAN) covers one person’s own devices over a range of a few metres.'
+      id: 'u1t1-173-q2', spec: '1.7.3', lesson: 4, type: 'mcq', skill: 'recall',
+      question: 'Which protocol keeps email on the server, so the same inbox appears on every device?',
+      options: ['IMAP', 'SMTP', 'FTP', 'UDP'],
+      answer: 0,
+      feedback: ['', 'SMTP sends email.', 'FTP transfers files.', 'UDP sends data fast with little error recovery.'],
+      explanation: 'IMAP: same inbox on every device, without using up local storage.'
+    },
+    {
+      id: 'u1t1-173-q3', spec: '1.7.3', lesson: 4, type: 'mcq', skill: 'recall',
+      question: 'Which protocol automatically assigns IP addresses to devices joining a network?',
+      options: ['DHCP', 'TCP/IP', 'HTTP', 'SMTP'],
+      answer: 0,
+      feedback: ['', 'TCP/IP breaks data into packets and routes them.', 'HTTP transfers web pages.', 'SMTP sends email.'],
+      explanation: 'DHCP also frees addresses no longer in use back to the pool.'
+    },
+    {
+      id: 'u1t1-173-q4', spec: '1.7.3', lesson: 4, type: 'mcq', skill: 'application',
+      question: 'Why does video and audio streaming suit UDP?',
+      options: ['Speed matters more than the odd lost packet', 'It guarantees every packet arrives', 'It assigns IP addresses', 'It keeps messages on a server'],
+      answer: 0,
+      feedback: ['', 'UDP has very little error recovery – it doesn’t guarantee delivery.', 'That is DHCP.', 'That is IMAP.'],
+      explanation: 'UDP sends data fast, with very little error recovery.'
+    },
+    {
+      id: 'u1t1-173-q5', spec: '1.7.3', lesson: 4, type: 'mcq', skill: 'recall',
+      question: 'Which wireless protocol gives short-range, low-power, device-to-device connections such as headphones – a wireless PAN?',
+      options: ['Bluetooth', 'Wi-Fi (802.11)', 'Cellular (4G/5G)', 'TCP/IP'],
+      answer: 0,
+      feedback: ['', 'Wi-Fi is wireless local area networking within a building or site.', 'Cellular is wide-area mobile data.', 'TCP/IP is the internet’s core protocol suite, not a wireless protocol.'],
+      explanation: 'Bluetooth forms a wireless PAN, not a full network.'
+    },
+    {
+      id: 'u1t1-173-q6', spec: '1.7.3', lesson: 4, type: 'mcq', skill: 'technique',
+      question: 'A question asks: “Describe the importance of SMTP. [2 marks]”. Which answer gains both marks?',
+      options: ['It sends email from a client to a server or server to server, giving a standard way of passing email between different mail servers.', 'Simple Mail Transfer Protocol.', 'It is to do with email.', 'It keeps your emails on the server.'],
+      answer: 0,
+      feedback: ['', 'Expanding the acronym says nothing about what it does or why it matters.', 'Too vague for two marks.', 'That is IMAP.'],
+      explanation: 'Know why each protocol matters – not just what it stands for.'
+    },
+
+    /* ---------- 1.7.4 ---------- */
+    {
+      id: 'u1t1-174-q1', spec: '1.7.4', lesson: 4, type: 'mcq', skill: 'recall',
+      question: 'What are the three steps of a handshake, in order?',
+      options: ['Request → acknowledge → confirm', 'Acknowledge → request → confirm', 'Confirm → request → acknowledge', 'Request → confirm → acknowledge'],
+      answer: 0,
+      feedback: ['', 'Device B can’t acknowledge before device A has asked.', 'Confirmation comes last.', 'Device A can only confirm once device B has responded.'],
+      explanation: 'Device A requests; device B acknowledges; device A confirms; then data transfer begins.'
+    },
+    {
+      id: 'u1t1-174-q2', spec: '1.7.4', lesson: 4, type: 'mcq', skill: 'application',
+      question: 'What could happen if a laptop started sending data before the router had confirmed the connection?',
+      options: ['The router might not be ready or listening, so the data could be lost or misread', 'The data would arrive faster', 'Nothing – handshaking is optional', 'The router would assign a new MAC address'],
+      answer: 0,
+      feedback: ['', 'Skipping the handshake doesn’t make the data arrive faster – it may not arrive at all.', 'Order is the whole point of handshaking.', 'MAC addresses are fixed in the hardware.'],
+      explanation: 'Handshaking happens before any real data is sent, so both devices are ready.'
+    },
+
+    /* ---------- 1.8.1 ---------- */
+    {
+      id: 'u1t1-181-q1', spec: '1.8.1', lesson: 4, type: 'mcq', skill: 'recall',
+      question: 'Which best describes the internet?',
+      options: ['A network of networks – a world-wide infrastructure built from smaller networks', 'One single network', 'A type of LAN', 'A wireless PAN'],
+      answer: 0,
+      feedback: ['', 'It is built from many separate networks.', 'It connects LANs; it is the largest WAN.', 'A PAN is one person’s devices.'],
+      explanation: 'Each LAN is its own network; the internet connects them all together.'
     }
   ],
 
+  /* ============================================== EXAM-STYLE (exit tickets and spec statements) */
   exam: [
     {
-      id: 'u1t1-e1', lesson: 1, marks: 4,
-      question: 'Describe the main features of Von Neumann architecture and explain the Von Neumann bottleneck.',
+      id: 'u1t1-111-e1', spec: '1.1.1', lesson: 1, marks: 2,
+      context: 'Exit ticket, Lesson 1.',
+      question: 'Name one component and the interface it connects to the motherboard through.',
       markPoints: [
-        'One memory holds both instructions and data.',
-        'Instructions are executed sequentially, one at a time.',
-        'A control unit drives the fetch and execute of instructions.',
-        'Stored program concept: the program can be changed without changing the hardware.',
-        'Bottleneck: instructions and data share the same bus…',
-        '…and the CPU is faster than memory, so it has to wait; memory bandwidth limits performance.'
+        'A correct component, e.g. CPU, RAM, SSD/HDD, GPU, sound card, NIC, keyboard…',
+        'Its matching interface, e.g. CPU socket; DIMM slots; SATA or NVMe (PCIe); PCIe; on-board/PCIe/USB; USB/HDMI/DisplayPort/Bluetooth.'
       ],
-      technique: 'Two parts: features, then the bottleneck. Give at least one point for the bottleneck with a reason.'
+      technique: 'Use the connection map – component, job, connects through.'
     },
     {
-      id: 'u1t1-e2', lesson: 1, marks: 4,
-      question: 'Describe what is meant by caching and explain how the use of cache improves performance.',
+      id: 'u1t1-121-e1', spec: '1.2.1', lesson: 1, marks: 2,
+      context: 'Exit ticket, Lesson 1.',
+      question: 'What is the Von Neumann bottleneck?',
       markPoints: [
-        'Cache is a small amount of very fast memory (SRAM) on or next to the CPU.',
-        'It holds frequently used instructions and data.',
-        'The CPU checks cache (L1, then L2, then L3) before RAM; if the data is there, it is a hit.',
-        'A hit avoids the slower access to RAM, so the CPU spends less time waiting.',
-        'Disk cache: RAM or a buffer holds frequently read blocks, speeding up reads from secondary storage.'
-      ],
-      technique: '“Explain how it improves performance” needs the link: fewer slow accesses to RAM, so less waiting.'
+        'Instructions and data share the same memory and must squeeze through the same bus…',
+        '…and the CPU is faster than memory, so it waits – memory bandwidth becomes the limit.'
+      ]
     },
     {
-      id: 'u1t1-e3', lesson: 2, marks: 4,
-      question: 'Describe the fetch-execute cycle, showing how an instruction is read from RAM into the registers.',
+      id: 'u1t1-121-e2', spec: '1.2.1', lesson: 1, marks: 4,
+      question: 'Describe the four defining features of Von Neumann architecture.',
       markPoints: [
-        'The address in the PC is copied into the MAR.',
-        'The MAR sends the address to memory along the address bus.',
-        'The instruction at that address is copied into the MDR.',
-        'The instruction is copied from the MDR into the CIR, and the PC is incremented.',
-        'The control unit decodes the instruction into opcode and operand.',
-        'The instruction is executed (by the ALU), with results stored in the ACC.'
-      ],
-      technique: 'Name each register and what moves into it, in order.'
+        'One memory for instructions AND data.',
+        'Sequential – one instruction at a time, in order.',
+        'A control unit drives fetch and execute.',
+        'Stored program – change the program, not the hardware.'
+      ]
     },
     {
-      id: 'u1t1-e4', lesson: 2, marks: 4,
-      question: 'Describe and explain parallel processing, including one advantage and one challenge.',
+      id: 'u1t1-122-e1', spec: '1.2.2', lesson: 1, marks: 2,
+      context: 'Exit ticket, Lesson 1.',
+      question: 'Why is L1 cache smaller than L3?',
       markPoints: [
-        'Parallel processing uses several cores/processors at the same time.',
-        'A task is divided into smaller independent pieces (task division)…',
-        '…which run concurrently and are coordinated so the results combine correctly.',
-        'Advantage: increased speed / more work done per second / handles large data sets / scalability.',
-        'Challenge: task dependency, synchronisation overhead, resource contention or added complexity.'
+        'L1 is the smallest and fastest level, closest to the core (per core)…',
+        '…and faster memory costs more per byte, so only a small amount is used; L3 is larger, slower and shared by all cores.'
       ],
-      technique: 'Use the key vocabulary (task division, concurrency, coordination) and give one advantage and one challenge.'
+      technique: 'Use the hierarchy: ↑ faster · smaller · costlier per byte.'
     },
     {
-      id: 'u1t1-e5', lesson: 3, marks: 4,
-      question: 'Explain what fragmentation is, its consequences, and why defragmentation is needed.',
+      id: 'u1t1-123-e1', spec: '1.2.3', lesson: 2, marks: 2,
+      context: 'Exit ticket, Lesson 2.',
+      question: 'Name one advantage AND one challenge of parallel processing.',
       markPoints: [
-        'Files are split and stored in non-contiguous (scattered) sectors when they do not fit in one free space.',
-        'This gets worse as the disk fills and empties over time.',
-        'The read/write head must move to several positions to read one file, so access is slower (and there is more wear).',
-        'Defragmentation rearranges the data so each file’s parts are together…',
-        '…so there is less head movement and access speed improves.'
-      ],
-      technique: 'Three parts: what it is, its consequences, and why defragmentation helps. Keep the read/write head at the centre of your explanation.'
+        'Advantage: increased speed / efficiency (more done per second) / scalability / handles large data sets.',
+        'Challenge: task dependency / synchronisation overhead / resource contention / added complexity.'
+      ]
     },
     {
-      id: 'u1t1-e6', lesson: 3, marks: 4,
-      context: 'A photographer needs to store several terabytes of photos for many years, and also wants fast access to the photos they are currently editing.',
-      question: 'Compare two suitable secondary storage devices for the photographer.',
+      id: 'u1t1-131-e1', spec: '1.3.1', lesson: 2, marks: 5,
+      context: 'Exit ticket, Lesson 2.',
+      question: 'Put PC, MAR, MDR, CIR and ACC in fetch-execute order and say what each holds.',
       markPoints: [
-        'SSD for photos currently being edited, because it has very fast access.',
-        'SSD costs more per byte, so it is less suitable for storing all the photos.',
-        'HDD (or magnetic tape) for the long-term archive, because it is much cheaper per byte with large capacity.',
-        'HDD/tape is slower to access than an SSD, which matters less for older photos.',
-        'Cloud storage could be compared as an off-site option: accessible anywhere, but dependent on the network and an ongoing subscription.'
-      ],
-      technique: 'Compare means trading the same characteristics for both devices, using the photographer’s needs.'
+        'PC – the address of the next instruction.',
+        'MAR – the address currently being accessed.',
+        'MDR – data just read from, or about to be written to, memory.',
+        'CIR – the instruction being decoded / executed.',
+        'ACC – intermediate results from the ALU. (Order: PC → MAR → MDR → CIR → ACC.)'
+      ]
     },
     {
-      id: 'u1t1-e7', lesson: 4, marks: 4,
-      question: 'Explain the importance of networking standards.',
+      id: 'u1t1-131-e2', spec: '1.3.1', lesson: 2, marks: 6,
+      question: 'Describe the fetch-execute cycle, showing how data can be read from RAM into registers.',
       markPoints: [
-        'Interoperability: hardware and software from different vendors can work together.',
-        'Without standards, building networks that share information would be difficult or impossible.',
-        'No vendor lock-in: customers can choose between suppliers.',
-        'Open standards promote competition, which helps keep prices down.',
-        'Development is easier: developers build to the standard, one layer at a time, not for every device.'
+        'PC → MAR: the address of the next instruction is copied into the MAR.',
+        'MAR → RAM: the MAR sends that address out on the address bus.',
+        'RAM → MDR: the instruction stored there is copied into the MDR.',
+        'MDR → CIR: the instruction moves into the CIR; the PC increments.',
+        'Decode: the control unit splits the CIR into opcode + operand.',
+        'Execute: the ALU runs the operation; the result goes to the ACC.'
       ],
-      technique: 'Each point should say why the standard matters, not just name a feature.'
+      technique: 'Six steps, six marks – one register transfer per point, in order.'
     },
     {
-      id: 'u1t1-e8', lesson: 4, marks: 3,
-      question: 'Explain the role of handshaking.',
+      id: 'u1t1-142-e1', spec: '1.4.2', lesson: 2, marks: 2,
+      context: 'Exit ticket, Lesson 2.',
+      question: 'Name a device and one situation where it would be the wrong choice.',
       markPoints: [
-        'Handshaking establishes that a device is ready to communicate before any data is sent.',
-        'The devices agree how they will communicate (the rules/protocol).',
-        'Steps: request → acknowledge → confirm, then data transfer begins.',
-        'This avoids data being sent to a device that is not ready or cannot understand it, so data is not lost or misread.'
-      ],
-      technique: 'Explain why it happens before data transfer, not just what the steps are.'
+        'A named input or output device, e.g. touchscreen.',
+        'A situation it doesn’t suit, with a reason, e.g. detailed spreadsheet entry, because it is imprecise.'
+      ]
+    },
+    {
+      id: 'u1t1-151-e1', spec: '1.5.1', lesson: 3, marks: 2,
+      context: 'Exit ticket, Lesson 3.',
+      question: 'Name a storage device and one situation where it would be the wrong choice.',
+      markPoints: [
+        'A named device, e.g. magnetic tape.',
+        'A situation it doesn’t suit, with a reason, e.g. a video editor’s daily work – serial access is far too slow.'
+      ]
+    },
+    {
+      id: 'u1t1-161-e1', spec: '1.6.1', lesson: 3, marks: 3,
+      context: 'Exit ticket, Lesson 3.',
+      question: 'Explain why fragmentation slows down an HDD but not an SSD.',
+      markPoints: [
+        'On an HDD a fragmented file is scattered, so the read/write head must move to several positions to read it.',
+        'Each move takes time, so access is slower.',
+        'An SSD has no moving head – any location costs the same to access – so scattered data isn’t slower.'
+      ]
+    },
+    {
+      id: 'u1t1-171-e1', spec: '1.7.1', lesson: 3, marks: 1,
+      context: 'Exit ticket, Lesson 3.',
+      question: 'Give one difference between a LAN and a WAN.',
+      markPoints: [
+        'A LAN covers one site (e.g. a school or office building); a WAN connects LANs across a large area (cities, countries, global).',
+        'The internet is the largest WAN.'
+      ]
+    },
+    {
+      id: 'u1t1-172-e1', spec: '1.7.2', lesson: 4, marks: 1,
+      context: 'Exit ticket, Lesson 4.',
+      question: 'Give one reason networking standards matter.',
+      markPoints: [
+        'Interoperability – hardware and software from different vendors work together.',
+        'No vendor lock-in – genuine choice between suppliers.',
+        'Competition – helps hold prices down.',
+        'Easier development – build to the standard, one layer at a time.'
+      ]
+    },
+    {
+      id: 'u1t1-173-e1', spec: '1.7.3', lesson: 4, marks: 2,
+      context: 'Exit ticket, Lesson 4.',
+      question: 'Name a protocol used for sending email, and one used for web pages.',
+      markPoints: [
+        'Email: SMTP.',
+        'Web pages: HTTP.'
+      ]
+    },
+    {
+      id: 'u1t1-174-e1', spec: '1.7.4', lesson: 4, marks: 1,
+      context: 'Exit ticket, Lesson 4.',
+      question: 'Explain in one sentence why handshaking happens before data is sent.',
+      markPoints: [
+        'To confirm both devices are ready and agree how to communicate, so data isn’t sent to a device that isn’t listening (and lost or misread).'
+      ]
+    },
+    {
+      id: 'u1t1-181-e1', spec: '1.8.1', lesson: 4, marks: 2,
+      question: 'Describe the internet in terms of a world-wide communications infrastructure.',
+      markPoints: [
+        'A network of networks: each LAN (school, office, home…) is its own network.',
+        'The internet connects them all together – a world-wide infrastructure built from smaller networks, not one single network.'
+      ]
     }
   ],
 
+  /* ================================================================= TRACING */
   traces: [
     {
-      id: 'u1t1-t1', lesson: 2,
-      title: 'Register tracker: a short program',
-      intro: '<p>A simple processor uses the Little Man Computer style instructions <code>LDA</code> (load the accumulator from an address), <code>ADD</code> (add the contents of an address to the accumulator), <code>SUB</code> (subtract), <code>STA</code> (store the accumulator at an address) and <code>HLT</code> (halt).</p>' +
-        '<p>The program starts at address 0, so the PC is initially 0. Addresses 10, 11 and 12 hold 25, 17 and 8. Address 13 holds 0. Complete one row for each instruction, showing values <strong>after the instruction has been executed</strong>. The MAR changes only when memory is accessed, and the PC is incremented after each fetch.</p>',
-      code: '0  LDA 10\n1  ADD 11\n2  SUB 12\n3  STA 13\n4  HLT',
-      columns: ['CIR', 'PC', 'MAR', 'ACC', 'Address 13'],
+      id: 'u1t1-131-t1', spec: '1.3.1', lesson: 2,
+      title: 'Register tracker: one fetch-execute cycle',
+      intro: '<p>Step through one cycle, as in the Lesson 2 register tracker. The PC holds 5. Address 5 holds the instruction <code>ADD 12</code>. The ACC holds 10 and address 12 holds 7. For this exercise, the execute step adds the value at address 12 to the ACC.</p>' +
+        '<p>Complete one row for each step, showing the register values <strong>after</strong> that step. Leave a cell empty if the register has not been given a value yet. Remember: the PC increments once the instruction has been fetched (by the end of step 4).</p>',
+      code: '1  PC → MAR\n2  MAR → RAM\n3  RAM → MDR\n4  MDR → CIR\n5  Decode\n6  Execute',
+      columns: ['Step', 'PC', 'MAR', 'MDR', 'CIR', 'ACC'],
       rows: [
-        ['LDA 10', '1', '10', '25', '0'],
-        ['ADD 11', '2', '11', '42', '0'],
-        ['SUB 12', '3', '12', '34', '0'],
-        ['STA 13', '4', '13', '34', '34'],
-        ['HLT', '5', '4', '34', '34']
+        ['PC → MAR', '5', '5', '', '', '10'],
+        ['MAR → RAM', '5', '5', '', '', '10'],
+        ['RAM → MDR', '5', '5', 'ADD 12', '', '10'],
+        ['MDR → CIR', '6', '5', 'ADD 12', 'ADD 12', '10'],
+        ['Decode', '6', '5', 'ADD 12', 'ADD 12', '10'],
+        ['Execute', '6', '5', 'ADD 12', 'ADD 12', '17']
       ],
-      given: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]],
-      explanation: 'Each fetch copies the PC to the MAR and then increments the PC. Executing <code>LDA</code>, <code>ADD</code>, <code>SUB</code> and <code>STA</code> puts the operand address in the MAR. <code>HLT</code> does not access memory, so the MAR still holds 4, the address used to fetch it. 25 + 17 = 42, then 42 − 8 = 34, which <code>STA 13</code> stores at address 13.'
+      given: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
+      explanation: 'Step 1 copies the PC (5) into the MAR. Step 2 sends that address on the address bus – no register changes. Step 3 copies the instruction into the MDR; step 4 moves it into the CIR, and the PC has incremented to 6. Decode splits the CIR into opcode (ADD) and operand (12) – no value changes. Execute: 10 + 7 = 17 in the ACC.'
     }
   ]
 });
