@@ -102,8 +102,8 @@ test('isValidSession rejects sessions that refer to removed questions or are mal
   assert.equal(RS.quiz.isValidSession(null), false);
   assert.equal(RS.quiz.isValidSession({ ids: [], current: 0, responses: {} }), false);
   assert.equal(RS.quiz.isValidSession({ ids: ['not-a-question'], current: 0, responses: {} }), false);
-  assert.equal(RS.quiz.isValidSession({ ids: ['u1t1-q1'], current: 5, responses: {} }), false);
-  assert.equal(RS.quiz.isValidSession({ ids: ['u1t1-q1'], current: 0, responses: {} }), true);
+  assert.equal(RS.quiz.isValidSession({ ids: ['u1t1-111-q1'], current: 5, responses: {} }), false);
+  assert.equal(RS.quiz.isValidSession({ ids: ['u1t1-111-q1'], current: 0, responses: {} }), true);
 });
 
 test('storage records progress and survives a reload', () => {
@@ -185,7 +185,7 @@ test('progress statistics and mastery are calculated correctly', () => {
   RS.store.recordQuestion(topic.questions[1].id, true);
   RS.store.setFlashcard(topic.flashcards[0].id, 'known');
   RS.store.setFlashcard(topic.flashcards[1].id, 'learning');
-  RS.store.recordExam(topic.exam[0].id, 1, topic.exam[0].marks); // below half marks
+  RS.store.recordExam(topic.exam[0].id, 0, topic.exam[0].marks); // below half marks
   RS.store.recordTrace(topic.traces[0].id, 9, 9);
 
   const s = RS.progress.topicStats(topic, RS.store.state);
@@ -218,6 +218,21 @@ test('search finds topics, notes and questions and requires every word', () => {
   assert.deepEqual(plain(RS.search.search('zzzz-not-a-word')), []);
   const topicHit = RS.search.search('Hardware and communication')[0];
   assert.ok(['Topic', 'Course topic'].includes(topicHit.kind), 'topic titles rank first');
+});
+
+test('buildPool can limit a quiz to one specification entry', () => {
+  const { RS } = loadSite();
+  const ids = RS.quiz.buildPool({ topics: ['u1-t1'], spec: '1.2.1' });
+  assert.ok(ids.length >= 3);
+  assert.ok(ids.every((id) => RS.content.question(id).spec === '1.2.1'));
+});
+
+test('select returns items in specification order', () => {
+  const { RS } = loadSite();
+  const t = RS.content.topic('u1-t1');
+  const order = RS.course.topic(1, 1).spec.map((e) => e.code);
+  const ranks = RS.content.select(t, 'questions', {}).map((q) => order.indexOf(q.spec));
+  assert.deepEqual(plain(ranks), plain([...ranks].sort((a, b) => a - b)));
 });
 
 test('buildPool can limit a quiz to one lesson', () => {

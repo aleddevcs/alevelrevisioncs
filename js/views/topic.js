@@ -20,16 +20,21 @@
     if (!full) { RS.views.notFound.render(app); return; }
     var courseTopic = RS.course.topic(full.unit, full.topic);
     var lessons = courseTopic ? courseTopic.lessons : [];
+    var specList = courseTopic ? courseTopic.spec : [];
+    // Revise everything, one lesson (?lesson=2) or one specification entry (?spec=1.2.1).
     var lesson = Number(params.query.lesson) || null;
     if (lesson && !lessons.some(function (l) { return l.number === lesson; })) lesson = null;
-    var q = lesson ? '?lesson=' + lesson : '';
+    var spec = RS.course.specEntry(courseTopic, params.query.spec) ? params.query.spec : null;
+    if (spec) lesson = null;
+    var q = lesson ? '?lesson=' + lesson : spec ? '?spec=' + spec : '';
+    var quizHref = '#/quiz?topic=' + full.id + (lesson ? '&lesson=' + lesson : spec ? '&spec=' + spec : '');
+    var quizLabel = lesson ? 'Quiz this lesson' : spec ? 'Quiz this spec point' : 'Quiz this topic';
 
-    // A copy of the topic holding only the chosen lesson's items (or everything).
+    // A copy of the topic holding only the chosen items, in specification order.
     full.notes.forEach(function (n, i) { n.anchor = 'note-' + i; });
-    var topic = Object.assign({}, full, { lesson: lesson, lessons: lessons, query: q });
-    ['notes', 'flashcards', 'questions', 'exam', 'traces'].forEach(function (k) { topic[k] = RS.content.forLesson(full, k, lesson); });
-    ['misconceptions', 'examTips'].forEach(function (k) {
-      topic[k] = (full[k] || []).filter(function (x) { return !lesson || !x.lesson || x.lesson === lesson; });
+    var topic = Object.assign({}, full, { lesson: lesson, spec: spec, lessons: lessons, specList: specList, query: q, quizHref: quizHref, quizLabel: quizLabel });
+    ['notes', 'flashcards', 'questions', 'exam', 'traces', 'misconceptions', 'examTips'].forEach(function (k) {
+      topic[k] = RS.content.select(full, k, { lesson: lesson, spec: spec });
     });
 
     var tab = TABS.some(function (t) { return t.id === params.tab; }) ? params.tab : 'notes';
@@ -54,7 +59,7 @@
         h('p', { class: 'lead' }, full.summary)),
       h('div', { class: 'topic-header-progress' },
         ui.progressRing(stats.mastery, full.title + ' mastery'),
-        h('a', { class: 'btn btn-primary', href: '#/quiz?topic=' + full.id + (lesson ? '&lesson=' + lesson : '') }, lesson ? 'Quiz this lesson' : 'Quiz this topic'))));
+        h('a', { class: 'btn btn-primary', href: quizHref }, quizLabel))));
 
     if (full.specRefs.length) {
       app.appendChild(h('details', { class: 'spec-refs' },
@@ -63,17 +68,25 @@
         h('p', { class: 'muted small' }, 'This mapping was made by reading the WJEC specification (version 2, March 2019). It has not been verified by WJEC. Always check the current specification for your course.')));
     }
 
-    // Lesson filter: revise one lesson or the whole topic.
-    if (lessons.length) {
-      var sel = h('select', { id: 'lesson-filter' }, h('option', { value: '' }, 'All lessons in this topic'),
-        lessons.map(function (l) { return h('option', { value: String(l.number), selected: l.number === lesson }, 'Lesson ' + l.number + ': ' + l.title); }));
+    // Filter: the whole topic, one lesson or one specification entry.
+    if (lessons.length || specList.length) {
+      var sel = h('select', { id: 'lesson-filter' }, h('option', { value: '' }, 'Whole topic'),
+        lessons.length ? h('optgroup', { label: 'By lesson' }, lessons.map(function (l) {
+          return h('option', { value: 'lesson=' + l.number, selected: l.number === lesson }, 'Lesson ' + l.number + ': ' + l.title);
+        })) : null,
+        specList.length ? h('optgroup', { label: 'By specification entry' }, specList.map(function (e) {
+          return h('option', { value: 'spec=' + e.code, selected: e.code === spec }, e.code + ' ' + shorten(e.text, 70));
+        })) : null);
       sel.addEventListener('change', function () {
-        RS.app.go('#/topic/' + full.id + '/' + tab + (sel.value ? '?lesson=' + sel.value : ''));
+        RS.app.go('#/topic/' + full.id + '/' + tab + (sel.value ? '?' + sel.value : ''));
       });
-      var current = lesson ? lessons.filter(function (l) { return l.number === lesson; })[0] : null;
-      app.appendChild(h('div', { class: 'toolbar lesson-filter' },
-        h('label', { for: 'lesson-filter' }, 'Revise '), sel,
-        current ? h('a', { href: topicHref + '/lesson/' + lesson }, 'Lesson ' + lesson + ' resources') : h('a', { href: topicHref }, 'Lessons and resources')));
+      var link = lesson ? h('a', { href: topicHref + '/lesson/' + lesson }, 'Lesson ' + lesson + ' resources') : h('a', { href: topicHref }, 'Lessons and resources');
+      app.appendChild(h('div', { class: 'toolbar lesson-filter' }, h('label', { for: 'lesson-filter' }, 'Revise '), sel, link));
+      if (spec) {
+        var entry = RS.course.specEntry(courseTopic, spec);
+        app.appendChild(h('p', { class: 'spec-statement' }, h('strong', null, spec + ' '), entry.text,
+          h('span', { class: 'muted small' }, ' · taught in ' + entry.lessons.map(function (n) { return 'Lesson ' + n; }).join(' and '))));
+      }
     }
 
     var tablist = h('nav', { class: 'tabs', 'aria-label': full.title + ' sections' });
@@ -89,19 +102,27 @@
     ({ notes: renderNotes, flashcards: renderFlashcards, questions: renderQuestions, exam: renderExam, tracing: renderTracing })[tab](panel, topic);
   }
 
-  function lessonTitle(topic, n) {
-    var l = topic.lessons.filter(function (x) { return x.number === n; })[0];
-    return 'Lesson ' + n + (l ? ': ' + l.title : '');
+  function shorten(text, max) {
+    return text.length > max ? text.slice(0, max - 1).replace(/\s+\S*$/, '') + '…' : text;
+  }
+
+  /** Heading for a specification entry: code, statement and the lesson(s) that teach it. */
+  function specHeading(topic, code) {
+    var e = topic.specList.filter(function (x) { return x.code === code; })[0];
+    return h('h2', { class: 'section-title spec-heading', id: 'spec-' + code },
+      h('span', { class: 'spec-code' }, code), ' ',
+      h('span', null, e ? e.text : ''),
+      e ? h('span', { class: 'spec-lessons' }, e.lessons.map(function (n) { return 'Lesson ' + n; }).join(' · ')) : null);
   }
 
   /* ---------- Notes ---------- */
   function renderNotes(panel, topic) {
     if (!topic.notes.length) panel.appendChild(ui.emptyState('No notes for this lesson yet.'));
-    var shownLesson = null;
+    var shownSpec = null;
     topic.notes.forEach(function (n) {
-      if (n.lesson && n.lesson !== shownLesson) {
-        shownLesson = n.lesson;
-        panel.appendChild(h('h2', { class: 'section-title lesson-heading' }, lessonTitle(topic, n.lesson)));
+      if (n.spec && n.spec !== shownSpec) {
+        shownSpec = n.spec;
+        panel.appendChild(specHeading(topic, n.spec));
       }
       var sec = h('section', { class: 'card note', id: n.anchor }, h('h3', null, n.heading));
       if (n.points) sec.appendChild(h('ul', null, n.points.map(function (p) { return h('li', { html: p }); })));
@@ -182,7 +203,7 @@
       counter.textContent = 'Card ' + (pos + 1) + ' of ' + deck.length;
 
       var flip = h('button', { type: 'button', class: 'flashcard' + (revealed ? ' is-revealed' : ''), 'aria-expanded': revealed ? 'true' : 'false' },
-        h('span', { class: 'fc-side-label' }, (revealed ? 'Answer' : 'Prompt') + (card.lesson && !topic.lesson ? ' · Lesson ' + card.lesson : '')),
+        h('span', { class: 'fc-side-label' }, (revealed ? 'Answer' : 'Prompt') + (card.spec && !topic.spec ? ' · ' + card.spec : '')),
         h('span', { class: 'fc-front', html: card.front }),
         revealed ? h('span', { class: 'fc-back', html: card.back }) : h('span', { class: 'fc-hint' }, 'Select to reveal the answer'),
         status ? h('span', { class: 'fc-status fc-status-' + status }, status === 'known' ? 'Marked as known' : 'Still learning') : null);
@@ -214,22 +235,32 @@
   /* ---------- Question bank ---------- */
   function renderQuestions(panel, topic) {
     var skill = 'all';
+    var shuffled = false;
     var sel = h('select', { id: 'qb-skill' }, h('option', { value: 'all' }, 'All skills'),
       Object.keys(RS.content.SKILLS).map(function (k) { return h('option', { value: k }, RS.content.SKILLS[k].label); }));
+    var orderBtn = h('button', { type: 'button', class: 'btn' }, 'Shuffle');
+    var intro = h('p', { class: 'muted' });
     var list = h('div', { class: 'question-list' });
-    panel.appendChild(h('p', { class: 'muted' }, 'All questions for this topic, shuffled. Every answer you check is saved to your progress.'));
+    panel.appendChild(intro);
     panel.appendChild(h('div', { class: 'toolbar' },
-      h('label', { for: 'qb-skill' }, 'Skill '), sel,
-      h('button', { type: 'button', class: 'btn', onclick: draw }, 'Reshuffle'),
-      h('a', { class: 'btn btn-primary', href: '#/quiz?topic=' + topic.id + (topic.lesson ? '&lesson=' + topic.lesson : '') }, topic.lesson ? 'Quiz this lesson' : 'Quiz this topic')));
+      h('label', { for: 'qb-skill' }, 'Skill '), sel, orderBtn,
+      h('a', { class: 'btn btn-primary', href: topic.quizHref }, topic.quizLabel)));
     panel.appendChild(list);
     sel.addEventListener('change', function () { skill = sel.value; draw(); });
+    orderBtn.addEventListener('click', function () { shuffled = !shuffled; draw(); });
 
     function draw() {
       list.innerHTML = '';
-      var qs = RS.utils.shuffle(topic.questions.filter(function (q) { return skill === 'all' || q.skill === skill; }));
+      orderBtn.textContent = shuffled ? 'Back to specification order' : 'Shuffle';
+      intro.textContent = (shuffled ? 'Questions in a random order.' : 'Questions in specification order.') + ' Every answer you check is saved to your progress.';
+      var qs = topic.questions.filter(function (q) { return skill === 'all' || q.skill === skill; });
+      if (shuffled) qs = RS.utils.shuffle(qs);
       if (!qs.length) { list.appendChild(ui.emptyState('No questions match this filter.')); return; }
-      qs.forEach(function (q, i) { list.appendChild(bankCard(q, i + 1, qs.length)); });
+      var shownSpec = null;
+      qs.forEach(function (q, i) {
+        if (!shuffled && !topic.spec && q.spec !== shownSpec) { shownSpec = q.spec; list.appendChild(specHeading(topic, q.spec)); }
+        list.appendChild(bankCard(q, i + 1, qs.length));
+      });
     }
 
     function bankCard(q, n, total) {
@@ -238,7 +269,7 @@
         holder.innerHTML = '';
         var retry = h('button', { type: 'button', class: 'btn' }, 'Try again');
         var card = ui.questionCard(q, {
-          heading: 'Question ' + n + ' of ' + total + (q.lesson && !topic.lesson ? ' · Lesson ' + q.lesson : ''),
+          heading: 'Question ' + n + ' of ' + total + (q.spec ? ' · ' + q.spec : ''),
           optionOrder: q.type === 'mcq' ? RS.utils.shuffle(q.options.map(function (_, i) { return i; })) : null,
           onAnswer: function (response, correct) { RS.store.recordQuestion(q.id, correct); },
           after: retry
@@ -279,7 +310,7 @@
     var taId = 'ans-' + e.id;
     var card = h('article', { class: 'card exam-card', id: e.id },
       h('div', { class: 'question-meta' },
-        h('span', { class: 'question-count' }, 'Question ' + n),
+        h('span', { class: 'question-count' }, 'Question ' + n + (e.spec ? ' · ' + e.spec : '')),
         ui.practiceBadge(),
         h('span', { class: 'badge badge-marks' }, RS.utils.plural(e.marks, 'mark')),
         prev ? h('span', { class: 'badge badge-done' }, 'Last self-assessment: ' + prev.score + '/' + prev.marks) : null),

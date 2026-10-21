@@ -66,8 +66,9 @@ test('every page and topic tab renders without JavaScript errors', async () => {
   const revisionCount = await page.evaluate(() => window.RS.content.topics().length);
   assert.equal(await page.locator('.topic-grid:not(.unit-grid) .topic-card').count(), revisionCount);
 
-  const hashes = ['#/quiz', '#/dashboard', '#/about', '#/search?q=cache', '#/question/u1t1-q1'];
+  const hashes = ['#/quiz', '#/dashboard', '#/about', '#/search?q=cache', '#/question/u1t1-111-q1'];
   for (let l = 1; l <= 4; l++) hashes.push(`#/topic/u1-t1/notes?lesson=${l}`, `#/topic/u1-t1/questions?lesson=${l}`);
+  for (const code of ['1.1.1', '1.3.1', '1.7.1']) hashes.push(`#/topic/u1-t1/notes?spec=${code}`, `#/topic/u1-t1/flashcards?spec=${code}`);
   for (const t of topics) {
     for (const tab of ['notes', 'flashcards', 'questions', 'exam']) hashes.push(`#/topic/${t.id}/${tab}`);
     if (t.traces) hashes.push(`#/topic/${t.id}/tracing`);
@@ -119,7 +120,7 @@ test('flashcards reveal and their status persists after a refresh', async () => 
 
 test('question bank gives instant feedback, rejects empty answers and can be retried', async () => {
   const page = await openPage();
-  await go(page, '#/question/u1t1-q42'); // typed-answer question: 4 + 3 + 2 + 1 = 10
+  await go(page, '#/question/u1t1-123-q1'); // typed-answer question: 4 + 3 + 2 + 1 = 10
   await page.click('button:has-text("Check answer")');
   assert.match(await page.textContent('.feedback'), /Type an answer first/);
   assert.equal(await page.evaluate(() => Object.keys(window.RS.store.state.questions).length), 0, 'empty answer is not recorded');
@@ -204,10 +205,10 @@ test('exam-style self-assessment and drafts are saved', async () => {
   await card.locator('.mark-points input').nth(0).check();
   await card.locator('.mark-points input').nth(1).check();
   await card.locator('button:has-text("Save my mark")').click();
-  assert.match(await card.locator('.mark-result').textContent(), /Saved: 2 out of 4/);
+  assert.match(await card.locator('.mark-result').textContent(), /Saved: 2 out of 2/);
   await page.reload();
   await page.waitForSelector('.exam-card');
-  assert.match(await page.locator('.exam-card').first().textContent(), /Last self-assessment: 2\/4/);
+  assert.match(await page.locator('.exam-card').first().textContent(), /Last self-assessment: 2\/2/);
   assert.equal(await page.locator('.exam-card textarea').first().inputValue(), 'The PC is copied to the MAR...');
   await page.context().close();
 });
@@ -218,12 +219,12 @@ test('trace tables mark each cell', async () => {
   const card = page.locator('.trace-card').first();
   await card.locator('button:has-text("Show answers")').click();
   await card.locator('button:has-text("Check table")').click();
-  assert.match(await card.locator('.mark-result').textContent(), /20 of 20 cells correct/);
+  assert.match(await card.locator('.mark-result').textContent(), /30 of 30 cells correct/);
   await card.locator('button:has-text("Clear")').click();
   await card.locator('.cell-input:not([readonly])').first().fill('99');
   await card.locator('button:has-text("Check table")').click();
-  assert.match(await card.locator('.mark-result').textContent(), /0 of 20 cells correct/);
-  assert.equal(await card.locator('.cell-bad').count(), 20);
+  assert.match(await card.locator('.mark-result').textContent(), /5 of 30 cells correct/);
+  assert.equal(await card.locator('.cell-bad').count(), 25, 'the 5 cells that should be left empty are already correct');
   await page.context().close();
 });
 
@@ -244,7 +245,7 @@ test('search from the header finds and links to content', async () => {
 
 test('dashboard export downloads progress and reset clears it', async () => {
   const page = await openPage();
-  await go(page, '#/question/u1t1-q42');
+  await go(page, '#/question/u1t1-123-q1');
   await page.fill('.text-input', '10');
   await page.click('button:has-text("Check answer")');
   await go(page, '#/dashboard');
@@ -261,7 +262,7 @@ test('dashboard export downloads progress and reset clears it', async () => {
   await page.waitForSelector('.mark-result:has-text("not a progress export")');
   // Importing the exported file restores the progress.
   await page.setInputFiles('#import-file', exportedFile);
-  await page.waitForFunction(() => window.RS.store.state.questions['u1t1-q42'] && window.RS.store.state.questions['u1t1-q42'].correct === 1);
+  await page.waitForFunction(() => window.RS.store.state.questions['u1t1-123-q1'] && window.RS.store.state.questions['u1t1-123-q1'].correct === 1);
   await page.context().close();
 });
 
@@ -339,17 +340,20 @@ test('course units, topics and lessons link to working resources', async () => {
   await go(page, '#/unit/1/topic/1');
   await page.click('.revision-panel a:has-text("Notes")');
   await page.waitForSelector('.topic-header h1:has-text("Hardware and communication")');
-  assert.equal(await page.locator('.lesson-heading').count(), 4, 'notes are grouped under the four lessons');
-  await page.selectOption('#lesson-filter', '3');
+  const headings = await page.$$eval('.spec-heading .spec-code', (els) => els.map((e) => e.textContent));
+  assert.deepEqual(headings, ['1.1.1', '1.2.1', '1.2.2', '1.2.3', '1.3.1', '1.4.1', '1.4.2', '1.5.1', '1.6.1', '1.7.1', '1.7.2', '1.7.3', '1.7.4', '1.8.1'], 'notes follow specification order');
+  await page.selectOption('#lesson-filter', 'lesson=3');
   await page.waitForFunction(() => location.hash === '#/topic/u1-t1/notes?lesson=3');
-  assert.equal(await page.locator('.lesson-heading').count(), 1);
-  assert.match(await page.textContent('.lesson-heading'), /Lesson 3: Storage, fragmentation and networks/);
+  assert.deepEqual(await page.$$eval('.spec-heading .spec-code', (els) => els.map((e) => e.textContent)), ['1.5.1', '1.6.1', '1.7.1']);
+  await page.selectOption('#lesson-filter', 'spec=1.3.1');
+  await page.waitForFunction(() => location.hash === '#/topic/u1-t1/notes?spec=1.3.1');
+  assert.match(await page.textContent('.spec-statement'), /Describe the fetch-execute cycle/);
 
   // "Quiz this lesson" from a lesson page gives a quiz on that lesson only.
   await go(page, '#/unit/1/topic/1/lesson/2');
   await page.click('.revision-panel a:has-text("Quiz this lesson")');
   await page.waitForSelector('#q-lesson');
-  assert.equal(await page.inputValue('#q-lesson'), '2');
+  assert.equal(await page.inputValue('#q-lesson'), 'lesson=2');
   await page.selectOption('#q-count', '0');
   await page.click('button:has-text("Start quiz")');
   await page.waitForSelector('.question-card');

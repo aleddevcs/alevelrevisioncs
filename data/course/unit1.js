@@ -10,6 +10,22 @@ RS.course.registerUnit({
       number: 1,
       title: 'Hardware and communication',
       summary: 'Computer architecture and Von Neumann, memory and caching, parallel processing, the fetch-execute cycle, input and output, secondary storage, fragmentation, networking, protocols, handshaking and the internet.',
+      spec: [
+        { code: '1.1.1', lessons: [1], text: 'Identify and describe the hardware and communication elements of contemporary computer systems and how they are connected.' },
+        { code: '1.2.1', lessons: [1], text: 'Identify and describe the main components of contemporary computer architecture, including Von Neumann architectures.' },
+        { code: '1.2.2', lessons: [1], text: 'Describe different types of memory and caching.' },
+        { code: '1.2.3', lessons: [2], text: 'Describe and explain parallel processing.' },
+        { code: '1.3.1', lessons: [2], text: 'Describe the fetch-execute cycle, showing how data can be read from RAM into registers.' },
+        { code: '1.4.1', lessons: [2], text: 'Describe the use of contemporary methods and their associated devices for input and output.' },
+        { code: '1.4.2', lessons: [2], text: 'Explain the use of these methods and devices in contemporary computer systems and their suitability in different situations.' },
+        { code: '1.5.1', lessons: [3], text: 'Compare the functional characteristics of contemporary secondary storage devices.' },
+        { code: '1.6.1', lessons: [3], text: 'Explain fragmentation and its consequences, and describe the need for defragmentation.' },
+        { code: '1.7.1', lessons: [3, 4], text: 'Describe networks and how they communicate.' },
+        { code: '1.7.2', lessons: [4], text: 'Explain the importance of networking standards.' },
+        { code: '1.7.3', lessons: [4], text: 'Describe the importance and the use of a range of contemporary protocols, including HTTP, FTP, SMTP, TCP/IP, IMAP, DHCP, UDP and wireless communication protocols.' },
+        { code: '1.7.4', lessons: [4], text: 'Explain the role of handshaking.' },
+        { code: '1.8.1', lessons: [4], text: 'Describe the internet in terms of a world-wide communications infrastructure.' }
+      ],
       lessons: [
         {
           number: 1,

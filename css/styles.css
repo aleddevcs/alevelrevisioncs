@@ -560,3 +560,9 @@ a.course-row:hover { border-color: var(--primary); color: var(--text); }
 .revision-panel { margin-top: 24px; }
 .quiz-setup select { max-width: 100%; min-width: 0; }
 .quiz-setup .field-inline { flex-wrap: wrap; }
+
+/* Specification entry headings on revision pages */
+.spec-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 1.05rem; line-height: 1.4; margin-top: 28px; }
+.spec-code { display: inline-block; padding: 2px 10px; border-radius: 6px; background: var(--primary); color: var(--primary-text); font-family: var(--mono); font-size: 0.9rem; }
+.spec-lessons { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+.spec-statement { background: var(--primary-soft); border-radius: var(--radius-sm); padding: 10px 14px; margin: 0 0 12px; }

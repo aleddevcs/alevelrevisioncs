@@ -76,6 +76,29 @@ test('every revision item is tagged with a lesson that exists in its course topi
   }
 });
 
+test('every revision item names a specification entry taught in its lesson', () => {
+  for (const t of topics) {
+    const course = RS.course.topic(t.unit, t.topic);
+    for (const kind of ['notes', 'flashcards', 'questions', 'exam', 'traces', 'misconceptions', 'examTips']) {
+      (t[kind] || []).forEach((item, i) => {
+        const where = `${t.id}.${kind}[${i}]${item.id ? ' (' + item.id + ')' : ''}`;
+        const entry = RS.course.specEntry(course, item.spec);
+        assert.ok(entry, `${where}: unknown specification entry "${item.spec}"`);
+        assert.ok(entry.lessons.includes(item.lesson), `${where}: ${item.spec} is not taught in lesson ${item.lesson}`);
+      });
+    }
+  }
+});
+
+test('every specification entry with revision has notes and practice questions', () => {
+  for (const t of topics) {
+    for (const entry of RS.course.topic(t.unit, t.topic).spec) {
+      assert.ok(RS.content.select(t, 'notes', { spec: entry.code }).length >= 1, `${t.id}: no notes for ${entry.code}`);
+      assert.ok(RS.content.select(t, 'questions', { spec: entry.code }).length >= 1, `${t.id}: no questions for ${entry.code}`);
+    }
+  }
+});
+
 test('each lesson with revision content has notes, flashcards and enough questions', () => {
   for (const t of topics) {
     const covered = new Set(t.questions.map((q) => q.lesson));

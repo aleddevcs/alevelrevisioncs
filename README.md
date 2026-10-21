@@ -20,11 +20,12 @@ paid services**, so it can be hosted free on GitHub Pages or opened straight fro
 | Search across notes, flashcards and questions | Header search box |
 | Light and dark themes, responsive layout, keyboard and screen-reader support | Everywhere |
 
-**Revision content is written from the lessons**, one course topic at a time. So far: **Unit 1, Topic 1
-(Hardware and communication)**, built from Lessons 1–4: 28 note sections, 44 flashcards (including Welsh key
-terms from the slides), 44 auto-marked practice questions, 8 exam-style questions and a register-tracking
-exercise. Every item is tagged with its lesson, so students can revise one lesson or the whole topic. Every
-question is labelled as **Knowledge recall**, **Application** or **Exam technique**.
+**Revision content is written only from the lessons** (slides, starters, interactive activities and exit
+tickets), one course topic at a time, and is **ordered by specification entry**. So far: **Unit 1, Topic 1
+(Hardware and communication)**, built from Lessons 1–4 and covering entries 1.1.1 to 1.8.1: 35 note sections,
+57 flashcards (including the Welsh key terms from the slides), 59 auto-marked practice questions, 15 exam-style
+questions (the lessons' exit tickets plus one per specification statement) and a register-tracker exercise.
+Students can revise the whole topic, one lesson, or one specification entry, and quiz on any of them.
 
 Other topics show their lessons and resources, with revision marked “coming soon” until it is written.
 
@@ -155,30 +156,34 @@ RS.content.registerTopic({
   summary: 'One-sentence summary.',
   keywords: ['extra', 'search', 'terms'],
   specRefs: ['Lesson 1 – 1.1.1 …'],
-  notes: [{ lesson: 1, heading: 'Heading', points: ['Bullet'] /* or html: '...' */, code: 'optional' }],
-  misconceptions: [{ lesson: 1, wrong: 'What students often think', right: 'What is actually true' }],
-  examTips: [{ lesson: 1, text: 'Advice on answering questions' }],
-  flashcards: [{ id: 'u1t1-fc1', lesson: 1, front: 'Prompt', back: 'Answer' }],
+  // Every item has `spec` (an entry listed for the topic in data/course/unitN.js) and `lesson`.
+  notes: [{ spec: '1.2.1', lesson: 1, heading: 'Heading', points: ['Bullet'] /* or html: '...' */, code: 'optional' }],
+  misconceptions: [{ spec: '1.2.2', lesson: 1, wrong: 'What students often think', right: 'What is actually true' }],
+  examTips: [{ spec: '1.2.1', lesson: 1, text: 'Advice on answering questions' }],
+  flashcards: [{ id: 'u1t1-121-fc1', spec: '1.2.1', lesson: 1, front: 'Prompt', back: 'Answer' }],
   questions: [
-    { id: 'u1t1-q1', lesson: 1, type: 'mcq', skill: 'recall',   // recall | application | technique
+    { id: 'u1t1-121-q1', spec: '1.2.1', lesson: 1, type: 'mcq', skill: 'recall',   // recall | application | technique
       question: 'Question text', code: 'optional code',
       options: ['Correct option', 'Wrong 1', 'Wrong 2', 'Wrong 3'],
       answer: 0,                                       // index of the correct option
       feedback: ['', 'Why wrong 1 is wrong', 'Why wrong 2 is wrong', 'Why wrong 3 is wrong'],
       explanation: 'Shown after answering' },
-    { id: 'u1t1-q42', lesson: 2, type: 'input', skill: 'application',
+    { id: 'u1t1-123-q1', spec: '1.2.3', lesson: 2, type: 'input', skill: 'application',
       question: 'Question text', accept: ['10', '10 s'], ignoreSpaces: false, caseSensitive: false,
       hint: 'optional', explanation: 'Shown after answering' }
   ],
-  exam: [{ id: 'u1t1-e1', lesson: 1, marks: 4, context: 'optional', question: '...', markPoints: ['...'], technique: 'optional' }],
-  traces: [{ id: 'u1t1-t1', lesson: 2, title: '...', intro: '...', code: '...', columns: ['PC', 'ACC'],
+  exam: [{ id: 'u1t1-121-e1', spec: '1.2.1', lesson: 1, marks: 4, context: 'optional', question: '...', markPoints: ['...'], technique: 'optional' }],
+  traces: [{ id: 'u1t1-131-t1', spec: '1.3.1', lesson: 2, title: '...', intro: '...', code: '...', columns: ['PC', 'ACC'],
              rows: [['1', '25']], given: [[0, 0]] /* optional pre-filled cells [row, column] */,
              explanation: '...' }]
 });
 ```
 
-Every item needs a `lesson` number that exists in the course topic; the tests check this, and that each
-lesson with revision has at least 2 note sections, 5 flashcards, 6 questions and 1 exam-style question.
+The course topic in `data/course/unitN.js` lists its specification entries in order, each with its statement
+and the lesson(s) that teach it (`spec: [{ code: '1.2.1', lessons: [1], text: '…' }]`). Revision pages, the
+question bank and flashcards follow that order. The tests check that every item names a real entry taught in
+its lesson, that every entry has notes and questions, and that each lesson has at least 2 note sections,
+5 flashcards, 6 questions and 1 exam-style question.
 Multiple-choice options are shuffled every time they are shown, so it is fine to always write the correct
 option first. Avoid “all of the above”/“none of the above” (a test enforces this).
 
