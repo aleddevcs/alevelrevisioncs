@@ -72,10 +72,9 @@ test('a file is listed only once', () => {
   }
 });
 
-test('revision links point to existing revision topics', () => {
-  for (const u of units) for (const t of u.topics) for (const id of t.revision) {
-    assert.ok(RS.content.topic(id), `Unit ${u.number} Topic ${t.number}: unknown revision topic "${id}"`);
-  }
+test('course topics find the revision content written for them', () => {
+  assert.equal(RS.course.revisionFor(RS.course.topic(1, 1)).id, 'u1-t1');
+  assert.equal(RS.course.revisionFor(RS.course.topic(3, 1)), null);
 });
 
 test('resource URLs encode spaces in file names', () => {
@@ -86,4 +85,13 @@ test('resource URLs encode spaces in file names', () => {
 test('lessons are included in search', () => {
   const hits = RS.search.search('floating point');
   assert.ok(hits.some((d) => d.kind === 'Lesson' && d.href === '#/unit/1/topic/4/lesson/3'));
+});
+
+test('every script and the stylesheet use the same cache-busting version', () => {
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const local = [...html.matchAll(/(?:src|href)="((?:js|data|css)\/[^"]+)"/g)].map((m) => m[1]);
+  assert.ok(local.length > 20);
+  const versions = new Set(local.map((u) => (u.match(/\?v=(\d+)$/) || [])[1]));
+  assert.equal(versions.size, 1, 'use the same ?v= number on every script and stylesheet');
+  assert.ok(!versions.has(undefined), 'every script and stylesheet needs ?v=N');
 });

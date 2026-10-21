@@ -550,3 +550,13 @@ a.course-row:hover { border-color: var(--primary); color: var(--text); }
   .resource-list li { flex-wrap: wrap; }
   .activity-frame iframe { height: 70vh; min-height: 400px; }
 }
+
+/* Wide tables in notes scroll inside their card rather than widening the page on phones. */
+.note-html { overflow-x: auto; }
+.lesson-heading { margin-top: 28px; }
+.lesson-filter select { max-width: 100%; }
+.revise-links { list-style: none; padding: 0; margin: 0 0 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+.revise-count { display: inline-grid; place-items: center; min-width: 24px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); font-size: 0.78rem; }
+.revision-panel { margin-top: 24px; }
+.quiz-setup select { max-width: 100%; min-width: 0; }
+.quiz-setup .field-inline { flex-wrap: wrap; }

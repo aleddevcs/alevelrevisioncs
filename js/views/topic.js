@@ -16,46 +16,71 @@
   ];
 
   function render(app, params) {
-    var topic = RS.content.topic(params.id);
-    if (!topic) { RS.views.notFound.render(app); return; }
+    var full = RS.content.topic(params.id);
+    if (!full) { RS.views.notFound.render(app); return; }
+    var courseTopic = RS.course.topic(full.unit, full.topic);
+    var lessons = courseTopic ? courseTopic.lessons : [];
+    var lesson = Number(params.query.lesson) || null;
+    if (lesson && !lessons.some(function (l) { return l.number === lesson; })) lesson = null;
+    var q = lesson ? '?lesson=' + lesson : '';
+
+    // A copy of the topic holding only the chosen lesson's items (or everything).
+    full.notes.forEach(function (n, i) { n.anchor = 'note-' + i; });
+    var topic = Object.assign({}, full, { lesson: lesson, lessons: lessons, query: q });
+    ['notes', 'flashcards', 'questions', 'exam', 'traces'].forEach(function (k) { topic[k] = RS.content.forLesson(full, k, lesson); });
+    ['misconceptions', 'examTips'].forEach(function (k) {
+      topic[k] = (full[k] || []).filter(function (x) { return !lesson || !x.lesson || x.lesson === lesson; });
+    });
+
     var tab = TABS.some(function (t) { return t.id === params.tab; }) ? params.tab : 'notes';
     if (tab === 'tracing' && !topic.traces.length) tab = 'notes';
-    RS.store.touchTopic(topic.id);
-    RS.app.setTitle(topic.title);
+    RS.store.touchTopic(full.id);
+    RS.app.setTitle(full.title + ' revision');
 
-    var stats = RS.progress.topicStats(topic, RS.store.state);
+    var stats = RS.progress.topicStats(full, RS.store.state);
+    var unitHref = '#/unit/' + full.unit;
+    var topicHref = unitHref + '/topic/' + full.topic;
     app.appendChild(h('nav', { class: 'breadcrumbs', 'aria-label': 'Breadcrumb' },
-      h('a', { href: '#/' }, 'Topics'), h('span', { 'aria-hidden': 'true' }, ' / '), h('span', { 'aria-current': 'page' }, topic.title)));
+      h('a', { href: '#/units' }, 'Units'), h('span', { 'aria-hidden': 'true' }, ' / '),
+      h('a', { href: unitHref }, 'Unit ' + full.unit), h('span', { 'aria-hidden': 'true' }, ' / '),
+      h('a', { href: topicHref }, 'Topic ' + full.topic), h('span', { 'aria-hidden': 'true' }, ' / '),
+      h('span', { 'aria-current': 'page' }, 'Revision')));
 
     app.appendChild(h('header', { class: 'topic-header' },
-      ui.topicIcon(topic),
+      ui.topicIcon(full),
       h('div', { class: 'topic-header-text' },
-        h('h1', null, topic.title),
-        h('p', { class: 'lead' }, topic.summary)),
+        h('p', { class: 'unit-kicker' }, 'Unit ' + full.unit + ' · Topic ' + full.topic + ' · Revision'),
+        h('h1', null, full.title),
+        h('p', { class: 'lead' }, full.summary)),
       h('div', { class: 'topic-header-progress' },
-        ui.progressRing(stats.mastery, topic.title + ' mastery'),
-        h('a', { class: 'btn btn-primary', href: '#/quiz?topic=' + topic.id }, 'Quiz this topic'))));
+        ui.progressRing(stats.mastery, full.title + ' mastery'),
+        h('a', { class: 'btn btn-primary', href: '#/quiz?topic=' + full.id + (lesson ? '&lesson=' + lesson : '') }, lesson ? 'Quiz this lesson' : 'Quiz this topic'))));
 
-    if (topic.specRefs.length) {
+    if (full.specRefs.length) {
       app.appendChild(h('details', { class: 'spec-refs' },
         h('summary', null, 'Specification links (WJEC GCE Computer Science, Wales)'),
-        h('ul', null, topic.specRefs.map(function (r) { return h('li', null, r); })),
+        h('ul', null, full.specRefs.map(function (r) { return h('li', null, r); })),
         h('p', { class: 'muted small' }, 'This mapping was made by reading the WJEC specification (version 2, March 2019). It has not been verified by WJEC. Always check the current specification for your course.')));
     }
 
-    var inCourse = RS.course.topicsUsingRevision(topic.id);
-    if (inCourse.length) {
-      app.appendChild(h('p', { class: 'muted small course-links' }, 'Lessons for this topic: ',
-        inCourse.map(function (t, i) {
-          return [i ? ' · ' : '', h('a', { href: '#/unit/' + t.unit + '/topic/' + t.number }, 'Unit ' + t.unit + ', Topic ' + t.number + ' (' + t.title + ')')];
-        })));
+    // Lesson filter: revise one lesson or the whole topic.
+    if (lessons.length) {
+      var sel = h('select', { id: 'lesson-filter' }, h('option', { value: '' }, 'All lessons in this topic'),
+        lessons.map(function (l) { return h('option', { value: String(l.number), selected: l.number === lesson }, 'Lesson ' + l.number + ': ' + l.title); }));
+      sel.addEventListener('change', function () {
+        RS.app.go('#/topic/' + full.id + '/' + tab + (sel.value ? '?lesson=' + sel.value : ''));
+      });
+      var current = lesson ? lessons.filter(function (l) { return l.number === lesson; })[0] : null;
+      app.appendChild(h('div', { class: 'toolbar lesson-filter' },
+        h('label', { for: 'lesson-filter' }, 'Revise '), sel,
+        current ? h('a', { href: topicHref + '/lesson/' + lesson }, 'Lesson ' + lesson + ' resources') : h('a', { href: topicHref }, 'Lessons and resources')));
     }
 
-    var tablist = h('nav', { class: 'tabs', 'aria-label': topic.title + ' sections' });
+    var tablist = h('nav', { class: 'tabs', 'aria-label': full.title + ' sections' });
     TABS.forEach(function (t) {
       if (t.id === 'tracing' && !topic.traces.length) return;
       var label = t.label + (t.count ? ' (' + topic[t.count].length + ')' : '');
-      tablist.appendChild(h('a', { href: '#/topic/' + topic.id + '/' + t.id, class: 'tab' + (t.id === tab ? ' is-active' : ''), 'aria-current': t.id === tab ? 'page' : null }, label));
+      tablist.appendChild(h('a', { href: '#/topic/' + full.id + '/' + t.id + q, class: 'tab' + (t.id === tab ? ' is-active' : ''), 'aria-current': t.id === tab ? 'page' : null }, label));
     });
     app.appendChild(tablist);
 
@@ -64,10 +89,21 @@
     ({ notes: renderNotes, flashcards: renderFlashcards, questions: renderQuestions, exam: renderExam, tracing: renderTracing })[tab](panel, topic);
   }
 
+  function lessonTitle(topic, n) {
+    var l = topic.lessons.filter(function (x) { return x.number === n; })[0];
+    return 'Lesson ' + n + (l ? ': ' + l.title : '');
+  }
+
   /* ---------- Notes ---------- */
   function renderNotes(panel, topic) {
-    topic.notes.forEach(function (n, i) {
-      var sec = h('section', { class: 'card note', id: 'note-' + i }, h('h2', null, n.heading));
+    if (!topic.notes.length) panel.appendChild(ui.emptyState('No notes for this lesson yet.'));
+    var shownLesson = null;
+    topic.notes.forEach(function (n) {
+      if (n.lesson && n.lesson !== shownLesson) {
+        shownLesson = n.lesson;
+        panel.appendChild(h('h2', { class: 'section-title lesson-heading' }, lessonTitle(topic, n.lesson)));
+      }
+      var sec = h('section', { class: 'card note', id: n.anchor }, h('h3', null, n.heading));
       if (n.points) sec.appendChild(h('ul', null, n.points.map(function (p) { return h('li', { html: p }); })));
       if (n.html) sec.appendChild(h('div', { class: 'note-html', html: n.html }));
       if (n.code) sec.appendChild(ui.codeBlock(n.code, n.heading + ' example'));
@@ -83,10 +119,10 @@
     if (topic.examTips && topic.examTips.length) {
       panel.appendChild(h('section', { class: 'card note note-tips' },
         h('h2', null, 'Exam technique'),
-        h('ul', null, topic.examTips.map(function (t) { return h('li', { html: t }); }))));
+        h('ul', null, topic.examTips.map(function (t) { return h('li', { html: typeof t === 'string' ? t : t.text }); }))));
     }
     panel.appendChild(h('div', { class: 'next-steps' },
-      h('a', { class: 'btn', href: '#/topic/' + topic.id + '/flashcards' }, 'Next: flashcards →')));
+      h('a', { class: 'btn', href: '#/topic/' + topic.id + '/flashcards' + topic.query }, 'Next: flashcards →')));
   }
 
   /* ---------- Flashcards ---------- */
@@ -146,7 +182,7 @@
       counter.textContent = 'Card ' + (pos + 1) + ' of ' + deck.length;
 
       var flip = h('button', { type: 'button', class: 'flashcard' + (revealed ? ' is-revealed' : ''), 'aria-expanded': revealed ? 'true' : 'false' },
-        h('span', { class: 'fc-side-label' }, revealed ? 'Answer' : 'Prompt'),
+        h('span', { class: 'fc-side-label' }, (revealed ? 'Answer' : 'Prompt') + (card.lesson && !topic.lesson ? ' · Lesson ' + card.lesson : '')),
         h('span', { class: 'fc-front', html: card.front }),
         revealed ? h('span', { class: 'fc-back', html: card.back }) : h('span', { class: 'fc-hint' }, 'Select to reveal the answer'),
         status ? h('span', { class: 'fc-status fc-status-' + status }, status === 'known' ? 'Marked as known' : 'Still learning') : null);
@@ -185,7 +221,7 @@
     panel.appendChild(h('div', { class: 'toolbar' },
       h('label', { for: 'qb-skill' }, 'Skill '), sel,
       h('button', { type: 'button', class: 'btn', onclick: draw }, 'Reshuffle'),
-      h('a', { class: 'btn btn-primary', href: '#/quiz?topic=' + topic.id }, 'Quiz this topic')));
+      h('a', { class: 'btn btn-primary', href: '#/quiz?topic=' + topic.id + (topic.lesson ? '&lesson=' + topic.lesson : '') }, topic.lesson ? 'Quiz this lesson' : 'Quiz this topic')));
     panel.appendChild(list);
     sel.addEventListener('change', function () { skill = sel.value; draw(); });
 
@@ -202,7 +238,7 @@
         holder.innerHTML = '';
         var retry = h('button', { type: 'button', class: 'btn' }, 'Try again');
         var card = ui.questionCard(q, {
-          heading: 'Question ' + n + ' of ' + total,
+          heading: 'Question ' + n + ' of ' + total + (q.lesson && !topic.lesson ? ' · Lesson ' + q.lesson : ''),
           optionOrder: q.type === 'mcq' ? RS.utils.shuffle(q.options.map(function (_, i) { return i; })) : null,
           onAnswer: function (response, correct) { RS.store.recordQuestion(q.id, correct); },
           after: retry

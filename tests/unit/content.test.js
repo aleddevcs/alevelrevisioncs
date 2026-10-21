@@ -25,7 +25,7 @@ function htmlFields() {
     add(`${t.id}.summary`, t.summary);
     t.notes.forEach((n, i) => { (n.points || []).forEach((p, j) => add(`${t.id}.notes[${i}].points[${j}]`, p)); add(`${t.id}.notes[${i}].html`, n.html); });
     (t.misconceptions || []).forEach((m, i) => { add(`${t.id}.misconceptions[${i}]`, m.wrong); add(`${t.id}.misconceptions[${i}]`, m.right); });
-    (t.examTips || []).forEach((x, i) => add(`${t.id}.examTips[${i}]`, x));
+    (t.examTips || []).forEach((x, i) => add(`${t.id}.examTips[${i}]`, typeof x === 'string' ? x : x.text));
     t.flashcards.forEach((f) => { add(f.id, f.front); add(f.id, f.back); });
     t.questions.forEach((q) => {
       add(q.id, q.question); add(q.id, q.explanation);
@@ -48,8 +48,8 @@ function allText() {
   return fields;
 }
 
-test('there are ten topics with unique ids and the required fields', () => {
-  assert.equal(topics.length, 10);
+test('revision topics have unique ids, the required fields and belong to a course topic', () => {
+  assert.ok(topics.length >= 1);
   const ids = new Set();
   for (const t of topics) {
     assert.ok(nonEmpty(t.id) && !ids.has(t.id), `duplicate or missing topic id ${t.id}`);
@@ -58,11 +58,34 @@ test('there are ten topics with unique ids and the required fields', () => {
     assert.ok(nonEmpty(t.summary), `${t.id}: summary`);
     assert.ok(RS.icons.names.includes(t.icon), `${t.id}: unknown icon ${t.icon}`);
     assert.ok(COLOURS.includes(t.colour), `${t.id}: unknown colour ${t.colour}`);
-    assert.ok(t.notes.length >= 5, `${t.id}: needs at least 5 note sections`);
-    assert.ok(t.flashcards.length >= 10, `${t.id}: needs at least 10 flashcards`);
-    assert.ok(t.questions.length >= 12, `${t.id}: needs at least 12 questions`);
-    assert.ok(t.exam.length >= 2, `${t.id}: needs at least 2 exam-style questions`);
+    assert.ok(RS.course.topic(t.unit, t.topic), `${t.id}: no course topic for unit ${t.unit}, topic ${t.topic}`);
+    assert.equal(topics.filter((x) => x.unit === t.unit && x.topic === t.topic).length, 1, `${t.id}: two revision files for the same course topic`);
     assert.ok(t.specRefs.length >= 1, `${t.id}: needs specification references`);
+  }
+});
+
+test('every revision item is tagged with a lesson that exists in its course topic', () => {
+  for (const t of topics) {
+    const lessons = RS.course.topic(t.unit, t.topic).lessons.map((l) => l.number);
+    for (const kind of ['notes', 'flashcards', 'questions', 'exam', 'traces', 'misconceptions', 'examTips']) {
+      (t[kind] || []).forEach((item, i) => {
+        const where = `${t.id}.${kind}[${i}]${item.id ? ' (' + item.id + ')' : ''}`;
+        assert.ok(lessons.includes(item.lesson), `${where}: lesson ${item.lesson} is not a lesson of Unit ${t.unit} Topic ${t.topic}`);
+      });
+    }
+  }
+});
+
+test('each lesson with revision content has notes, flashcards and enough questions', () => {
+  for (const t of topics) {
+    const covered = new Set(t.questions.map((q) => q.lesson));
+    for (const n of covered) {
+      const count = (kind) => RS.content.forLesson(t, kind, n).length;
+      assert.ok(count('notes') >= 2, `${t.id} lesson ${n}: needs at least 2 note sections`);
+      assert.ok(count('flashcards') >= 5, `${t.id} lesson ${n}: needs at least 5 flashcards`);
+      assert.ok(count('questions') >= 6, `${t.id} lesson ${n}: needs at least 6 questions`);
+      assert.ok(count('exam') >= 1, `${t.id} lesson ${n}: needs at least 1 exam-style question`);
+    }
   }
 });
 

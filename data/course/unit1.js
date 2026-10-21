@@ -10,7 +10,6 @@ RS.course.registerUnit({
       number: 1,
       title: 'Hardware and communication',
       summary: 'Computer architecture and Von Neumann, memory and caching, parallel processing, the fetch-execute cycle, input and output, secondary storage, fragmentation, networking, protocols, handshaking and the internet.',
-      revision: ['processor', 'memory', 'networks'],
       lessons: [
         {
           number: 1,
@@ -60,7 +59,6 @@ RS.course.registerUnit({
       number: 2,
       title: 'Logical operations',
       summary: 'Truth tables for AND, OR, NOT and XOR; logical operations in programming, including clearing registers and masking; simplifying Boolean expressions using identities and rules.',
-      revision: ['boolean-logic'],
       resources: [
         { file: 'Topic2_Logical_Operations_Cheat_Sheet.docx', title: 'Logical operations cheat sheet', type: 'cheat-sheet' }
       ],
@@ -118,7 +116,6 @@ RS.course.registerUnit({
       number: 3,
       title: 'Data transmission',
       summary: 'Serial and parallel transmission; simplex, half duplex and full duplex; multiplexing and switching; packet contents; network collisions; routing.',
-      revision: ['networks'],
       plannedLessons: 3,
       lessons: [
         {
@@ -156,7 +153,6 @@ RS.course.registerUnit({
       number: 4,
       title: 'Data representation and data types',
       summary: 'Bits, bytes and words; binary and hexadecimal; character sets; primitive data types; binary arithmetic; two’s complement and sign and magnitude; floating point; truncation and rounding.',
-      revision: ['data-representation'],
       plannedLessons: 4,
       lessons: [
         {
@@ -203,18 +199,18 @@ RS.course.registerUnit({
         }
       ]
     },
-    { number: 5, title: 'Data structures', summary: 'Arrays (up to two dimensions) and records; selecting and justifying data structures.', revision: ['data-structures'] },
-    { number: 6, title: 'Organisation of data', summary: 'Files, records and fields; master and transaction files; serial, sequential, indexed sequential and direct access; file security and archiving; validation and verification.', revision: ['databases'] },
-    { number: 7, title: 'Database systems', summary: 'Relational databases; primary and foreign keys, indexes and links; entity relationship modelling; different users’ views of data.', revision: ['databases'] },
-    { number: 8, title: 'The operating system', summary: 'Managing resources; providing an interface; managing backing store; utility software; modes of operation; human–computer interaction.', revision: ['memory'] },
-    { number: 9, title: 'Algorithms and programs', summary: 'Defining algorithms; variables, constants and identifiers; scope; parameters; DIV and MOD; bubble and insertion sort; linear and binary search; programming constructs; modular programming; compression; testing.', revision: ['algorithms', 'programming'] },
-    { number: 10, title: 'Principles of programming', summary: 'Programming paradigms; the object-oriented approach; high-level and low-level languages.', revision: ['programming'] },
-    { number: 11, title: 'Systems analysis', summary: 'Feasibility; investigation and analysis; design; changeover; alpha, beta and acceptance testing; maintenance; backup and recovery; documentation.', revision: ['systems'] },
-    { number: 12, title: 'Software engineering', summary: 'The role of integrated development environment (IDE) tools in developing and debugging programs.', revision: ['systems'] },
-    { number: 13, title: 'Program construction', summary: 'The stages of compilation: lexical analysis, symbol table construction, syntax analysis, semantic analysis, code generation and optimisation.', revision: ['programming'] },
+    { number: 5, title: 'Data structures', summary: 'Arrays (up to two dimensions) and records; selecting and justifying data structures.' },
+    { number: 6, title: 'Organisation of data', summary: 'Files, records and fields; master and transaction files; serial, sequential, indexed sequential and direct access; file security and archiving; validation and verification.' },
+    { number: 7, title: 'Database systems', summary: 'Relational databases; primary and foreign keys, indexes and links; entity relationship modelling; different users’ views of data.' },
+    { number: 8, title: 'The operating system', summary: 'Managing resources; providing an interface; managing backing store; utility software; modes of operation; human–computer interaction.' },
+    { number: 9, title: 'Algorithms and programs', summary: 'Defining algorithms; variables, constants and identifiers; scope; parameters; DIV and MOD; bubble and insertion sort; linear and binary search; programming constructs; modular programming; compression; testing.' },
+    { number: 10, title: 'Principles of programming', summary: 'Programming paradigms; the object-oriented approach; high-level and low-level languages.' },
+    { number: 11, title: 'Systems analysis', summary: 'Feasibility; investigation and analysis; design; changeover; alpha, beta and acceptance testing; maintenance; backup and recovery; documentation.' },
+    { number: 12, title: 'Software engineering', summary: 'The role of integrated development environment (IDE) tools in developing and debugging programs.' },
+    { number: 13, title: 'Program construction', summary: 'The stages of compilation: lexical analysis, symbol table construction, syntax analysis, semantic analysis, code generation and optimisation.' },
     { number: 14, title: 'The need for different types of software systems and their attributes', summary: 'Open source, bespoke and off-the-shelf software; computers in weather forecasting, CAD, robotics and graphics; expert systems.' },
     { number: 15, title: 'Practical programming', summary: 'Designing data structures and routines, developing programs from a design and evaluating them. Assessed in Unit 2.' },
-    { number: 16, title: 'Data security and integrity processes', summary: 'Dangers of managing personal data; security and integrity processes; disaster and contingency planning; malicious and accidental damage.', revision: ['networks'] },
+    { number: 16, title: 'Data security and integrity processes', summary: 'Dangers of managing personal data; security and integrity processes; disaster and contingency planning; malicious and accidental damage.' },
     { number: 17, title: 'Economic, moral, legal, ethical and cultural issues relating to computer science', summary: 'Social and economic change; effects on employment; legislation on security, privacy, data protection and freedom of information.' }
   ]
 });

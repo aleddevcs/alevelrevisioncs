@@ -43,7 +43,7 @@
     var p = route.parts;
     if (!p.length) return { view: 'home', nav: 'home' };
     switch (p[0]) {
-      case 'topic': return { view: 'topic', nav: 'home', params: { id: p[1], tab: p[2] } };
+      case 'topic': return { view: 'topic', nav: 'units', params: { id: p[1], tab: p[2] } };
       case 'units': return { view: 'units', nav: 'units', title: 'Course units' };
       case 'unit':
         if (p[2] === 'topic' && p[4] === 'lesson') return { view: 'lesson', nav: 'units', params: { unit: p[1], topic: p[3], lesson: p[5] } };
@@ -57,7 +57,7 @@
       case 'dashboard': return { view: 'dashboard', nav: 'dashboard', title: 'Dashboard' };
       case 'about': return { view: 'about', nav: 'about', title: 'About' };
       case 'search': return { view: 'search', nav: null, title: 'Search' };
-      case 'question': return { view: 'question', nav: 'home', params: { id: p[1] }, title: 'Practice question' };
+      case 'question': return { view: 'question', nav: 'units', params: { id: p[1] }, title: 'Practice question' };
       default: return { view: 'notFound', nav: null, title: 'Page not found' };
     }
   }
