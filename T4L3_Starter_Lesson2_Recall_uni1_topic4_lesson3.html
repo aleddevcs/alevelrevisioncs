@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Starter: Lesson 2 recall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#14213D; --navy-2:#22335A; --teal:#0F8B8D; --teal-soft:#D6EFEF;
+  --orange:#F28C28; --orange-soft:#FDE9D4; --paper:#F3F6FA; --card:#FFFFFF;
+  --ink:#1B2433; --muted:#5A667A; --line:#D5DCE6; --good:#1E8A4C; --bad:#C0392B;
+  --good-soft:#E3F4EA; --bad-soft:#F8E3E0;
+  --sans:"Atkinson Hyperlegible","Segoe UI",Arial,sans-serif;
+  --mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.5}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+header{background:var(--navy);color:#fff;padding:20px 24px 22px}
+.head-inner,main{max-width:860px;margin:0 auto}
+.kicker{color:#9FD9DA;font-size:15px;margin:0}
+h1{margin:2px 0 6px;font-size:30px;line-height:1.15}
+.sub{margin:0;color:#C9D3E6;max-width:62ch}
+main{padding:22px 24px 48px}
+.bar{position:sticky;top:0;z-index:5;background:var(--paper);padding:10px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:16px}
+.track{flex:1;min-width:160px;height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--teal);transition:width .2s}
+.count{font-weight:700;color:var(--navy);white-space:nowrap}
+.q{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+.q.right{border-color:var(--good);box-shadow:0 0 0 1px var(--good) inset}
+.q.wrong{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset}
+.qhead{display:flex;gap:12px;align-items:baseline}
+.num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;display:grid;place-items:center;font-size:15px}
+.tag{font-size:13px;color:var(--teal);font-weight:700}
+.qtext{margin:0 0 10px;font-weight:700;font-size:18px}
+.opts{display:grid;gap:8px;margin-left:42px}
+.opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px;color:var(--ink)}
+.opt:hover:not([disabled]){border-color:var(--teal)}
+.opt[aria-pressed="true"]{border-color:var(--navy);background:var(--teal-soft);font-weight:700}
+.opt.is-right{border-color:var(--good);background:var(--good-soft)}
+.opt.is-wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt[disabled]{cursor:default}
+.why{display:none;margin:10px 0 0 42px;font-size:15px;color:var(--ink);background:var(--paper);border-radius:10px;padding:10px 12px}
+.why.show{display:block}
+.why b{color:var(--navy)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.btn{border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:10px;padding:10px 18px;font-weight:700}
+.btn.primary{background:var(--navy);color:#fff}
+.btn.primary[disabled]{opacity:.45;cursor:not-allowed}
+.hint{color:var(--muted);font-size:15px}
+.result{display:none;background:var(--navy);color:#fff;border-radius:16px;padding:20px 22px;margin-bottom:18px}
+.result.show{display:block}
+.score{font-size:44px;font-weight:700;line-height:1}
+.score small{font-size:18px;font-weight:400;color:#C9D3E6}
+.result h2{font-size:18px;margin:14px 0 6px;color:var(--orange)}
+.result ul{margin:0;padding-left:20px}
+.result p{margin:8px 0 0;color:#E4EAF4}
+@media (max-width:600px){.opts,.why{margin-left:0}h1{font-size:24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-inner">
+    <p class="kicker">Starter, Topic 4 Lesson 3</p>
+    <h1>Lesson 2 recall: binary arithmetic, truncation and rounding</h1>
+    <p class="sub">Twelve questions on your own. Work each answer out on paper before you choose, then check. Floating point uses binary fractions and two’s complement, so these matter today.</p>
+  </div>
+</header>
+<main>
+  <div class="result" id="result" aria-live="polite"></div>
+  <div class="bar"><div class="track" aria-hidden="true"><div class="fill" id="fill"></div></div><span class="count" id="count">0 of 12 answered</span></div>
+  <div id="qs"></div>
+  <div class="actions">
+    <button class="btn primary" id="check" disabled>Check my answers</button>
+    <button class="btn" id="again" style="display:none">Try again</button>
+    <span class="hint" id="hint">Answer all 12 to unlock the check.</span>
+  </div>
+</main>
+<script>
+// [topic, question, correct, [wrong...], explanation]
+const Q=[
+ ["Binary addition","What is 01011010 + 00100111 in 8-bit binary?","10000001",
+  ["01111101","10000011","10000000"],
+  "90 + 39 = 129 = 1000 0001. 01111101 is what you get if you ignore every carry."],
+ ["Overflow","Two unsigned 8-bit numbers are added: 11001000 + 01000000. What happens?","00001000 is stored: overflow, because the true answer 264 needs 9 bits",
+  ["100001000 is stored: the register grows to 9 bits","11111111 is stored: the register holds its maximum","00001000 is stored: underflow, because the answer is too small"],
+  "200 + 64 = 264, but 8 bits only reach 255. The carry out of the left-hand column is lost, so the register holds 0000 1000 = 8."],
+ ["Overflow","In 8-bit two's complement, 01100000 + 01000000 = 10100000. Which statement is true?","Overflow: the true answer, 160, is above +127",
+  ["The answer is −96, which is correct","There is no overflow, because there is no carry out","Underflow, because the result is negative"],
+  "96 + 64 = 160, but 8-bit two's complement stops at +127. Two positives gave a negative result: that is the sign of overflow."],
+ ["Subtraction","To calculate 75 − 30 in 8-bit two's complement, which pattern is added to 01001011?","11100010",
+  ["10011110","11100001","00011110"],
+  "+30 = 0001 1110. Flip: 1110 0001. Add 1: 1110 0010. 10011110 is sign and magnitude, and 11100001 forgot to add 1."],
+ ["Subtraction","01001011 + 11100010 is calculated in an 8-bit register. What is stored?","00101101",
+  ["100101101","00101100","10101101"],
+  "The sum is 1 0010 1101. The carry out is discarded (normal in two's complement), leaving 0010 1101 = 45, which is 75 − 30."],
+ ["Binary fractions","What is 101.011 in denary?","5.375",
+  ["5.3","5.75","5.011"],
+  "4 + 1 + 0.25 + 0.125 = 5.375. Place values after the point are 0.5, 0.25, 0.125."],
+ ["Binary fractions","What is 0.1101 in denary?","0.8125",
+  ["0.13","0.75","0.875"],
+  "0.5 + 0.25 + 0.0625 = 0.8125. Floating point mantissas are read exactly like this."],
+ ["Binary fractions","Which binary number is 2.25?","10.01",
+  ["10.1","10.25","10.001"],
+  "2 = 10 and 0.25 = 0.01, so 10.01. 10.1 is 2.5 and 10.001 is 2.125."],
+ ["Truncation and rounding","Truncate 11.0111 to two binary places.","11.01",
+  ["11.10","11.11","11.0"],
+  "Truncation cuts off the extra bits: keep the first two after the point. 11.10 is the rounded answer."],
+ ["Truncation and rounding","Round 11.0111 to two binary places.","11.10",
+  ["11.01","11.11","100.00"],
+  "The next bit after the cut is 1, so round up: 11.01 + 0.01 = 11.10."],
+ ["Truncation and rounding","11.0111 (3.4375) is rounded to 11.10 (3.5). What is the absolute error?","0.0625",
+  ["0.1875","0.018","3.5"],
+  "3.5 − 3.4375 = 0.0625. 0.1875 is the truncation error, and 0.018 is the relative error."],
+ ["Truncation and rounding","A true value of 20 is stored as 19. What is the relative error?","0.05",
+  ["1","0.0526","5"],
+  "Absolute error 1, divided by the true value 20, gives 0.05 (5%). Dividing by 19 instead gives 0.0526."]
+];
+const L="ABCD";
+let answers=new Array(Q.length).fill(null), order=[], checked=false;
+const qs=document.getElementById('qs');
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function build(){
+  qs.innerHTML='';answers.fill(null);checked=false;
+  order=Q.map(q=>shuffle([q[2],...q[3]]));
+  Q.forEach((q,i)=>{
+    const d=document.createElement('div');d.className='q';d.id='q'+i;
+    d.innerHTML='<div class="qhead"><span class="num">'+(i+1)+'</span><div><div class="tag">'+q[0]+'</div><p class="qtext">'+q[1]+'</p></div></div><div class="opts" role="group" aria-label="Question '+(i+1)+' options"></div><div class="why"></div>';
+    const box=d.querySelector('.opts');
+    order[i].forEach((o,k)=>{
+      const b=document.createElement('button');b.className='opt';b.setAttribute('aria-pressed','false');
+      b.textContent=L[k]+'.  '+o;b.dataset.v=o;
+      b.onclick=()=>{if(checked)return;answers[i]=o;box.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b));update()};
+      box.append(b);
+    });
+    qs.append(d);
+  });
+  document.getElementById('result').className='result';
+  document.getElementById('check').style.display='';document.getElementById('again').style.display='none';
+  update();
+}
+function update(){
+  const n=answers.filter(a=>a!==null).length;
+  document.getElementById('fill').style.width=(n/Q.length*100)+'%';
+  document.getElementById('count').textContent=n+' of '+Q.length+' answered';
+  const c=document.getElementById('check');c.disabled=n<Q.length;
+  document.getElementById('hint').textContent=checked?'':n<Q.length?'Answer all 12 to unlock the check.':'Ready when you are.';
+}
+document.getElementById('check').onclick=()=>{
+  checked=true;let score=0;const miss={};
+  Q.forEach((q,i)=>{
+    const d=document.getElementById('q'+i),ok=answers[i]===q[2];
+    if(ok)score++;else miss[q[0]]=(miss[q[0]]||0)+1;
+    d.classList.add(ok?'right':'wrong');
+    d.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.dataset.v===q[2])b.classList.add('is-right');else if(b.dataset.v===answers[i])b.classList.add('is-wrong')});
+    const w=d.querySelector('.why');w.innerHTML='<b>'+(ok?'Correct.':'Not this time.')+'</b> '+q[4];w.classList.add('show');
+  });
+  const r=document.getElementById('result');
+  const topics=Object.keys(miss);
+  r.innerHTML='<div class="score">'+score+' <small>out of '+Q.length+'</small></div>'+
+    (topics.length?'<h2>Topics to look back at</h2><ul>'+topics.map(t=>'<li>'+t+' ('+miss[t]+' wrong)</li>').join('')+'</ul><p>Write these down. Binary fractions and two’s complement come up throughout floating point.</p>'
+      :'<p>Full marks. You are ready for floating point.</p>');
+  r.classList.add('show');
+  document.getElementById('check').style.display='none';document.getElementById('again').style.display='';
+  update();window.scrollTo({top:0,behavior:'smooth'});
+};
+document.getElementById('again').onclick=()=>{build();window.scrollTo({top:0})};
+build();
+</script>
+</body>
+</html>

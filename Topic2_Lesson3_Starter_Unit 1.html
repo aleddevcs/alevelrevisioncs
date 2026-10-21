@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lesson 3 Starter: Lesson 2 Recap</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --navy-dark:#121C33; --teal:#1C7293; --teal-dark:#155a72;
+    --amber:#F2A541; --amber-dark:#c97f1f; --bg:#F3F6FB; --card:#FFFFFF;
+    --text:#1B2A4A; --muted:#5B6B85; --border:#DCE3EE;
+    --green:#2E9E5B; --green-bg:#E7F7EE; --red:#D64545; --red-bg:#FDEAEA;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Calibri','Segoe UI',system-ui,-apple-system,sans-serif;
+    padding: env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px) 0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{ max-width:820px; margin:0 auto; padding:1.8rem 1.3rem 3rem; }
+  h1{ font-family:Cambria,Georgia,'Times New Roman',serif; font-size:clamp(1.4rem,3.5vw,1.9rem); margin:0 0 .3rem; font-weight:700; color:var(--navy-dark); }
+  .lede{ color:var(--muted); font-size:.98rem; margin:0 0 1.2rem; }
+  .ol{ text-decoration:overline; text-decoration-thickness:1.5px; }
+
+  .dots{ display:flex; gap:.45rem; margin-bottom:1.2rem; flex-wrap:wrap; }
+  .dot{ width:2rem; height:.55rem; border-radius:999px; background:var(--border); border:none; padding:0; }
+  .dot.done{ background:var(--teal); }
+  .dot.bridge{ background:#F5DDB3; }
+  .dot.bridge.done{ background:var(--amber); }
+  .dot.current{ outline:3px solid var(--navy); outline-offset:2px; }
+
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; padding:1.6rem 1.7rem; box-shadow:0 1px 2px rgba(18,28,51,.04), 0 10px 28px rgba(18,28,51,.06); }
+
+  .chip{ display:inline-block; font-size:.72rem; font-weight:700; letter-spacing:.06em; padding:.25rem .7rem; border-radius:999px; margin-bottom:.9rem; }
+  .chip.recap{ background:#DFF0F6; color:var(--teal-dark); }
+  .chip.bridge{ background:#FFF1DC; color:var(--amber-dark); }
+  .chip .num{ opacity:.7; margin-left:.4rem; }
+
+  .q-text{ font-family:Cambria,Georgia,serif; font-size:1.3rem; line-height:1.35; font-weight:700; color:var(--navy-dark); margin:0 0 1.1rem; }
+
+  .visual{ margin:0 0 1.2rem; display:flex; gap:.4rem; flex-wrap:wrap; }
+  .bit{ width:2.1rem; height:2.1rem; border:2px solid var(--navy); border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; background:#fff; color:var(--navy); }
+  .bit.hi{ background:var(--amber); border-color:var(--amber); color:#fff; }
+
+  .options{ display:grid; grid-template-columns:1fr 1fr; gap:.7rem; }
+  @media (max-width:600px){ .options{ grid-template-columns:1fr; } }
+  .option{
+    display:flex; align-items:center; gap:.7rem; text-align:left;
+    border:2px solid var(--border); background:#fff; color:var(--navy); font-family:inherit;
+    font-size:1rem; font-weight:600; padding:.75rem .9rem; border-radius:12px; cursor:pointer;
+  }
+  .option:hover:not(:disabled){ border-color:var(--teal); }
+  .option:disabled{ cursor:default; }
+  .option .letter{ flex:none; width:1.8rem; height:1.8rem; border-radius:50%; background:#E7ECF5; color:var(--navy); display:flex; align-items:center; justify-content:center; font-size:.82rem; font-weight:700; }
+  .option.correct{ border-color:var(--green); background:var(--green-bg); }
+  .option.correct .letter{ background:var(--green); color:#fff; }
+  .option.wrong{ border-color:var(--red); background:var(--red-bg); }
+  .option.wrong .letter{ background:var(--red); color:#fff; }
+  .option.dim{ opacity:.45; }
+
+  .why{ margin-top:1.1rem; padding:.9rem 1.1rem; background:#EAF3FF; border-left:5px solid var(--teal); border-radius:8px; font-size:.96rem; line-height:1.5; color:var(--navy); }
+  .why.bridge{ background:#FFF4E2; border-left-color:var(--amber); }
+
+  .controls{ display:flex; gap:.6rem; margin-top:1.2rem; flex-wrap:wrap; align-items:center; }
+  .btn{ border:none; font-family:inherit; font-weight:700; font-size:.92rem; padding:.62rem 1.3rem; border-radius:999px; cursor:pointer; }
+  .btn.primary{ background:var(--teal); color:#fff; }
+  .btn.primary:hover{ background:var(--teal-dark); }
+  .btn.ghost{ background:#fff; border:1.5px solid var(--border); color:var(--muted); }
+  .btn.ghost:hover{ border-color:var(--teal); color:var(--teal-dark); }
+
+  .end h2{ font-family:Cambria,Georgia,serif; font-size:1.55rem; margin:0 0 .5rem; color:var(--navy-dark); }
+  .end p{ color:var(--muted); font-size:1.02rem; line-height:1.55; margin:0 0 1rem; }
+  .score{ font-family:Cambria,Georgia,serif; font-size:2.8rem; font-weight:700; color:var(--teal-dark); margin:.2rem 0 .6rem; }
+  .missed{ margin:0 0 1rem; padding:0; list-style:none; display:flex; flex-direction:column; gap:.5rem; }
+  .missed li{ background:#F5F8FC; border:1px solid var(--border); border-radius:10px; padding:.7rem .9rem; font-size:.94rem; }
+  .missed li strong{ color:var(--green); }
+</style>
+</head>
+<body>
+  <div class="page">
+    <h1>Starter: Lesson 2 recap</h1>
+    <p class="lede">Work through these on your own before we start today's lesson on distribution, factoring and absorption.</p>
+    <div class="dots" id="dots"></div>
+    <div class="card" id="card"></div>
+  </div>
+
+<script>
+(function(){
+  function bar(l){ return '<span class="ol">'+l+'<\/span>'; }
+
+  var QUESTIONS = [
+    { tag:'recap', q:'What three things do you need to state to get full marks on a masking question?',
+      opts:['The mask, the operation, and the result','The register, the mask, and a truth table','The mask, the bit position, and the register size','The operation, the truth table, and the answer'], correct:0,
+      why:'Three separate marks: state the mask, name the operation (AND), and give the result.' },
+    { tag:'recap', q:'In a mask, what does a 0 do to the matching bit when you AND them together?',
+      opts:['Keeps it unchanged','Clears it to 0','Flips it to the opposite value','Sets it to 1'],
+      visual:['1','0','1','1'], hi:[1], correct:1,
+      why:'A 0 in the mask always forces the result to 0, whatever the register bit was. A 1 keeps the original bit.' },
+    { tag:'recap', q:'Which law is shown by A + '+bar('A')+' = 1 ?',
+      opts:['Complement','Annulment','Identity','Idempotent'], correct:0,
+      why:'A and NOT A can never both be true, and between them they cover every case \u2014 that\u2019s the Complement law.' },
+    { tag:'recap', q:'Which law is shown by A.A = A ?',
+      opts:['Idempotent','Identity','Complement','Associative'], correct:0,
+      why:'Combining A with itself just gives A back \u2014 that\u2019s the Idempotent law.' },
+    { tag:'recap', q:'How many rows would a truth table need to prove the associative law for A, B and C?',
+      opts:['3','6','8','9'], correct:2,
+      why:'Three variables means 2\u00b3 = 8 rows, counting systematically from 000 to 111.' },
+    { tag:'recap', q:'\u00ac(\u00acA) \u2014 in other words, NOT(NOT A) \u2014 simplifies to...',
+      opts:['A', 'NOT A', '1', '0'], correct:0,
+      why:'Two NOTs cancel out \u2014 that\u2019s the Involution law. Negating a value twice returns the original value.' },
+    { tag:'bridge', q:'Bridge to today: in A.B + A.C, what term appears in both parts?',
+      opts:['A', 'B', 'C', 'There isn\u2019t one'], correct:0,
+      why:'A is common to both terms \u2014 spotting that common factor is exactly the skill you\u2019ll need for factorising today.' },
+    { tag:'bridge', q:'Bridge to today: you know A + A.B always simplifies to A. What do you predict A.(A+B) simplifies to?',
+      opts:['A', 'A.B', 'B', '1'], correct:0,
+      why:'Good instinct if you guessed A \u2014 it\u2019s the same idea the other way round (AND instead of OR). You\u2019ll prove exactly why today.' }
+  ];
+
+  var LETTERS = ['A','B','C','D'];
+  var state = { order:[], pos:0, revealed:false, chosen:null, answers:{}, ended:false };
+
+  var cardEl = document.getElementById('card');
+  var dotsEl = document.getElementById('dots');
+
+  function startRun(indices){
+    state.order = indices || QUESTIONS.map(function(_, i){ return i; });
+    state.pos = 0; state.revealed = false; state.chosen = null; state.ended = false;
+    if(!indices) state.answers = {};
+    render();
+  }
+
+  function currentQ(){ return QUESTIONS[state.order[state.pos]]; }
+
+  function renderDots(){
+    dotsEl.innerHTML = '';
+    state.order.forEach(function(qi, p){
+      var d = document.createElement('div');
+      d.className = 'dot' + (QUESTIONS[qi].tag === 'bridge' ? ' bridge' : '') + (p < state.pos || state.ended ? ' done' : '') + (p === state.pos && !state.ended ? ' current' : '');
+      dotsEl.appendChild(d);
+    });
+  }
+
+  function render(){
+    renderDots();
+    if(state.ended){ renderEnd(); return; }
+
+    var q = currentQ();
+    var isBridge = q.tag === 'bridge';
+    var html = '<div class="chip ' + q.tag + '">' + (isBridge ? 'BRIDGE TO TODAY' : 'RECAP') +
+               '<span class="num">' + (state.pos+1) + ' of ' + state.order.length + '</span></div>' +
+               '<p class="q-text">' + q.q + '</p>';
+    if(q.visual){
+      html += '<div class="visual">' + q.visual.map(function(b,i){
+        return '<div class="bit' + (q.hi && q.hi.indexOf(i)>-1 ? ' hi' : '') + '">' + b + '</div>';
+      }).join('') + '</div>';
+    }
+    html += '<div class="options" id="options"></div>';
+    html += '<div id="why"></div>';
+    html += '<div class="controls" id="controls"></div>';
+    cardEl.innerHTML = html;
+
+    var optsEl = document.getElementById('options');
+    q.opts.forEach(function(o, i){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'option';
+      b.innerHTML = '<span class="letter">' + LETTERS[i] + '</span><span>' + o + '</span>';
+      if(state.chosen !== null) b.disabled = true;
+      if(state.revealed){
+        if(i === q.correct) b.classList.add('correct');
+        else if(i === state.chosen) b.classList.add('wrong');
+        else b.classList.add('dim');
+      }
+      b.addEventListener('click', function(){ choose(i); });
+      optsEl.appendChild(b);
+    });
+
+    if(state.revealed){
+      document.getElementById('why').innerHTML = '<div class="why' + (isBridge ? ' bridge' : '') + '">' + q.why + '</div>';
+    }
+    renderControls();
+  }
+
+  function renderControls(){
+    var c = document.getElementById('controls');
+    c.innerHTML = '';
+    if(!state.revealed) return;
+    var isLast = state.pos === state.order.length - 1;
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn primary';
+    b.textContent = isLast ? 'See my score' : 'Next question \u2192';
+    b.addEventListener('click', next);
+    c.appendChild(b);
+  }
+
+  function choose(i){
+    if(state.chosen !== null) return;
+    state.chosen = i; state.revealed = true;
+    state.answers[state.order[state.pos]] = (i === currentQ().correct);
+    render();
+  }
+
+  function next(){
+    if(state.pos >= state.order.length - 1){ state.ended = true; }
+    else { state.pos++; state.revealed = false; state.chosen = null; }
+    render();
+  }
+
+  function renderEnd(){
+    var total = state.order.length;
+    var right = state.order.filter(function(qi){ return state.answers[qi]; }).length;
+    var missed = state.order.filter(function(qi){ return !state.answers[qi]; });
+    var html = '<div class="end"><h2>Your score</h2><div class="score">' + right + ' / ' + total + '</div>';
+    if(missed.length === 0){
+      html += '<p>Full marks \u2014 you\u2019re ready for distribution, factoring and absorption.</p>';
+    } else {
+      html += '<p>Have another look at these before we start:</p><ul class="missed">';
+      missed.forEach(function(qi){
+        var q = QUESTIONS[qi];
+        html += '<li>' + q.q + '<br><strong>' + q.opts[q.correct] + '</strong></li>';
+      });
+      html += '</ul>';
+    }
+    html += '<div class="controls">';
+    if(missed.length) html += '<button class="btn primary" id="retry">Retry the ones I missed</button>';
+    html += '<button class="btn ghost" id="again">Start again</button></div></div>';
+    cardEl.innerHTML = html;
+    var retry = document.getElementById('retry');
+    if(retry) retry.addEventListener('click', function(){ startRun(missed); });
+    document.getElementById('again').addEventListener('click', function(){ startRun(); });
+  }
+
+  startRun();
+})();
+</script>
+</body>
+</html>

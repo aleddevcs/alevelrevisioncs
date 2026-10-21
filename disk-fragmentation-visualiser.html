@@ -1,0 +1,634 @@
+<title>Disk Fragmentation Visualiser</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --ink: #16202B;
+    --slate: #2B3A4A;
+    --copper: #D9822B;
+    --copper-lt: #F6E3CF;
+    --copper-ink: #7A4512;
+    --paper: #FFFFFF;
+    --mist: #EEF2F5;
+    --mist-2: #E3E9EE;
+    --text: #1F2933;
+    --muted: #5C6B7A;
+    --line: #C9D3DC;
+    --green: #2F7A4E;
+    --green-lt: #DDEFE3;
+    --red: #B3412F;
+    --red-lt: #F4DCD7;
+    --blue: #2F6DB5;
+    --blue-lt: #DCE8F7;
+
+    --bg: var(--mist);
+    --surface: var(--paper);
+    --surface-2: var(--mist);
+    --ink-on-surface: var(--ink);
+    --text-on-surface: var(--text);
+    --muted-on-surface: var(--muted);
+    --line-on-surface: var(--line);
+
+    --a-bg: var(--copper);
+    --a-fg: #2B1400;
+    --b-bg: var(--blue);
+    --b-fg: #F5F9FF;
+    --free-bg: var(--surface);
+    --free-line: var(--line);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E151D;
+      --surface: #182330;
+      --surface-2: #1F2C3A;
+      --ink-on-surface: #F3F6F8;
+      --text-on-surface: #DDE4EA;
+      --muted-on-surface: #93A2B0;
+      --line-on-surface: #33455A;
+      --copper-lt: #4A3620;
+      --copper-ink: #F0B274;
+      --green-lt: #1E3A2A;
+      --red-lt: #402420;
+      --blue-lt: #1D3149;
+      --free-line: #33455A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E151D;
+    --surface: #182330;
+    --surface-2: #1F2C3A;
+    --ink-on-surface: #F3F6F8;
+    --text-on-surface: #DDE4EA;
+    --muted-on-surface: #93A2B0;
+    --line-on-surface: #33455A;
+    --copper-lt: #4A3620;
+    --copper-ink: #F0B274;
+    --green-lt: #1E3A2A;
+    --red-lt: #402420;
+    --blue-lt: #1D3149;
+    --free-line: #33455A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-on-surface);
+    font-family: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+    padding: clamp(16px, 3vw, 40px);
+    padding-block: clamp(20px, 4vw, 48px);
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", "Courier New", monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--copper-ink);
+    background: var(--copper-lt);
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  h1 { font-size: clamp(24px, 3.4vw, 32px); margin: 0 0 6px; text-wrap: balance; color: var(--ink-on-surface); }
+  .sub { color: var(--muted-on-surface); font-size: 14.5px; max-width: 66ch; line-height: 1.5; margin: 0 0 20px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line-on-surface);
+    border-radius: 14px;
+    padding: clamp(18px, 3vw, 26px);
+    margin-bottom: 18px;
+  }
+
+  .card h2 { font-size: 17px; margin: 0 0 4px; color: var(--ink-on-surface); }
+  .card .hint { font-size: 13.5px; color: var(--muted-on-surface); margin: 0 0 16px; }
+
+  /* Legend */
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 16px; font-size: 13px; color: var(--text-on-surface); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 15px; height: 15px; border-radius: 4px; display: inline-block; }
+  .swatch.a { background: var(--a-bg); }
+  .swatch.b { background: var(--b-bg); }
+  .swatch.free { background: var(--free-bg); border: 1.5px dashed var(--free-line); }
+
+  /* Head track */
+  .disk-wrap { position: relative; }
+  .head-marker {
+    position: absolute; top: 0; left: 0; width: 0; height: 0;
+    border-left: 9px solid transparent; border-right: 9px solid transparent;
+    border-top: 12px solid var(--ink-on-surface);
+    transition: left 0.45s cubic-bezier(.4,.1,.2,1), top 0.45s cubic-bezier(.4,.1,.2,1);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .head-marker.visible { opacity: 1; }
+  .head-marker.moving-a { border-top-color: var(--copper); }
+  .head-marker.moving-b { border-top-color: var(--blue); }
+
+  /* Disk row */
+  .disk-wrap { padding-top: 22px; }
+
+  .disk-row {
+    display: grid;
+    grid-template-columns: repeat(14, 1fr);
+    gap: 6px;
+    row-gap: 22px;
+  }
+  .block {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 700;
+    font-size: clamp(11px, 2vw, 14px);
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    transition: transform .1s, box-shadow .15s;
+    color: var(--text-on-surface);
+  }
+  .block:focus-visible { outline: 2px solid var(--ink-on-surface); outline-offset: 2px; }
+  .block.a { background: var(--a-bg); color: var(--a-fg); }
+  .block.b { background: var(--b-bg); color: var(--b-fg); }
+  .block.free { background: var(--free-bg); border: 1.5px dashed var(--free-line); color: var(--muted-on-surface); font-weight: 400; }
+  .block.selected { box-shadow: 0 0 0 3px var(--ink-on-surface); transform: translateY(-2px); }
+  .block.run-start { box-shadow: 0 0 0 3px var(--ink-on-surface) inset; }
+
+  .addr-row {
+    display: grid;
+    grid-template-columns: repeat(14, 1fr);
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .addr-row span { text-align: center; font-size: 9.5px; color: var(--muted-on-surface); font-family: "IBM Plex Mono", monospace; }
+
+  .swap-tip { font-size: 12.5px; color: var(--muted-on-surface); margin: 14px 0 0; min-height: 18px; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 18px 0; }
+  .stat {
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat .stat-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-on-surface); margin-bottom: 4px; }
+  .stat .stat-val { font-family: "IBM Plex Mono", monospace; font-size: 26px; font-weight: 700; }
+  .stat.a-stat .stat-val { color: var(--copper-ink); }
+  .stat.b-stat .stat-val { color: var(--blue); }
+  .stat .stat-note { font-size: 11.5px; color: var(--muted-on-surface); margin-top: 2px; }
+
+  .controls { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  button.primary, button.secondary, button.ghost {
+    font-family: inherit; font-weight: 700; border-radius: 8px; cursor: pointer; padding: 10px 18px; font-size: 14px;
+  }
+  button.primary { border: none; background: var(--copper); color: #2B1400; }
+  button.primary:hover:not(:disabled) { filter: brightness(1.06); }
+  button.primary:disabled { opacity: .45; cursor: not-allowed; }
+  button.secondary { border: 1.5px solid var(--blue); background: var(--blue-lt); color: var(--ink-on-surface); }
+  button.secondary:hover:not(:disabled) { filter: brightness(1.04); }
+  button.secondary:disabled { opacity: .45; cursor: not-allowed; }
+  button.ghost { border: 1.5px solid var(--line-on-surface); background: transparent; color: var(--text-on-surface); font-weight: 600; font-size: 13.5px; padding: 9px 15px; }
+  button.ghost:hover { border-color: var(--copper); }
+
+  .solved-banner {
+    margin-top: 16px;
+    background: var(--green-lt);
+    border-left: 3px solid var(--green);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  .solved-banner strong { color: var(--ink-on-surface); }
+
+  /* Question section */
+  .q-block { margin-bottom: 22px; }
+  .q-block:last-child { margin-bottom: 0; }
+  .q-title { font-size: 15px; font-weight: 700; color: var(--ink-on-surface); margin: 0 0 10px; }
+  .q-options { display: grid; gap: 8px; }
+  .q-opt {
+    text-align: left; background: var(--surface-2); border: 1.5px solid var(--line-on-surface);
+    border-radius: 9px; padding: 11px 14px; font-family: inherit; font-size: 14px; cursor: pointer; color: var(--text-on-surface);
+  }
+  .q-opt:hover:not(:disabled) { border-color: var(--copper); }
+  .q-opt:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+  .q-opt:disabled { cursor: default; }
+  .q-opt.correct { border-color: var(--green); background: var(--green-lt); }
+  .q-opt.wrong { border-color: var(--red); background: var(--red-lt); }
+  .q-opt.dim { opacity: .5; }
+  .q-feedback { margin-top: 10px; padding: 11px 14px; border-radius: 9px; font-size: 13.5px; line-height: 1.5; }
+  .q-feedback.good { background: var(--green-lt); border-left: 3px solid var(--green); }
+  .q-feedback.bad { background: var(--red-lt); border-left: 3px solid var(--red); }
+
+  .progress-pill {
+    display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    background: var(--surface-2); color: var(--muted-on-surface); padding: 4px 10px; border-radius: 999px; margin-bottom: 14px;
+  }
+
+  .summary-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0; }
+  .tile { background: var(--surface-2); border-radius: 10px; padding: 16px; text-align: center; }
+  .tile .num { font-family: "IBM Plex Mono", monospace; font-size: 26px; font-weight: 700; color: var(--copper-ink); }
+  .tile .lbl { font-size: 12px; color: var(--muted-on-surface); margin-top: 2px; }
+
+  footer.page { margin-top: 26px; font-size: 12.5px; color: var(--muted-on-surface); text-align: center; }
+
+  @media (max-width: 640px) {
+    .disk-row, .addr-row { grid-template-columns: repeat(7, 1fr); }
+    .addr-row span:nth-child(n+8) { display: none; }
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap">
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">AS Unit 1 · Topic 1 · 1.6.1</div>
+    <h1>Disk Fragmentation Visualiser</h1>
+    <p class="sub">Two files are scattered across this simplified disk. Swap blocks to bring each file's parts back together, then watch the read/write head need fewer stops to collect them.</p>
+  </header>
+
+  <div id="app"></div>
+
+  <footer class="page">AS Computer Science · Unit 1 · Topic 1 Hardware &amp; Communication · Lesson 03</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var LAYOUTS = [
+    ["A", null, "B", null, "A", null, "B", "A", null, null, "A", null, "B", null],
+    ["B", "A", null, null, "B", "A", null, null, "A", "B", null, "A", null, null]
+  ];
+
+  var QUESTIONS = [
+    {
+      q: "Why does a fragmented file take longer to read on a HDD?",
+      opts: [
+        "The file becomes corrupted the more it is split up",
+        "The read/write head has to move to several different positions to collect all its parts",
+        "The CPU has to decode each fragment separately before displaying it",
+        "Fragmented files are automatically compressed, which slows reading"
+      ],
+      correct: 1,
+      explain: "Each time the head has to jump to a new, separate position on the disk to find the next part of the file, that movement costs time — the more scattered the file, the more of those moves are needed."
+    },
+    {
+      q: "What does defragmentation actually do?",
+      opts: [
+        "Deletes files that haven't been opened in a long time",
+        "Compresses every file on the disk to save space",
+        "Physically rearranges data so each file's parts are stored closer together",
+        "Increases the total storage capacity of the disk"
+      ],
+      correct: 2,
+      explain: "Defragmentation doesn't create space or shrink files — it physically moves data around so the parts of each file sit next to each other, meaning the head needs to move into fewer positions to read them."
+    },
+    {
+      q: "Why don't SSDs need defragmenting in the way a HDD does?",
+      opts: [
+        "SSDs never run out of free space",
+        "SSDs have no moving read/write head, so any location on the drive costs the same to access",
+        "SSDs automatically defragment themselves every night",
+        "SSDs can't store a file in more than one place"
+      ],
+      correct: 1,
+      explain: "Fragmentation costs time on a HDD because of the physically moving head. An SSD has no moving parts — reaching a scattered part of a file costs the same as reaching a part stored right next to it, so scattering doesn't slow things down the same way."
+    },
+    {
+      q: "A HDD's free space is left in lots of small scattered gaps after years of use. What's most likely to happen when a new, fairly large file is saved?",
+      opts: [
+        "It will automatically be stored in one contiguous block, regardless of the gaps",
+        "It will likely be split across several of those small gaps, becoming fragmented",
+        "It will be refused, since HDDs can't save files into small gaps",
+        "It will be saved to a completely different, empty disk"
+      ],
+      correct: 1,
+      explain: "If there's no single gap big enough for the whole file, the disk stores it in pieces across whatever smaller gaps are available — which is exactly how files end up fragmented in the first place."
+    }
+  ];
+
+  var state = {
+    disk: LAYOUTS[0].slice(),
+    layoutIdx: 0,
+    selected: null,
+    solved: false,
+    swapCount: 0,
+    qIdx: 0,
+    qPicked: null,
+    qLocked: false,
+    qResults: []
+  };
+
+  var app = document.getElementById("app");
+
+  function runsOf(disk, letter) {
+    var runs = 0, inRun = false;
+    for (var i = 0; i < disk.length; i++) {
+      if (disk[i] === letter) {
+        if (!inRun) { runs++; inRun = true; }
+      } else {
+        inRun = false;
+      }
+    }
+    return runs;
+  }
+
+  function runStarts(disk, letter) {
+    var starts = [], inRun = false;
+    for (var i = 0; i < disk.length; i++) {
+      if (disk[i] === letter) {
+        if (!inRun) { starts.push(i); inRun = true; }
+      } else {
+        inRun = false;
+      }
+    }
+    return starts;
+  }
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function blockLabel(letter, disk, idx) {
+    if (!letter) return "";
+    var n = 0;
+    for (var i = 0; i <= idx; i++) if (disk[i] === letter) n++;
+    return letter + n;
+  }
+
+  function renderDiskCard() {
+    var card = el("div", "card");
+    card.appendChild(el("h2", null, "The disk"));
+    card.appendChild(el("p", "hint", "Click a block, then click a second block to swap them. Free space can swap with either file — that's how a real defragmenter moves data."));
+
+    var legend = el("div", "legend");
+    legend.innerHTML =
+      '<span><span class="swatch a"></span>File A (4 blocks)</span>' +
+      '<span><span class="swatch b"></span>File B (3 blocks)</span>' +
+      '<span><span class="swatch free"></span>Free space</span>';
+    card.appendChild(legend);
+
+    var wrap = el("div", "disk-wrap");
+    var marker = el("div", "head-marker");
+    marker.id = "headMarker";
+    wrap.appendChild(marker);
+
+    var row = el("div", "disk-row");
+    row.id = "diskRow";
+    state.disk.forEach(function (letter, i) {
+      var b = el("button", "block " + (letter ? letter.toLowerCase() : "free"));
+      b.type = "button";
+      b.setAttribute("aria-label", letter ? (blockLabel(letter, state.disk, i) + " at position " + i) : ("free space at position " + i));
+      b.textContent = letter ? blockLabel(letter, state.disk, i) : "·";
+      if (state.selected === i) b.classList.add("selected");
+      b.addEventListener("click", function () { handleBlockClick(i); });
+      row.appendChild(b);
+    });
+    wrap.appendChild(row);
+    card.appendChild(wrap);
+
+    var addrRow = el("div", "addr-row");
+    for (var i = 0; i < state.disk.length; i++) addrRow.appendChild(el("span", null, String(i)));
+    card.appendChild(addrRow);
+
+    var tip = el("div", "swap-tip");
+    tip.id = "swapTip";
+    tip.textContent = state.selected === null
+      ? "Nothing selected. Click any block to begin."
+      : "Selected position " + state.selected + ". Click another block to swap with it.";
+    card.appendChild(tip);
+
+    var runsA = runsOf(state.disk, "A");
+    var runsB = runsOf(state.disk, "B");
+
+    var stats = el("div", "stats-row");
+    var statA = el("div", "stat a-stat");
+    statA.innerHTML = '<div class="stat-label">File A — head stops</div><div class="stat-val">' + runsA + '</div><div class="stat-note">' + (runsA === 1 ? "Fully together" : runsA + " separate positions to visit") + '</div>';
+    var statB = el("div", "stat b-stat");
+    statB.innerHTML = '<div class="stat-label">File B — head stops</div><div class="stat-val">' + runsB + '</div><div class="stat-note">' + (runsB === 1 ? "Fully together" : runsB + " separate positions to visit") + '</div>';
+    stats.appendChild(statA);
+    stats.appendChild(statB);
+    card.appendChild(stats);
+
+    var controls = el("div", "controls");
+    var readA = el("button", "secondary", "▶ Simulate reading File A");
+    readA.addEventListener("click", function () { simulateRead("A"); });
+    var readB = el("button", "secondary", "▶ Simulate reading File B");
+    readB.addEventListener("click", function () { simulateRead("B"); });
+    var reset = el("button", "ghost", "Reset arrangement");
+    reset.addEventListener("click", function () {
+      state.disk = LAYOUTS[state.layoutIdx].slice();
+      state.selected = null;
+      state.solved = false;
+      state.swapCount = 0;
+      renderAll();
+    });
+    var newLayout = el("button", "ghost", "Try a new arrangement");
+    newLayout.addEventListener("click", function () {
+      state.layoutIdx = (state.layoutIdx + 1) % LAYOUTS.length;
+      state.disk = LAYOUTS[state.layoutIdx].slice();
+      state.selected = null;
+      state.solved = false;
+      state.swapCount = 0;
+      renderAll();
+    });
+    controls.appendChild(readA);
+    controls.appendChild(readB);
+    controls.appendChild(reset);
+    controls.appendChild(newLayout);
+    card.appendChild(controls);
+
+    if (runsA === 1 && runsB === 1) {
+      var origA = runsOf(LAYOUTS[state.layoutIdx], "A");
+      var origB = runsOf(LAYOUTS[state.layoutIdx], "B");
+      var banner = el("div", "solved-banner",
+        "<strong>Defragmented.</strong> File A went from " + origA + " head stops down to 1, and File B from " + origB + " down to 1. Fewer stops means less head movement, and faster access. Scroll down for the question check.");
+      card.appendChild(banner);
+      if (!state.solved) {
+        state.solved = true;
+      }
+    }
+
+    return card;
+  }
+
+  function handleBlockClick(i) {
+    if (state.selected === null) {
+      state.selected = i;
+    } else if (state.selected === i) {
+      state.selected = null;
+    } else {
+      var tmp = state.disk[state.selected];
+      state.disk[state.selected] = state.disk[i];
+      state.disk[i] = tmp;
+      state.selected = null;
+      state.swapCount++;
+    }
+    renderAll();
+  }
+
+  function simulateRead(letter) {
+    var marker = document.getElementById("headMarker");
+    var row = document.getElementById("diskRow");
+    if (!marker || !row) return;
+
+    // Every block holding this file, in address order — not just the start
+    // of each run. Landing only on run-starts meant a fully defragmented
+    // file (one run) only ever showed the pointer on its first block and
+    // stopped, which read as broken. Visiting every block, and only slowing
+    // down to mark a "stop" when jumping to a new, non-adjacent run, shows
+    // both things at once: the head still has to pass over the whole file,
+    // and fragmentation is specifically about how many separate jumps that takes.
+    var positions = [];
+    for (var p = 0; p < state.disk.length; p++) if (state.disk[p] === letter) positions.push(p);
+    if (positions.length === 0) return;
+
+    var blocks = row.querySelectorAll(".block");
+    var wrap = marker.parentElement;
+
+    marker.className = "head-marker visible moving-" + letter.toLowerCase();
+    blocks.forEach(function (b) { b.classList.remove("run-start"); });
+
+    var idx = 0;
+    function step() {
+      if (idx >= positions.length) {
+        setTimeout(function () { blocks.forEach(function (b) { b.classList.remove("run-start"); }); }, 700);
+        return;
+      }
+      var pos = positions[idx];
+      var isJump = idx === 0 || positions[idx] !== positions[idx - 1] + 1;
+      var target = blocks[pos];
+
+      // Position relative to the wrapping box, on BOTH axes — the disk grid
+      // wraps to two rows on narrow screens, so left-only positioning left
+      // the pointer stuck on row one while a row-two block lit up below it.
+      var wrapRect = wrap.getBoundingClientRect();
+      var targetRect = target.getBoundingClientRect();
+      var left = (targetRect.left - wrapRect.left) + targetRect.width / 2 - 9;
+      var top = (targetRect.top - wrapRect.top) - 14;
+      marker.style.left = left + "px";
+      marker.style.top = top + "px";
+
+      if (isJump) {
+        blocks.forEach(function (b) { b.classList.remove("run-start"); });
+        target.classList.add("run-start");
+      }
+
+      idx++;
+      setTimeout(step, isJump ? 650 : 260);
+    }
+    step();
+  }
+
+  function renderQuestionsCard() {
+    if (!state.solved) return null;
+
+    if (state.qIdx >= QUESTIONS.length) return renderQuizSummary();
+
+    var card = el("div", "card");
+    card.appendChild(el("div", "progress-pill", "Question " + (state.qIdx + 1) + " of " + QUESTIONS.length));
+    var qData = QUESTIONS[state.qIdx];
+
+    var qb = el("div", "q-block");
+    qb.appendChild(el("p", "q-title", qData.q));
+    var opts = el("div", "q-options");
+    qData.opts.forEach(function (optText, i) {
+      var b = el("button", "q-opt", optText);
+      b.type = "button";
+      b.disabled = state.qLocked;
+      if (state.qLocked) {
+        if (i === qData.correct) b.classList.add("correct");
+        else if (state.qPicked === i) b.classList.add("wrong");
+        else b.classList.add("dim");
+      } else if (state.qPicked === i) {
+        b.style.borderColor = "var(--copper)";
+      }
+      b.addEventListener("click", function () {
+        if (state.qLocked) return;
+        state.qPicked = i;
+        renderAll();
+      });
+      opts.appendChild(b);
+    });
+    qb.appendChild(opts);
+    card.appendChild(qb);
+
+    var controls = el("div", "controls");
+    if (!state.qLocked) {
+      var check = el("button", "primary", "Check answer");
+      check.disabled = state.qPicked === null;
+      check.addEventListener("click", function () {
+        state.qLocked = true;
+        renderAll();
+      });
+      controls.appendChild(check);
+      card.appendChild(controls);
+    } else {
+      var correct = state.qPicked === qData.correct;
+      card.appendChild(el("div", "q-feedback " + (correct ? "good" : "bad"), qData.explain));
+      var controls2 = el("div", "controls");
+      if (!correct) {
+        var retry = el("button", "ghost", "Try again");
+        retry.addEventListener("click", function () {
+          state.qLocked = false;
+          state.qPicked = null;
+          renderAll();
+        });
+        controls2.appendChild(retry);
+      } else {
+        var next = el("button", "primary", state.qIdx === QUESTIONS.length - 1 ? "See summary" : "Next question");
+        next.addEventListener("click", function () {
+          state.qResults.push({ firstTry: !state.qResultHadRetry });
+          state.qResultHadRetry = false;
+          state.qIdx++;
+          state.qPicked = null;
+          state.qLocked = false;
+          renderAll();
+        });
+        controls2.appendChild(next);
+      }
+      if (!correct) state.qResultHadRetry = true;
+      card.appendChild(controls2);
+    }
+
+    return card;
+  }
+
+  function renderQuizSummary() {
+    var firstTry = state.qResults.filter(function (r) { return r.firstTry; }).length;
+    var card = el("div", "card");
+    card.appendChild(el("div", "progress-pill", "Complete"));
+    card.appendChild(el("h2", null, "Question check complete"));
+    var tiles = el("div", "summary-tiles");
+    var t1 = el("div", "tile");
+    t1.innerHTML = '<div class="num">' + firstTry + ' / ' + QUESTIONS.length + '</div><div class="lbl">correct first try</div>';
+    var t2 = el("div", "tile");
+    t2.innerHTML = '<div class="num">' + state.swapCount + '</div><div class="lbl">swaps used to defragment</div>';
+    tiles.appendChild(t1);
+    tiles.appendChild(t2);
+    card.appendChild(tiles);
+    card.appendChild(el("p", "hint", "Fewer swaps means you found a more efficient path to a fully defragmented disk — but any number that gets both files to 1 head stop works."));
+    return card;
+  }
+
+  function renderAll() {
+    app.innerHTML = "";
+    app.appendChild(renderDiskCard());
+    var qCard = renderQuestionsCard();
+    if (qCard) app.appendChild(qCard);
+  }
+
+  renderAll();
+})();
+</script>

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Binary arithmetic: Topic 4, Lesson 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#14213D; --navy-2:#22335A; --teal:#0F8B8D; --teal-soft:#D6EFEF;
+  --orange:#F28C28; --orange-soft:#FDE9D4; --paper:#F3F6FA; --card:#FFFFFF;
+  --ink:#1B2433; --muted:#5A667A; --line:#D5DCE6; --good:#1E8A4C; --bad:#C0392B; --bad-soft:#F8E3E0; --good-soft:#E3F4EA;
+  --sans:"Atkinson Hyperlegible","Segoe UI",Arial,sans-serif;
+  --mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.5}
+button,input,select{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+header{background:var(--navy);color:#fff;padding:18px 24px 0}
+.head-inner{max-width:1100px;margin:0 auto}
+.kicker{color:#9FD9DA;font-size:15px;margin:0}
+h1{margin:2px 0 14px;font-size:30px;line-height:1.15}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:transparent;border:0;color:#C9D3E6;padding:10px 18px;border-radius:10px 10px 0 0;font-weight:700}
+nav button[aria-selected="true"]{background:var(--paper);color:var(--navy)}
+nav button:hover:not([aria-selected="true"]){color:#fff;background:var(--navy-2)}
+.badge{display:inline-block;background:var(--orange);color:var(--navy);font-size:12px;font-weight:700;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+main{max-width:1100px;margin:0 auto;padding:24px}
+.panel{display:none}.panel.active{display:block}
+h2{font-size:24px;margin:0 0 4px;color:var(--navy)}
+.lede{color:var(--muted);margin:0 0 18px;max-width:72ch}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spread{justify-content:space-between}
+.btn{border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:10px;padding:8px 16px;font-weight:700}
+.btn:hover{background:var(--teal-soft)}
+.btn.primary{background:var(--navy);color:#fff}.btn.primary:hover{background:var(--navy-2)}
+.btn.accent{background:var(--orange);border-color:var(--orange);color:var(--navy)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.seg{display:inline-flex;border:2px solid var(--navy);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:#fff;color:var(--navy);padding:8px 14px;font-weight:700}
+.seg button+button{border-left:2px solid var(--navy)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.label{font-weight:700;color:var(--navy)}
+.small{font-size:15px;color:var(--muted)}
+input.num{width:120px;padding:7px 10px;border:2px solid var(--line);border-radius:10px;font-family:var(--mono)}
+.mono{font-family:var(--mono)}
+
+/* ---- adder grid ---- */
+.gridwrap{overflow-x:auto;margin:16px 0 6px}
+.agrid{display:grid;gap:6px;align-items:center;width:max-content;margin:0 auto}
+.rlabel{font-weight:700;color:var(--navy);text-align:right;padding-right:8px;white-space:nowrap;font-size:16px}
+.rlabel.carry{color:var(--orange)}
+.pvh{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center}
+.pvh.neg{color:var(--orange);font-weight:700}
+.cell{width:46px;height:54px;border-radius:9px;display:grid;place-items:center;font-family:var(--mono);font-size:26px;font-weight:700}
+.cell.in{border:2px solid var(--navy);background:#fff;color:var(--navy)}
+button.cell.in:hover{background:var(--teal-soft)}
+.cell.in.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.cell.carry{color:var(--orange);font-size:22px;height:34px}
+.cell.res{border:2px dashed var(--line);color:transparent}
+.cell.res.shown{border:2px solid var(--navy);background:#fff;color:var(--navy)}
+.cell.res.shown.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.cell.res.of{border:2px solid var(--bad);background:var(--bad);color:#fff}
+.cell.res.discard{border:2px dashed var(--orange);background:var(--orange-soft);color:var(--orange)}
+.cell.cur{outline:3px solid var(--orange);outline-offset:2px}
+.cell.blank{visibility:hidden}
+.rule{grid-column:1/-1;height:2px;background:var(--navy)}
+.plus{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--navy);text-align:center}
+.vals{font-family:var(--mono);font-size:15px;color:var(--muted);padding-left:10px;white-space:nowrap}
+.explain{min-height:48px;background:var(--teal-soft);border-radius:10px;padding:10px 14px;font-size:16px}
+.negbox{display:none;margin-top:12px;background:var(--orange-soft);border-radius:10px;padding:10px 14px;font-family:var(--mono);font-size:15px;white-space:pre-wrap}
+.negbox.show{display:block}
+.verdict{display:none;margin-top:12px;border-radius:12px;padding:12px 16px;font-weight:700}
+.verdict.show{display:block}
+.verdict.ok{background:var(--good-soft);color:var(--good)}
+.verdict.of{background:var(--bad-soft);color:var(--bad)}
+.verdict span{display:block;font-weight:400;color:var(--ink);margin-top:2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.setrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ---- truncate & round ---- */
+.tr-grid{display:grid;grid-template-columns:320px 1fr;gap:18px}
+.tr-grid h3{margin:0 0 8px;font-size:17px;color:var(--navy)}
+.examples{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.examples button{text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px}
+.examples button:hover{border-color:var(--teal)}
+.examples small{display:block;color:var(--muted)}
+.pvrow{display:flex;gap:4px;align-items:flex-end;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+.pvc{display:flex;flex-direction:column;align-items:center;gap:3px}
+.pvc .h{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.pvc .d{width:40px;height:48px;border-radius:8px;border:2px solid var(--navy);display:grid;place-items:center;font-family:var(--mono);font-size:22px;font-weight:700;background:#fff}
+.pvc.cut .d{border-style:dashed;border-color:var(--orange);background:var(--orange-soft);color:var(--orange)}
+.pvc.next .d{outline:3px solid var(--orange);outline-offset:2px}
+.pt{font-size:34px;font-weight:700;align-self:flex-end;padding:0 2px 2px}
+.cutline{color:var(--orange);font-weight:700;font-size:14px;margin-top:4px}
+table.res{border-collapse:collapse;width:100%;margin-top:14px;font-size:16px}
+table.res th{background:var(--navy);color:#fff;text-align:left;padding:8px 10px}
+table.res td{border:1px solid var(--line);padding:8px 10px}
+table.res td.m{font-family:var(--mono)}
+table.res tr.best td{background:var(--good-soft)}
+.tablewrap{overflow-x:auto}
+.err{color:var(--bad);font-weight:700;min-height:24px}
+
+/* ---- shifts ---- */
+.sreg{display:flex;gap:6px;justify-content:center;flex-wrap:nowrap}
+.sreg .cell{width:52px;height:62px;font-size:30px}
+.sreg .cell.new{background:var(--orange);border-color:var(--orange);color:var(--navy)}
+.lost{display:flex;justify-content:space-between;max-width:470px;margin:8px auto 0;font-size:15px;min-height:24px}
+.lost b{color:var(--bad)}
+.svals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.readout{background:var(--paper);border-radius:12px;padding:12px 16px}
+.readout .name{font-size:14px;color:var(--muted)}
+.readout .val{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--navy)}
+ol.log{margin:12px 0 0;padding-left:22px;font-size:15px;max-height:220px;overflow:auto}
+ol.log li{margin:3px 0}
+@media (max-width:860px){.tr-grid,.two{grid-template-columns:1fr}.svals{grid-template-columns:1fr}h1{font-size:24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-inner">
+    <p class="kicker">Unit 1, Topic 4: Data representation and data types (4.4.1, 4.4.5)</p>
+    <h1>Binary arithmetic, truncation and rounding</h1>
+    <nav role="tablist" aria-label="Activities">
+      <button role="tab" aria-selected="true" aria-controls="p-add" id="t-add">Binary adder</button>
+      <button role="tab" aria-selected="false" aria-controls="p-tr" id="t-tr">Truncate and round</button>
+      <button role="tab" aria-selected="false" aria-controls="p-sh" id="t-sh">Shift explorer<span class="badge">A level</span></button>
+    </nav>
+  </div>
+</header>
+<main>
+<!-- ================= ADDER ================= -->
+<section class="panel active" id="p-add" role="tabpanel" aria-labelledby="t-add">
+  <h2>Binary adder</h2>
+  <p class="lede">Set two numbers, then step through the addition one column at a time, right to left. Work it out on paper first, then use Next column to check each carry and result bit.</p>
+  <div class="box">
+    <div class="row spread">
+      <div class="row">
+        <span class="label">Numbers</span>
+        <div class="seg" id="aMode"><button aria-pressed="true" data-m="u">Unsigned</button><button aria-pressed="false" data-m="t">Two's complement</button></div>
+      </div>
+      <div class="row">
+        <span class="label">Operation</span>
+        <div class="seg" id="aOp"><button aria-pressed="true" data-o="add">Add</button><button aria-pressed="false" data-o="sub">Subtract</button></div>
+      </div>
+      <div class="row">
+        <span class="label">Bits</span>
+        <div class="seg" id="aW"><button aria-pressed="false" data-w="4">4</button><button aria-pressed="true" data-w="8">8</button></div>
+      </div>
+    </div>
+    <div class="two" style="margin-top:14px">
+      <div class="setrow"><span class="label">First number</span><input class="num" id="inA" aria-label="First number in denary"><button class="btn" id="setA">Set</button></div>
+      <div class="setrow"><span class="label" id="labB">Second number</span><input class="num" id="inB" aria-label="Second number in denary"><button class="btn" id="setB">Set</button></div>
+    </div>
+    <p class="small" style="margin:6px 0 0">Type denary, or binary ending in b (such as 01010111b). You can also click the bits in the top two rows (in Subtract mode, the second row is worked out for you).</p>
+    <div class="negbox" id="negbox"></div>
+    <div class="gridwrap"><div class="agrid" id="agrid"></div></div>
+    <div class="explain" id="explain" aria-live="polite">Press Next column to start at the right-hand column.</div>
+    <div class="verdict" id="verdict"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" id="next">Next column</button>
+      <button class="btn" id="all">Show all</button>
+      <button class="btn" id="restart">Start again</button>
+      <button class="btn accent" id="rand">Random question</button>
+      <button class="btn" id="exam">Exam questions</button>
+    </div>
+    <p class="small" id="examNote" style="margin:8px 0 0"></p>
+  </div>
+</section>
+
+<!-- ================= TRUNCATE & ROUND ================= -->
+<section class="panel" id="p-tr" role="tabpanel" aria-labelledby="t-tr">
+  <h2>Truncate and round</h2>
+  <p class="lede">Choose a number and how many places to keep. Truncation cuts the extra digits off, so the value moves nearer zero. Rounding looks at the next digit to decide. Compare the absolute and relative errors.</p>
+  <div class="tr-grid">
+    <div class="box">
+      <h3>Number</h3>
+      <div class="seg" id="trBase" style="margin-bottom:10px"><button aria-pressed="true" data-b="2">Binary</button><button aria-pressed="false" data-b="10">Denary</button></div>
+      <div class="setrow"><input class="num" id="trIn" style="width:170px" aria-label="Number" value="111.10110"></div>
+      <h3 style="margin-top:14px" id="trPlacesLabel">Binary places to keep</h3>
+      <div class="seg" id="trPlaces"><button data-p="0" aria-pressed="false">0</button><button data-p="1" aria-pressed="false">1</button><button data-p="2" aria-pressed="true">2</button><button data-p="3" aria-pressed="false">3</button><button data-p="4" aria-pressed="false">4</button></div>
+      <div class="err" id="trErr" aria-live="polite"></div>
+      <h3>Past paper numbers</h3>
+      <div class="examples" id="trEx">
+        <button data-v="111.10110" data-b="2" data-p="2">2022, Q4(e)<small>111.10110, two binary places [5]</small></button>
+        <button data-v="101.0101" data-b="2" data-p="1">2024, Q4(c)<small>101.0101, one binary place [3]</small></button>
+        <button data-v="26.8" data-b="10" data-p="0">2016, Q6(e)<small>26.8, to a whole number [6]</small></button>
+        <button data-v="24.875" data-b="10" data-p="1">2025, Q4(b)<small>24.875, one decimal place [6]</small></button>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Place values</h3>
+      <div class="pvrow" id="trPV"></div>
+      <div class="cutline" id="trCut"></div>
+      <div class="tablewrap"><table class="res" id="trTable"></table></div>
+      <p class="small" id="trNote" style="margin:10px 0 0"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SHIFTS ================= -->
+<section class="panel" id="p-sh" role="tabpanel" aria-labelledby="t-sh">
+  <h2>Shift explorer <span class="badge">A level preview</span></h2>
+  <p class="lede">Shifts are on the A level spec, not AS. Each shift moves every bit one place. A logical shift fills the gap with 0. An arithmetic right shift copies the sign bit, so dividing by 2 still works for negative numbers.</p>
+  <div class="box">
+    <div class="row spread">
+      <div class="row"><span class="label">Shift type</span><div class="seg" id="sType"><button aria-pressed="true" data-s="l">Logical</button><button aria-pressed="false" data-s="a">Arithmetic</button></div></div>
+      <div class="setrow"><span class="label">Set</span><input class="num" id="sIn" aria-label="Value in denary" placeholder="22 or −20"><button class="btn" id="sSet">Set</button></div>
+    </div>
+    <div class="gridwrap"><div class="sreg" id="sreg"></div></div>
+    <div class="lost" id="slost"><span></span><span></span></div>
+    <div class="row" style="justify-content:center;margin-top:12px">
+      <button class="btn primary" id="sL">Shift left</button>
+      <button class="btn primary" id="sR">Shift right</button>
+      <button class="btn" id="sReset">Reset</button>
+    </div>
+    <div class="svals">
+      <div class="readout"><div class="name">Binary</div><div class="val" id="sBin"></div></div>
+      <div class="readout"><div class="name">Unsigned value</div><div class="val" id="sU"></div></div>
+      <div class="readout"><div class="name">Two's complement value</div><div class="val" id="sT"></div></div>
+    </div>
+    <ol class="log" id="slog"></ol>
+  </div>
+</section>
+</main>
+
+<script>
+const MINUS='\u2212';
+const sgn=n=>n<0?MINUS+(-n):String(n);
+const tabs=[...document.querySelectorAll('[role=tab]')];
+tabs.forEach(t=>t.addEventListener('click',()=>tabs.forEach(x=>{x.setAttribute('aria-selected',x===t);document.getElementById(x.getAttribute('aria-controls')).classList.toggle('active',x===t)})));
+function seg(id,cb){document.querySelectorAll('#'+id+' button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b)}))}
+function setSeg(id,attr,val){document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x.dataset[attr]===String(val)))}
+const toBits=(v,w)=>{v=((v%2**w)+2**w)%2**w;return v.toString(2).padStart(w,'0').split('').map(Number)};
+const raw=b=>b.reduce((a,x)=>a*2+x,0);
+const tcVal=b=>{const r=raw(b);return b[0]?r-2**b.length:r};
+
+/* ================= BINARY ADDER ================= */
+let W=8, mode='u', op='add', A=[], B=[], step=0, calc=null;
+function readA(){return mode==='t'?tcVal(A):raw(A)}
+function readB(){return mode==='t'?tcVal(B):raw(B)}
+function compute(){
+  const second = op==='sub' ? toBits(raw(B.map(x=>1-x))+1, W) : B.slice();
+  const carryIn=new Array(W+1).fill(0); const res=new Array(W).fill(0); const desc=[];
+  let c=0;
+  for(let i=W-1;i>=0;i--){
+    const s=A[i]+second[i]+c; res[i]=s%2; carryIn[i+1]=c; // carry into column i (display index i+1)
+    desc[i]={a:A[i],b:second[i],cin:c,sum:s,bit:s%2,cout:s>1?1:0};
+    c=s>1?1:0;
+  }
+  return {second,res,carryOut:c,desc};
+}
+function pvLabels(){const out=[];for(let i=0;i<W;i++){const p=W-1-i;out.push(i===0&&mode==='t'?MINUS+2**p:String(2**p))}return out}
+function render(){
+  calc=compute();
+  const g=document.getElementById('agrid');g.innerHTML='';
+  g.style.gridTemplateColumns='auto auto repeat('+W+',46px) auto';
+  const add=(el)=>{g.append(el);return el};
+  const div=(cls,txt)=>{const d=document.createElement('div');d.className=cls;if(txt!==undefined)d.textContent=txt;return d};
+  // header
+  add(div('rlabel',''));add(div('pvh',''));pvLabels().forEach((l,i)=>add(div('pvh'+(i===0&&mode==='t'?' neg':''),l)));add(div('',''));
+  // row A
+  const rowIn=(name,bits,clickable,vtxt)=>{
+    add(div('rlabel',name));add(div('',''));
+    bits.forEach((b,i)=>{const el=document.createElement(clickable?'button':'div');el.className='cell in'+(b?' on':'');el.textContent=b;
+      if(clickable){el.setAttribute('aria-label',name+' bit '+(i+1));el.onclick=()=>{clickable[i]=clickable[i]?0:1;restart()}}
+      add(el)});
+    add(div('vals',vtxt));
+  };
+  rowIn('First',A,A,'= '+sgn(readA()));
+  // second row
+  add(div('rlabel',op==='sub'?'Negated':'Second'));
+  add(div('plus','+'));
+  calc.second.forEach((b,i)=>{
+    const el=document.createElement(op==='sub'?'div':'button');el.className='cell in'+(b?' on':'');el.textContent=b;
+    if(op!=='sub'){el.setAttribute('aria-label','Second number bit '+(i+1));el.onclick=()=>{B[i]=B[i]?0:1;restart()}}
+    add(el)});
+  add(div('vals','= '+(op==='sub'?sgn(-readB()):sgn(readB()))));
+  // carry row
+  add(div('rlabel carry','Carry'));
+  const shownCols=new Set();for(let k=0;k<step;k++)shownCols.add(W-1-k);
+  // overflow column carry (carry out of MSB) shown when all done
+  add(div('cell carry',step>=W&&calc.carryOut?'1':''));
+  for(let i=0;i<W;i++){
+    // carry INTO column i comes from column i+1, revealed once column i+1 is done
+    const cin=calc.desc[i].cin;const revealed=(i+1<=W-1)&&shownCols.has(i+1);
+    add(div('cell carry',revealed&&cin?'1':''));
+  }
+  add(div('',''));
+  add(div('rule'));
+  // result row
+  add(div('rlabel','Result'));
+  const ofCell=div('cell res','');
+  if(step>=W&&calc.carryOut){const discard=mode==='t';ofCell.className='cell res '+(discard?'discard':'of');ofCell.textContent='1'}
+  else ofCell.classList.add('blank');
+  add(ofCell);
+  calc.res.forEach((b,i)=>{const el=div('cell res',b);if(shownCols.has(i))el.classList.add('shown');if(b&&shownCols.has(i))el.classList.add('on');if(step<W&&i===W-1-step)el.classList.add('cur');add(el)});
+  add(div('vals',step>=W?'= '+sgn(mode==='t'?tcVal(calc.res):raw(calc.res)):''));
+  // controls
+  document.getElementById('next').disabled=step>=W;document.getElementById('all').disabled=step>=W;
+  // negation box
+  const nb=document.getElementById('negbox');
+  if(op==='sub'){
+    const bb=B.join(''),fl=B.map(x=>1-x).join('');
+    nb.textContent='Subtract by adding the two\'s complement of the second number ('+sgn(readB())+'):\nSecond:  '+bb+'\nFlip:    '+fl+'\nAdd 1:   '+calc.second.join('')+'   ('+sgn(-readB())+')';
+    nb.classList.add('show');
+  }else nb.classList.remove('show');
+  verdict();
+}
+function verdict(){
+  const v=document.getElementById('verdict');
+  if(step<W){v.className='verdict';return}
+  const a=readA(),b=op==='sub'?-readB():readB(),truth=a+b,stored=mode==='t'?tcVal(calc.res):raw(calc.res);
+  let html,cls;
+  if(mode==='u'){
+    if(calc.carryOut){cls='of';html='Overflow error. <span>The true answer is '+truth+', but '+W+' bits only hold 0 to '+(2**W-1)+'. The carry out of the left-hand column has nowhere to go, so the register stores '+stored+'. In the exam, say that an overflow error has occurred.</span>'}
+    else{cls='ok';html='No overflow. <span>'+a+' + '+b+' = '+truth+', which fits in '+W+' bits.</span>'}
+  }else{
+    const lo=-(2**(W-1)),hi=2**(W-1)-1;
+    if(truth<lo||truth>hi){cls='of';html='Overflow error. <span>The true answer is '+sgn(truth)+', outside the '+W+'-bit two\'s complement range '+sgn(lo)+' to +'+hi+'. The result reads as '+sgn(stored)+'. Two numbers with the same sign gave an answer with the other sign.</span>'}
+    else{cls='ok';html='Correct: '+sgn(a)+(b<0?' '+MINUS+' '+(-b):' + '+b)+' = '+sgn(truth)+'. <span>'+(calc.carryOut?'The carry out of the left-hand column (orange) is discarded. In two\'s complement that is normal and is not an overflow.':'There is no carry out of the left-hand column.')+'</span>'}
+  }
+  v.className='verdict show '+cls;v.innerHTML=html;
+}
+function explainStep(){
+  const e=document.getElementById('explain');
+  if(step===0){e.textContent='Press Next column to start at the right-hand column.';return}
+  if(step>W)return;
+  const i=W-step, d=calc.desc[i];
+  const parts=[d.a,d.b];if(d.cin)parts.push('carry 1');
+  const sumTxt=d.sum===0?'0':d.sum===1?'1':d.sum===2?'2, which is 10 in binary':'3, which is 11 in binary';
+  e.textContent='Column '+step+' from the right: '+parts.join(' + ')+' = '+sumTxt+'. Write '+d.bit+(d.cout?(i===0?' and carry 1 out of the left-hand column.':', carry 1 to the next column.'):'.');
+}
+function restart(){step=0;render();explainStep()}
+document.getElementById('next').onclick=()=>{if(step<W){step++;render();explainStep()}};
+document.getElementById('all').onclick=()=>{step=W;render();document.getElementById('explain').textContent='All columns done. Check your carry row and result against the grid.'};
+document.getElementById('restart').onclick=restart;
+seg('aMode',b=>{const a=readA(),bb=readB();mode=b.dataset.m;if(op==='sub'&&mode==='u'){op='add';setSeg('aOp','o','add')}A=toBits(a,W);B=toBits(bb,W);updLabels();restart()});
+seg('aOp',b=>{op=b.dataset.o;if(op==='sub'&&mode==='u'){mode='t';setSeg('aMode','m','t')}updLabels();restart()});
+seg('aW',b=>{W=+b.dataset.w;A=A.slice(-W);B=B.slice(-W);while(A.length<W)A.unshift(0);while(B.length<W)B.unshift(0);restart()});
+function updLabels(){document.getElementById('labB').textContent=op==='sub'?'Number to subtract':'Second number'}
+function parseIn(s){s=s.trim().replace(/\s+/g,'').replace(/^[−–]/,'-');let m;if((m=s.match(/^([01]+)b$/i)))return {bits:m[1]};if(/^-?\d+$/.test(s))return {v:parseInt(s,10)};return null}
+function setFrom(which){
+  const r=parseIn(document.getElementById(which==='A'?'inA':'inB').value), n=document.getElementById('examNote');
+  if(!r){n.textContent='Type a denary number, or binary ending in b.';return}
+  let bits;
+  if(r.bits!==undefined){if(r.bits.length>W){n.textContent='That has more than '+W+' bits.';return}bits=r.bits.padStart(W,'0').split('').map(Number)}
+  else{
+    const lo=mode==='t'?-(2**(W-1)):0, hi=mode==='t'?2**(W-1)-1:2**W-1;
+    if(r.v<lo||r.v>hi){n.textContent=sgn(r.v)+' does not fit: '+W+'-bit '+(mode==='t'?'two\'s complement':'unsigned')+' holds '+sgn(lo)+' to '+hi+'.';return}
+    bits=toBits(r.v,W);
+  }
+  n.textContent='';if(which==='A')A=bits;else B=bits;restart();
+}
+document.getElementById('setA').onclick=()=>setFrom('A');document.getElementById('setB').onclick=()=>setFrom('B');
+['inA','inB'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')setFrom(id==='inA'?'A':'B')}));
+document.getElementById('rand').onclick=()=>{
+  const r=(lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
+  if(mode==='u'){const max=2**W-1;A=toBits(r(1,max),W);B=toBits(r(1,max),W)}
+  else{const h=2**(W-1)-1;A=toBits(r(-h,h),W);B=toBits(r(1,h),W)}
+  document.getElementById('examNote').textContent='';restart();
+};
+const EXAMS=[
+  {n:'2017, Q7(a): 87 + 113, unsigned 8-bit',m:'u',o:'add',a:87,b:113},
+  {n:'2016, Q6(b): 2A + BB (hex), unsigned 8-bit',m:'u',o:'add',a:0x2A,b:0xBB},
+  {n:'2022, Q4(b): AE + 1B (hex), unsigned 8-bit',m:'u',o:'add',a:0xAE,b:0x1B},
+  {n:'2024, Q4(b): 27 + 7E (hex), unsigned 8-bit',m:'u',o:'add',a:27,b:0x7E},
+  {n:'Your notes: 197 + 211, overflow',m:'u',o:'add',a:197,b:211},
+  {n:'Slides: 87 − 39 by adding −39',m:'t',o:'sub',a:87,b:39},
+  {n:'Slides: 100 + 50, two\'s complement overflow',m:'t',o:'add',a:100,b:50}
+];
+let exI=-1;
+document.getElementById('exam').onclick=()=>{
+  exI=(exI+1)%EXAMS.length;const x=EXAMS[exI];
+  W=8;setSeg('aW','w',8);mode=x.m;setSeg('aMode','m',mode);op=x.o;setSeg('aOp','o',op);updLabels();
+  A=toBits(x.a,8);B=toBits(x.b,8);
+  document.getElementById('examNote').textContent='Showing '+(exI+1)+' of '+EXAMS.length+': '+x.n+'. Press Exam questions again for the next one.';
+  restart();
+};
+A=toBits(87,8);B=toBits(113,8);restart();
+
+/* ================= TRUNCATE & ROUND ================= */
+let trBase=2, trP=2;
+const fmtNum=x=>{let s=(+x.toPrecision(12)).toString();if(s.includes('e'))s=x.toFixed(10).replace(/0+$/,'');return s};
+function binToVal(s){const [i,f='']=s.split('.');let v=i?parseInt(i,2):0;for(let k=0;k<f.length;k++)if(f[k]==='1')v+=2**-(k+1);return v}
+function valToBin(v,p){ // v exact multiple of 2^-p
+  let ip=Math.floor(v), fp=v-ip, s=ip.toString(2);
+  if(p>0){s+='.';for(let k=0;k<p;k++){fp*=2;const b=Math.floor(fp+1e-12);s+=b;fp-=b}}
+  return s;
+}
+function trRender(){
+  const raw=document.getElementById('trIn').value.trim(), err=document.getElementById('trErr');
+  const tbl=document.getElementById('trTable'), pv=document.getElementById('trPV');
+  const ok=trBase===2?/^[01]*\.?[01]*$/.test(raw)&&/[01]/.test(raw):/^\d*\.?\d*$/.test(raw)&&/\d/.test(raw);
+  if(!ok){err.textContent=trBase===2?'Use only 0, 1 and one binary point.':'Use digits and one decimal point.';tbl.innerHTML='';pv.innerHTML='';document.getElementById('trCut').textContent='';return}
+  err.textContent='';
+  let [ip,fp='']=raw.split('.');if(ip==='')ip='0';
+  const base=trBase, digits=ip.split('').concat(fp.split(''));
+  // place values display
+  pv.innerHTML='';
+  const nI=ip.length;
+  digits.forEach((d,k)=>{
+    if(k===nI){const p=document.createElement('div');p.className='pt';p.textContent='.';pv.append(p)}
+    const exp=nI-1-k;
+    const c=document.createElement('div');c.className='pvc';
+    const after=k-nI+1; // 1 for first fractional digit
+    if(after>trP)c.classList.add('cut');
+    if(after===trP+1)c.classList.add('next');
+    const h=document.createElement('div');h.className='h';h.textContent=fmtNum(base**exp);
+    const dd=document.createElement('div');dd.className='d';dd.textContent=d;
+    c.append(h,dd);pv.append(c);
+  });
+  if(fp.length===0){const p=document.createElement('div');p.className='pt';p.textContent='.';pv.append(p)}
+  const nextDigit=fp[trP];
+  const placeWord=base===2?(trP===1?'binary place':'binary places'):(trP===1?'decimal place':'decimal places');
+  document.getElementById('trCut').textContent=fp.length<=trP?'Nothing to remove: the number already has '+fp.length+' place'+(fp.length===1?'':'s')+' after the point.'
+    :'Dashed digits are removed. The next digit after the cut is '+nextDigit+(base===2?(nextDigit==='1'?', so rounding goes up.':', so rounding leaves it.'):(+nextDigit>=5?', which is 5 or more, so rounding goes up.':', which is less than 5, so rounding leaves it.'));
+  // values
+  const orig=base===2?binToVal(raw.startsWith('.')?'0'+raw:raw):parseFloat(raw);
+  const unit=base**-trP;
+  const truncStr=ip+(trP>0?'.'+fp.slice(0,trP).padEnd(trP,'0'):'');
+  const truncVal=base===2?binToVal(truncStr):parseFloat(truncStr);
+  const up=fp.length>trP&&(base===2?nextDigit==='1':+nextDigit>=5);
+  const roundVal=up?+(truncVal+unit).toFixed(12):truncVal;
+  const roundStr=base===2?valToBin(roundVal,trP):roundVal.toFixed(trP);
+  const aT=Math.abs(orig-truncVal),aR=Math.abs(orig-roundVal);
+  const rel=a=>orig===0?'n/a':fmtNum(+(a/orig).toPrecision(3))+' ('+fmtNum(+(a/orig*100).toPrecision(3))+'%)';
+  const best=aR<aT?'r':aT<aR?'t':'=';
+  const showB=base===2;
+  tbl.innerHTML='<tr><th></th>'+(showB?'<th>Binary</th>':'')+'<th>Denary</th><th>Absolute error</th><th>Relative error</th></tr>'+
+    '<tr><td><b>Original</b></td>'+(showB?'<td class="m">'+raw+'</td>':'')+'<td class="m">'+fmtNum(orig)+'</td><td>\u2014</td><td>\u2014</td></tr>'+
+    '<tr class="'+(best==='t'?'best':'')+'"><td><b>Truncated</b></td>'+(showB?'<td class="m">'+truncStr+'</td>':'')+'<td class="m">'+fmtNum(truncVal)+'</td><td class="m">'+fmtNum(aT)+'</td><td class="m">'+rel(aT)+'</td></tr>'+
+    '<tr class="'+(best==='r'?'best':'')+'"><td><b>Rounded</b></td>'+(showB?'<td class="m">'+roundStr+'</td>':'')+'<td class="m">'+fmtNum(roundVal)+'</td><td class="m">'+fmtNum(aR)+'</td><td class="m">'+rel(aR)+'</td></tr>';
+  document.getElementById('trNote').textContent= best==='='?'Both methods give the same result here, so the errors are equal.'
+    : (best==='r'?'Rounding is more accurate here: its absolute error is smaller.':'Truncation happens to be more accurate here: the next digit was small, so rounding left the number the same or truncation landed closer.')+' Relative error = absolute error \u00F7 original value. Mark schemes accept it as a decimal or a percentage.';
+}
+seg('trBase',b=>{trBase=+b.dataset.b;document.getElementById('trPlacesLabel').textContent=trBase===2?'Binary places to keep':'Decimal places to keep';trRender()});
+seg('trPlaces',b=>{trP=+b.dataset.p;trRender()});
+document.getElementById('trIn').addEventListener('input',trRender);
+document.querySelectorAll('#trEx button').forEach(b=>b.addEventListener('click',()=>{
+  document.getElementById('trIn').value=b.dataset.v;trBase=+b.dataset.b;setSeg('trBase','b',trBase);
+  document.getElementById('trPlacesLabel').textContent=trBase===2?'Binary places to keep':'Decimal places to keep';
+  trP=+b.dataset.p;setSeg('trPlaces','p',trP);trRender();
+}));
+trRender();
+
+/* ================= SHIFTS ================= */
+let S=toBits(22,8), sType='l', sStart=S.slice(), sNew=-1, sLostL='', sLostR='';
+const slog=document.getElementById('slog');
+function sRender(){
+  const r=document.getElementById('sreg');r.innerHTML='';
+  S.forEach((b,i)=>{const c=document.createElement('button');c.className='cell in'+(b?' on':'')+(i===sNew?' new':'');c.textContent=b;c.setAttribute('aria-label','Bit '+(i+1));c.onclick=()=>{S[i]=1-S[i];sNew=-1;sStart=S.slice();slog.innerHTML='';sLostL=sLostR='';sRender()};r.append(c)});
+  const l=document.getElementById('slost').children;l[0].innerHTML=sLostL;l[1].innerHTML=sLostR;
+  document.getElementById('sBin').textContent=S.join('').replace(/(.{4})/,'$1 ');
+  document.getElementById('sU').textContent=raw(S);
+  document.getElementById('sT').textContent=sgn(tcVal(S));
+}
+function lostMsg(b){return b?'<b>Lost: 1</b>':'Lost: 0'}
+document.getElementById('sL').onclick=()=>{
+  const out=S[0];const bu=raw(S),bt=tcVal(S);S=S.slice(1).concat([0]);sNew=7;sLostL=lostMsg(out);sLostR='';
+  let note='Shifted left: unsigned '+bu+' \u2192 '+raw(S)+'.';
+  if(out)note+=' A 1 fell off the left, so \u00D72 no longer works (data lost).';
+  else if(sType==='a'&&(S[0]!==(bt<0?1:0)))note+=' The sign bit changed, so the signed result is wrong (overflow).';
+  else note+=' That is \u00D72.';
+  if(sType==='a')note+=' An arithmetic left shift is the same as a logical left shift.';
+  log(note);sRender();
+};
+document.getElementById('sR').onclick=()=>{
+  const out=S[7];const bu=raw(S),bt=tcVal(S);const fill=sType==='a'?S[0]:0;S=[fill].concat(S.slice(0,7));sNew=0;sLostR=lostMsg(out);sLostL='';
+  let note=sType==='a'?'Arithmetic right: the sign bit ('+fill+') is copied in. Two\'s complement '+sgn(bt)+' \u2192 '+sgn(tcVal(S))+'.'
+    :'Logical right: a 0 fills the gap. Unsigned '+bu+' \u2192 '+raw(S)+'.';
+  if(sType==='l'&&bt<0)note+=' As two\'s complement, '+sgn(bt)+' became '+sgn(tcVal(S))+': a logical shift breaks negative numbers.';
+  if(out)note+=' A 1 fell off the right, so the answer is rounded down (\u00F72 is not exact).';
+  log(note);sRender();
+};
+function log(t){const li=document.createElement('li');li.textContent=t;slog.append(li);slog.scrollTop=slog.scrollHeight}
+document.getElementById('sReset').onclick=()=>{S=sStart.slice();sNew=-1;sLostL=sLostR='';slog.innerHTML='';sRender()};
+seg('sType',b=>{sType=b.dataset.s;sRender()});
+document.getElementById('sSet').onclick=()=>{
+  const r=parseIn(document.getElementById('sIn').value);
+  if(!r||r.v===undefined||r.v<-128||r.v>255){log('Type a denary number from '+MINUS+'128 to 255.');return}
+  S=toBits(r.v,8);sStart=S.slice();sNew=-1;sLostL=sLostR='';slog.innerHTML='';sRender();
+};
+document.getElementById('sIn').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('sSet').click()});
+sRender();
+</script>
+</body>
+</html>

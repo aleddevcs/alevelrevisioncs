@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Starter: Topic 3 recall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#14213D; --navy-2:#22335A; --teal:#0F8B8D; --teal-soft:#D6EFEF;
+  --orange:#F28C28; --orange-soft:#FDE9D4; --paper:#F3F6FA; --card:#FFFFFF;
+  --ink:#1B2433; --muted:#5A667A; --line:#D5DCE6; --good:#1E8A4C; --bad:#C0392B;
+  --good-soft:#E3F4EA; --bad-soft:#F8E3E0;
+  --sans:"Atkinson Hyperlegible","Segoe UI",Arial,sans-serif;
+  --mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.5}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+header{background:var(--navy);color:#fff;padding:20px 24px 22px}
+.head-inner,main{max-width:860px;margin:0 auto}
+.kicker{color:#9FD9DA;font-size:15px;margin:0}
+h1{margin:2px 0 6px;font-size:30px;line-height:1.15}
+.sub{margin:0;color:#C9D3E6;max-width:62ch}
+main{padding:22px 24px 48px}
+.bar{position:sticky;top:0;z-index:5;background:var(--paper);padding:10px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:16px}
+.track{flex:1;min-width:160px;height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--teal);transition:width .2s}
+.count{font-weight:700;color:var(--navy);white-space:nowrap}
+.q{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+.q.right{border-color:var(--good);box-shadow:0 0 0 1px var(--good) inset}
+.q.wrong{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset}
+.qhead{display:flex;gap:12px;align-items:baseline}
+.num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;display:grid;place-items:center;font-size:15px}
+.tag{font-size:13px;color:var(--teal);font-weight:700}
+.qtext{margin:0 0 10px;font-weight:700;font-size:18px}
+.opts{display:grid;gap:8px;margin-left:42px}
+.opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px;color:var(--ink)}
+.opt:hover:not([disabled]){border-color:var(--teal)}
+.opt[aria-pressed="true"]{border-color:var(--navy);background:var(--teal-soft);font-weight:700}
+.opt.is-right{border-color:var(--good);background:var(--good-soft)}
+.opt.is-wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt[disabled]{cursor:default}
+.why{display:none;margin:10px 0 0 42px;font-size:15px;color:var(--ink);background:var(--paper);border-radius:10px;padding:10px 12px}
+.why.show{display:block}
+.why b{color:var(--navy)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.btn{border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:10px;padding:10px 18px;font-weight:700}
+.btn.primary{background:var(--navy);color:#fff}
+.btn.primary[disabled]{opacity:.45;cursor:not-allowed}
+.hint{color:var(--muted);font-size:15px}
+.result{display:none;background:var(--navy);color:#fff;border-radius:16px;padding:20px 22px;margin-bottom:18px}
+.result.show{display:block}
+.score{font-size:44px;font-weight:700;line-height:1}
+.score small{font-size:18px;font-weight:400;color:#C9D3E6}
+.result h2{font-size:18px;margin:14px 0 6px;color:var(--orange)}
+.result ul{margin:0;padding-left:20px}
+.result p{margin:8px 0 0;color:#E4EAF4}
+@media (max-width:600px){.opts,.why{margin-left:0}h1{font-size:24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-inner">
+    <p class="kicker">Starter, Topic 4 Lesson 1</p>
+    <h1>Topic 3 recall: data transmission</h1>
+    <p class="sub">Twelve questions on your own. Answer every question, then check. Write down anything you get wrong.</p>
+  </div>
+</header>
+<main>
+  <div class="result" id="result" aria-live="polite"></div>
+  <div class="bar"><div class="track" aria-hidden="true"><div class="fill" id="fill"></div></div><span class="count" id="count">0 of 12 answered</span></div>
+  <div id="qs"></div>
+  <div class="actions">
+    <button class="btn primary" id="check" disabled>Check my answers</button>
+    <button class="btn" id="again" style="display:none">Try again</button>
+    <span class="hint" id="hint">Answer all 12 to unlock the check.</span>
+  </div>
+</main>
+<script>
+// [topic, question, correct, [wrong...], explanation]
+const Q=[
+ ["Serial and parallel","Which describes serial transmission?","Data is sent one bit at a time along a single channel",
+  ["Several bits are sent at the same time, each on its own wire","Data can only travel in one direction","Several signals are combined to share one channel"],
+  "Serial sends bits one after another on one channel. Parallel sends several bits at once on separate wires."],
+ ["Serial and parallel","Why is parallel transmission unreliable over long distances?","Skew: bits on different wires arrive at slightly different times",
+  ["Parallel cables can only send data in one direction","Parallel can only send one bit at a time","Parallel needs a router at each end of the cable"],
+  "Over distance, bits sent together drift apart (skew), and crosstalk between wires adds interference. That is why long links are serial."],
+ ["Simplex and duplex","A walkie-talkie lets both people talk, but only one at a time. Which method is this?","Half duplex",
+  ["Simplex","Full duplex","Multiplexing"],
+  "Both directions, but one direction at a time, is half duplex. Both at the same time is full duplex. One direction only is simplex."],
+ ["Simplex and duplex","A radio station broadcasts to listeners who cannot reply. Which method is this?","Simplex",
+  ["Half duplex","Full duplex","Packet switching"],
+  "Data only ever travels one way, so it is simplex."],
+ ["Multiplexing and switching","Why is multiplexing needed on a network?","It lets several signals share one channel, making better use of the link",
+  ["It splits a message into packets","It finds the shortest route across the network","It detects errors in a packet"],
+  "Multiplexing combines several signals onto one channel, so one expensive link can carry many conversations."],
+ ["Multiplexing and switching","Which statement describes circuit switching?","A dedicated path is set up for the whole communication",
+  ["Each packet can take a different route","Packets are reordered using sequence numbers","Links are shared between many users at the same moment"],
+  "Circuit switching reserves a fixed path for the whole call. Packet switching sends each packet independently."],
+ ["Packet contents","Which part of a packet does a router use to decide where to send it next?","The destination IP address",
+  ["The source IP address","The checksum","The sequence number"],
+  "Routers read the destination address and use their routing table to choose the next hop."],
+ ["Packet contents","Packets arrive in the order 3, 1, 4, 2. What lets the receiver rebuild the message?","The sequence number in each packet",
+  ["The checksum in each packet","The time to live in each packet","The source address in each packet"],
+  "Each packet carries a sequence number (packet number), so the receiver can put them back in order."],
+ ["Packet contents","What is the checksum in a packet used for?","To check whether the data was corrupted in transmission",
+  ["To put the packets back in order","To show which device sent the packet","To set how long the packet can stay on the network"],
+  "The receiver recalculates the checksum. If it does not match, the packet is corrupt and is requested again."],
+ ["Packet contents","Why does a packet have a time to live (TTL)?","So a packet that cannot be delivered does not travel around the network forever",
+  ["So the receiver knows when the packet was sent","So packets are delivered in the right order","So the router knows the packet's size"],
+  "TTL is reduced at each hop. When it reaches zero the packet is discarded."],
+ ["Collisions","Two devices detect a collision. What does each device do next?","Waits a random amount of time, then sends again",
+  ["Waits a fixed amount of time, then sends again","Stops sending and never resends","Sends again immediately"],
+  "A random wait matters: if both waited the same fixed time they would collide again."],
+ ["Routing","Why can packets from the same message take different routes?","Each packet is routed independently, using the best route available at that moment",
+  ["Every packet must use a different route","The sender chooses a route for each packet in advance","Routers send packets at random"],
+  "Routers choose the best available route for each packet, so congestion or a failed link can send packets different ways."]
+];
+const L="ABCD";
+let answers=new Array(Q.length).fill(null), order=[], checked=false;
+const qs=document.getElementById('qs');
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function build(){
+  qs.innerHTML='';answers.fill(null);checked=false;
+  order=Q.map(q=>shuffle([q[2],...q[3]]));
+  Q.forEach((q,i)=>{
+    const d=document.createElement('div');d.className='q';d.id='q'+i;
+    d.innerHTML='<div class="qhead"><span class="num">'+(i+1)+'</span><div><div class="tag">'+q[0]+'</div><p class="qtext">'+q[1]+'</p></div></div><div class="opts" role="group" aria-label="Question '+(i+1)+' options"></div><div class="why"></div>';
+    const box=d.querySelector('.opts');
+    order[i].forEach((o,k)=>{
+      const b=document.createElement('button');b.className='opt';b.setAttribute('aria-pressed','false');
+      b.textContent=L[k]+'.  '+o;b.dataset.v=o;
+      b.onclick=()=>{if(checked)return;answers[i]=o;box.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b));update()};
+      box.append(b);
+    });
+    qs.append(d);
+  });
+  document.getElementById('result').className='result';
+  document.getElementById('check').style.display='';document.getElementById('again').style.display='none';
+  update();
+}
+function update(){
+  const n=answers.filter(a=>a!==null).length;
+  document.getElementById('fill').style.width=(n/Q.length*100)+'%';
+  document.getElementById('count').textContent=n+' of '+Q.length+' answered';
+  const c=document.getElementById('check');c.disabled=n<Q.length;
+  document.getElementById('hint').textContent=checked?'':n<Q.length?'Answer all 12 to unlock the check.':'Ready when you are.';
+}
+document.getElementById('check').onclick=()=>{
+  checked=true;let score=0;const miss={};
+  Q.forEach((q,i)=>{
+    const d=document.getElementById('q'+i),ok=answers[i]===q[2];
+    if(ok)score++;else miss[q[0]]=(miss[q[0]]||0)+1;
+    d.classList.add(ok?'right':'wrong');
+    d.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.dataset.v===q[2])b.classList.add('is-right');else if(b.dataset.v===answers[i])b.classList.add('is-wrong')});
+    const w=d.querySelector('.why');w.innerHTML='<b>'+(ok?'Correct.':'Not this time.')+'</b> '+q[4];w.classList.add('show');
+  });
+  const r=document.getElementById('result');
+  const topics=Object.keys(miss);
+  r.innerHTML='<div class="score">'+score+' <small>out of '+Q.length+'</small></div>'+
+    (topics.length?'<h2>Topics to look back at</h2><ul>'+topics.map(t=>'<li>'+t+' ('+miss[t]+' wrong)</li>').join('')+'</ul><p>Write these down. They will come up again in the Topic 3 exam questions.</p>'
+      :'<p>Full marks. Topic 3 is secure.</p>');
+  r.classList.add('show');
+  document.getElementById('check').style.display='none';document.getElementById('again').style.display='';
+  update();window.scrollTo({top:0,behavior:'smooth'});
+};
+document.getElementById('again').onclick=()=>{build();window.scrollTo({top:0})};
+build();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+Question,Correct Answer,Incorrect Answer 1,Incorrect Answer 2,Incorrect Answer 3
+A.(B+C) expands to...,A.B + A.C,A.B + C,A + B.C,A.B.C
+A+(B.C) expands to...,(A+B).(A+C),A.B + A.C,A + B + C,(A.B)+(A.C)
+C.(A + NOT B) expands to...,C.A + C.NOT B,C + A.NOT B,C.A + NOT B,C.A.NOT B
+B+(A.C) expands to...,(B+A).(B+C),B.A + B.C,A+(B.C),(B+A)+(B+C)
+A.B + A.C factorises to...,A.(B + C),A + B.C,(A+B).(A+C),A.B.C
+(A+B).(A+C) factorises to...,A + (B.C),A.(B+C),A + B + C,A.B + A.C
+What should you look for first when factorising?,A common factor or term,The largest variable,A constant,A NOT symbol
+C.A + C.NOT B factorises to...,C.(A + NOT B),C + A.NOT B,(C+A).(C+NOT B),C.A.NOT B
+How can you check a factorising answer is correct?,Expand it back out and see if you return to the start,Build a truth table,Count the letters used,Check if it looks shorter
+A + A.B simplifies to...,A,A.B,B,1
+A.(A+B) simplifies to...,A,B,A.B,0
+What is the first step in proving A+A.B=A algebraically?,Rewrite A as A.1 (Identity law),Rewrite A as A+0 (Identity law),Factorise straight away,Build a truth table
+"After A.1+A.B, the next step is...",A.(1+B) — Factorise,A+(1.B) — Distributive,A.1.B — Identity,A+1+B — Associative
+1+B simplifies to...,1 (Annulment law),B (Identity law),0 (Annulment law),A (Identity law)
+NOT A . (A.B) simplifies to...,0,NOT A . B,A.B,1
+NOT A . (A+B) simplifies to...,NOT A . B,0,A.B,NOT A + B
+NOT A + (A.B) simplifies to...,NOT A + B,1,A + B,NOT A . B
+NOT A + (A+B) simplifies to...,1,0,NOT A + B,A + B
+B.(NOT B . C) simplifies to...,0,B.C,NOT B . C,1
+Which method is NOT accepted for a simplification question?,Using a truth table only,Naming the law on each line,Applying one law per line,Showing every step
+Why rewrite A as A.1 before factorising in an absorption proof?,So there's something to factorise with,To make the expression longer,Because it's required notation,To use the Complement law
+A.(A+C) + C.(A+B) simplifies to...,A + C.B,A + B + C,A.C + A.B,A

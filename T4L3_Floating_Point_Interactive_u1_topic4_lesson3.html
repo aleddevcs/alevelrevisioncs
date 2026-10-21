@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Floating point: Topic 4, Lesson 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#14213D; --navy-2:#22335A; --teal:#0F8B8D; --teal-soft:#D6EFEF;
+  --orange:#F28C28; --orange-soft:#FDE9D4; --paper:#F3F6FA; --card:#FFFFFF;
+  --ink:#1B2433; --muted:#5A667A; --line:#D5DCE6; --good:#1E8A4C; --bad:#C0392B; --bad-soft:#F8E3E0; --good-soft:#E3F4EA;
+  --sans:"Atkinson Hyperlegible","Segoe UI",Arial,sans-serif;
+  --mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.5}
+button,input{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+header{background:var(--navy);color:#fff;padding:18px 24px 0}
+.head-inner{max-width:1100px;margin:0 auto}
+.kicker{color:#9FD9DA;font-size:15px;margin:0}
+h1{margin:2px 0 14px;font-size:30px;line-height:1.15}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:transparent;border:0;color:#C9D3E6;padding:10px 16px;border-radius:10px 10px 0 0;font-weight:700}
+nav button[aria-selected="true"]{background:var(--paper);color:var(--navy)}
+nav button:hover:not([aria-selected="true"]){color:#fff;background:var(--navy-2)}
+main{max-width:1100px;margin:0 auto;padding:24px}
+.panel{display:none}.panel.active{display:block}
+h2{font-size:24px;margin:0 0 4px;color:var(--navy)}
+h3{font-size:17px;margin:0 0 8px;color:var(--navy)}
+.lede{color:var(--muted);margin:0 0 18px;max-width:72ch}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spread{justify-content:space-between}
+.btn{border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:10px;padding:8px 16px;font-weight:700}
+.btn:hover{background:var(--teal-soft)}
+.btn.primary{background:var(--navy);color:#fff}.btn.primary:hover{background:var(--navy-2)}
+.btn.accent{background:var(--orange);border-color:var(--orange);color:var(--navy)}
+.seg{display:inline-flex;border:2px solid var(--navy);border-radius:10px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:#fff;color:var(--navy);padding:7px 13px;font-weight:700}
+.seg button+button{border-left:2px solid var(--navy)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.label{font-weight:700;color:var(--navy)}
+.small{font-size:15px;color:var(--muted)}
+.mono{font-family:var(--mono)}
+input.num{width:150px;padding:7px 10px;border:2px solid var(--line);border-radius:10px;font-family:var(--mono)}
+.tag{display:inline-block;background:var(--orange);color:var(--navy);font-size:13px;font-weight:700;border-radius:6px;padding:2px 8px}
+.tag.hide{display:none}
+
+/* floating point register */
+.fpwrap{overflow-x:auto;padding:6px 0}
+.fp{display:flex;gap:26px;align-items:flex-end;width:max-content;margin:0 auto}
+.part{display:flex;flex-direction:column;align-items:center;gap:4px}
+.part .ttl{font-weight:700;color:var(--navy);font-size:15px}
+.bits{display:flex;gap:5px;align-items:flex-end}
+.bc{display:flex;flex-direction:column;align-items:center;gap:3px}
+.bc .pv{font-family:var(--mono);font-size:11px;color:var(--muted);height:15px;white-space:nowrap}
+.bc .pv.neg{color:var(--orange);font-weight:700}
+.bit{width:44px;height:54px;border-radius:9px;border:2px solid var(--navy);background:#fff;font-family:var(--mono);font-size:26px;font-weight:700;color:var(--navy)}
+button.bit:hover{background:var(--teal-soft)}
+.bit.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.bit.sign.on{background:var(--orange);border-color:var(--orange);color:var(--navy)}
+.compact .bit{width:34px;height:44px;font-size:20px}
+.pt{font-size:30px;font-weight:700;padding:0 1px 4px;color:var(--navy)}
+.readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.readout{background:var(--paper);border-radius:12px;padding:12px 16px}
+.readout .name{font-size:14px;color:var(--muted)}
+.readout .val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--navy);word-break:break-word}
+.readout .sub{font-size:14px;color:var(--muted)}
+.readout.ans{background:var(--teal-soft)}
+.hidden-val .val,.hidden-val .sub{filter:blur(9px);user-select:none}
+.working{margin-top:12px;background:var(--teal-soft);border-radius:10px;padding:10px 14px;font-size:16px}
+.working .mono{font-weight:700}
+.status{margin-top:12px;border-radius:10px;padding:10px 14px;font-weight:700}
+.status.ok{background:var(--good-soft);color:var(--good)}
+.status.no{background:var(--bad-soft);color:var(--bad)}
+.status span{font-weight:400;color:var(--ink)}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.presets button{border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 12px;text-align:left}
+.presets button:hover{border-color:var(--teal)}
+.presets small{display:block;color:var(--muted);font-size:13px}
+.presets button.beyond{border-color:var(--orange-soft);background:var(--orange-soft)}
+
+/* steps */
+ol.steps{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:10px}
+ol.steps li{display:grid;grid-template-columns:36px 1fr;gap:12px;background:var(--paper);border-radius:12px;padding:12px 14px}
+ol.steps .n{width:32px;height:32px;border-radius:50%;background:var(--teal);color:#fff;font-weight:700;display:grid;place-items:center}
+ol.steps li.last .n{background:var(--orange);color:var(--navy)}
+ol.steps b{color:var(--navy)}
+.err{color:var(--bad);font-weight:700;min-height:24px;margin-top:6px}
+
+/* range */
+table.rng{border-collapse:collapse;width:100%;margin-top:14px;font-size:16px}
+table.rng th{background:var(--navy);color:#fff;text-align:left;padding:8px 10px}
+table.rng td{border:1px solid var(--line);padding:8px 10px;vertical-align:middle}
+table.rng td.m{font-family:var(--mono)}
+table.rng tr.beyond td{background:var(--orange-soft)}
+.tablewrap{overflow-x:auto}
+
+/* sort */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.card.right{border-left-color:var(--good)}.card.wrong{border-left-color:var(--bad)}
+.card p{margin:0}
+.choices{display:flex;gap:6px}
+.choices button{flex:1;border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;padding:6px 0;font-weight:700}
+.choices button.picked-right{background:var(--good);border-color:var(--good);color:#fff}
+.choices button.picked-wrong{background:var(--bad);border-color:var(--bad);color:#fff}
+.why{font-size:15px;color:var(--muted)}
+.tally{font-weight:700;color:var(--navy)}
+@media (max-width:860px){.readouts{grid-template-columns:1fr}h1{font-size:24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-inner">
+    <p class="kicker">Unit 1, Topic 4: Data representation and data types (4.4.3, 4.4.4)</p>
+    <h1>Floating point</h1>
+    <nav role="tablist" aria-label="Activities">
+      <button role="tab" aria-selected="true" aria-controls="p-to" id="t-to">Floating point to denary</button>
+      <button role="tab" aria-selected="false" aria-controls="p-from" id="t-from">Denary to floating point</button>
+      <button role="tab" aria-selected="false" aria-controls="p-rng" id="t-rng">Range calculator</button>
+      <button role="tab" aria-selected="false" aria-controls="p-sort" id="t-sort">Integer or floating point?</button>
+    </nav>
+  </div>
+</header>
+<main>
+<!-- ============ FP TO DENARY ============ -->
+<section class="panel active" id="p-to" role="tabpanel" aria-labelledby="t-to">
+  <h2>Floating point to denary</h2>
+  <p class="lede">Click the bits to build a floating point number. Find the mantissa, find the exponent, then move the point. Turn on practice mode to hide the answers while you work them out.</p>
+  <div class="box">
+    <div class="row spread">
+      <div class="row"><span class="label">Mantissa bits</span><div class="seg" id="toM"><button data-v="5" aria-pressed="false">5</button><button data-v="8" aria-pressed="true">8</button><button data-v="12" aria-pressed="false">12</button></div></div>
+      <div class="row"><span class="label">Exponent bits</span><div class="seg" id="toE"><button data-v="3" aria-pressed="false">3</button><button data-v="4" aria-pressed="true">4</button></div></div>
+      <div class="row"><span class="tag hide" id="toBeyond">Beyond the past papers</span></div>
+    </div>
+    <div class="fpwrap"><div class="fp" id="toFP"></div></div>
+    <div class="readouts" id="toReadouts">
+      <div class="readout"><div class="name">Step 1: mantissa</div><div class="val" id="toMv"></div><div class="sub" id="toMs"></div></div>
+      <div class="readout"><div class="name">Step 2: exponent</div><div class="val" id="toEv"></div><div class="sub" id="toEs"></div></div>
+      <div class="readout ans"><div class="name">Step 3: answer</div><div class="val" id="toAv"></div><div class="sub" id="toAs"></div></div>
+    </div>
+    <div class="working" id="toWork"></div>
+    <div class="status" id="toNorm"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn accent" id="toRand">Random question</button>
+      <button class="btn" id="toPractice" aria-pressed="false">Practice mode: off</button>
+      <button class="btn" id="toReveal" style="display:none">Reveal answers</button>
+      <button class="btn" id="toClear">All 0</button>
+    </div>
+    <h3 style="margin-top:16px">Examples</h3>
+    <div class="presets" id="toPresets"></div>
+  </div>
+</section>
+
+<!-- ============ DENARY TO FP ============ -->
+<section class="panel" id="p-from" role="tabpanel" aria-labelledby="t-from">
+  <h2>Denary to floating point</h2>
+  <p class="lede">Type a denary number and choose the format. The four steps from your notes appear below: fixed point binary, normalise, set the exponent, then pad the mantissa.</p>
+  <div class="box">
+    <div class="row spread">
+      <div class="row"><span class="label">Number</span><input class="num" id="frIn" value="9.75" aria-label="Denary number"><button class="btn primary" id="frGo">Convert</button></div>
+      <div class="row"><span class="label">Mantissa</span><div class="seg" id="frM"><button data-v="5" aria-pressed="false">5</button><button data-v="8" aria-pressed="true">8</button><button data-v="12" aria-pressed="false">12</button></div></div>
+      <div class="row"><span class="label">Exponent</span><div class="seg" id="frE"><button data-v="3" aria-pressed="false">3</button><button data-v="4" aria-pressed="true">4</button></div></div>
+    </div>
+    <div class="err" id="frErr" aria-live="polite"></div>
+    <div class="row"><span class="tag hide" id="frBeyond">Beyond the past papers</span></div>
+    <ol class="steps" id="frSteps"></ol>
+    <div class="fpwrap" style="margin-top:14px"><div class="fp" id="frFP"></div></div>
+    <div class="status" id="frCheck"></div>
+    <h3 style="margin-top:16px">Examples</h3>
+    <div class="presets" id="frPresets"></div>
+  </div>
+</section>
+
+<!-- ============ RANGE ============ -->
+<section class="panel" id="p-rng" role="tabpanel" aria-labelledby="t-rng">
+  <h2>Range calculator</h2>
+  <p class="lede">The largest positive number uses the biggest mantissa (0.111…) and the biggest exponent. The smallest positive normalised number uses 0.100… and the smallest exponent. Which exponent counts as smallest depends on the convention.</p>
+  <div class="box">
+    <div class="row spread">
+      <div class="row"><span class="label">Mantissa bits</span><div class="seg" id="rgM"><button data-v="4" aria-pressed="false">4</button><button data-v="5" aria-pressed="false">5</button><button data-v="8" aria-pressed="true">8</button><button data-v="12" aria-pressed="false">12</button></div></div>
+      <div class="row"><span class="label">Exponent bits</span><div class="seg" id="rgE"><button data-v="3" aria-pressed="true">3</button><button data-v="4" aria-pressed="false">4</button></div></div>
+    </div>
+    <div class="row" style="margin-top:12px"><span class="label">Exponent convention</span>
+      <div class="seg" id="rgC"><button data-v="exam" aria-pressed="true">WJEC exams: exponent from 0</button><button data-v="full" aria-pressed="false">Full two's complement</button><button data-v="uns" aria-pressed="false">Unsigned exponent</button></div>
+    </div>
+    <p class="small" id="rgNote" style="margin:10px 0 0"></p>
+    <div class="tablewrap"><table class="rng" id="rgTable"></table></div>
+    <h3 style="margin-top:16px">Past paper formats</h3>
+    <div class="presets" id="rgPresets"></div>
+  </div>
+</section>
+
+<!-- ============ SORT ============ -->
+<section class="panel" id="p-sort" role="tabpanel" aria-labelledby="t-sort">
+  <h2>Integer or floating point?</h2>
+  <p class="lede">Read each statement with your partner and decide which form it describes. You get one go per card, so agree before you click.</p>
+  <p class="tally" id="sortTally"></p>
+  <div class="cards" id="cards"></div>
+  <div class="row" style="margin-top:14px"><button class="btn" id="sortReset">Shuffle and start again</button></div>
+</section>
+</main>
+
+<script>
+const MINUS='\u2212';
+const tabs=[...document.querySelectorAll('[role=tab]')];
+tabs.forEach(t=>t.addEventListener('click',()=>tabs.forEach(x=>{x.setAttribute('aria-selected',x===t);document.getElementById(x.getAttribute('aria-controls')).classList.toggle('active',x===t)})));
+function seg(id,cb){document.querySelectorAll('#'+id+' button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.v)}))}
+function setSeg(id,val){document.querySelectorAll('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===String(val)))}
+const sgn=n=>n<0?MINUS+fmt(-n):fmt(n);
+function fmt(x){if(x===0)return '0';let s=(+x.toPrecision(12)).toString();if(s.includes('e'))s=x.toFixed(14).replace(/0+$/,'').replace(/\.$/,'');return s}
+function fmtC(x){ // with thousands separators for big integers
+  if(Number.isInteger(x)&&Math.abs(x)>=10000)return (x<0?MINUS:'')+Math.abs(x).toLocaleString('en-GB');
+  return x<0?MINUS+fmt(-x):fmt(x);
+}
+const FR=['\u00BD','\u00BC','\u215B','1/16','1/32','1/64','1/128','1/256','1/512','1/1024','1/2048'];
+const mLab=n=>[MINUS+'1',...FR.slice(0,n-1)];
+const eLab=n=>{const o=[MINUS+2**(n-1)];for(let k=n-2;k>=0;k--)o.push(String(2**k));return o};
+const mVal=b=>{let v=b[0]?-1:0;for(let k=1;k<b.length;k++)if(b[k])v+=2**-k;return v};
+const eVal=b=>{let v=0;b.forEach(x=>v=v*2+x);return b[0]?v-2**b.length:v};
+const str=b=>b.join('');
+function normState(m){
+  if(m.every(x=>x===0))return {ok:false,txt:'The mantissa is all zeros, so the value is 0. Zero cannot be normalised.'};
+  if(m[0]===0&&m[1]===1)return {ok:true,txt:'Normalised: a positive mantissa starts 0.1.'};
+  if(m[0]===1&&m[1]===0)return {ok:true,txt:'Normalised: a negative mantissa starts 1.0.'};
+  if(m[0]===0)return {ok:false,txt:'Not normalised: a positive mantissa should start 0.1. The leading 0 after the point wastes a bit of precision.'};
+  return {ok:false,txt:'Not normalised: a negative mantissa should start 1.0.'};
+}
+// Build register; editable if onFlip given
+function drawFP(el,m,e,onFlip){
+  el.innerHTML='';el.classList.toggle('compact',m.length>8);
+  const part=(ttl,bits,labs,kind)=>{
+    const p=document.createElement('div');p.className='part';
+    const t=document.createElement('div');t.className='ttl';t.textContent=ttl;
+    const row=document.createElement('div');row.className='bits';
+    bits.forEach((b,i)=>{
+      const c=document.createElement('div');c.className='bc';
+      const pv=document.createElement('div');pv.className='pv'+(i===0?' neg':'');pv.textContent=labs[i];
+      const bt=document.createElement(onFlip?'button':'div');bt.className='bit'+(b?' on':'')+(i===0?' sign':'');bt.textContent=b;bt.style.display='grid';bt.style.placeItems='center';
+      if(onFlip){bt.setAttribute('aria-label',ttl+' bit '+(i+1)+', place value '+labs[i]);bt.onclick=()=>onFlip(kind,i)}
+      c.append(pv,bt);row.append(c);
+      if(kind==='m'&&i===0){const d=document.createElement('div');d.className='pt';d.textContent='.';row.append(d)}
+    });
+    p.append(t,row);return p;
+  };
+  el.append(part('Mantissa',m,mLab(m.length),'m'),part('Exponent',e,eLab(e.length),'e'));
+}
+function movePointStr(m,ex){ // clearer version for display
+  const all=[...m]; // point after index 0
+  let pos=1+ex;
+  let bits=all.slice();
+  if(pos<1){const n=1-pos;bits=new Array(n).fill(m[0]).concat(bits);pos=1}
+  while(bits.length<pos)bits.push(0);
+  const ip=bits.slice(0,pos),fp=bits.slice(pos);
+  return str(ip)+'.'+(fp.length?str(fp):'0');
+}
+function fracSum(m){
+  const parts=[];if(m[0])parts.push(MINUS+'1');
+  for(let k=1;k<m.length;k++)if(m[k])parts.push(FR[k-1]);
+  return parts.length?parts.join(' + ').replace('+ '+MINUS,MINUS):'0';
+}
+
+/* ---------- Tab 1 ---------- */
+let TM=[0,1,1,0,1,0,0,0],TE=[0,0,1,1],practice=false,revealed=false;
+function toRender(){
+  drawFP(document.getElementById('toFP'),TM,TE,(k,i)=>{if(k==='m')TM[i]=1-TM[i];else TE[i]=1-TE[i];revealed=false;toRender()});
+  const mv=mVal(TM),ev=eVal(TE),ans=mv*2**ev;
+  document.getElementById('toMv').textContent=sgn(mv);
+  document.getElementById('toMs').textContent=str(TM).replace(/^(.)/,'$1.')+'  =  '+fracSum(TM);
+  document.getElementById('toEv').textContent=sgn(ev);
+  const ep=[];TE.forEach((b,i)=>{if(b)ep.push(i===0?MINUS+2**(TE.length-1):String(2**(TE.length-1-i)))});
+  document.getElementById('toEs').textContent=str(TE)+'  =  '+(ep.length?ep.join(' + ').replace('+ '+MINUS,MINUS):'0');
+  document.getElementById('toAv').textContent=fmtC(ans);
+  document.getElementById('toAs').textContent=sgn(mv)+' \u00D7 2'+(ev<0?'\u207B':'')+String(Math.abs(ev)).replace(/\d/g,d=>'\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079'[d]);
+  const w=document.getElementById('toWork');
+  if(ev===0)w.innerHTML='The exponent is 0, so the point stays where it is: the answer is the mantissa, <span class="mono">'+sgn(mv)+'</span>.';
+  else w.innerHTML='The exponent is '+sgn(ev)+', so move the point '+Math.abs(ev)+' place'+(Math.abs(ev)>1?'s':'')+' <b>'+(ev>0?'right':'left')+'</b>: <span class="mono">'+str(TM).replace(/^(.)/,'$1.')+' \u2192 '+movePointStr(TM,ev)+'</span>'+(TM[0]?' (the leftmost bit is still the negative place value).':'')+' = <span class="mono">'+fmtC(ans)+'</span>';
+  const n=normState(TM),st=document.getElementById('toNorm');st.className='status '+(n.ok?'ok':'no');st.textContent=n.txt;
+  document.getElementById('toBeyond').classList.toggle('hide',!(ev<0||TM[0]===1));
+  const hide=practice&&!revealed;
+  document.querySelectorAll('#toReadouts .readout').forEach(r=>r.classList.toggle('hidden-val',hide));
+  w.style.filter=hide?'blur(8px)':'';
+  document.getElementById('toReveal').style.display=practice?'':'none';
+}
+function intToBits(v,n){v=((v%2**n)+2**n)%2**n;return v.toString(2).padStart(n,'0').split('').map(Number)}
+seg('toM',v=>{const n=+v;TM=TM.slice(0,n);while(TM.length<n)TM.push(0);toRender()});
+seg('toE',v=>{const n=+v;const ev=eVal(TE);TE=intToBits(Math.max(-(2**(n-1)),Math.min(2**(n-1)-1,ev)),n);toRender()});
+document.getElementById('toClear').onclick=()=>{TM.fill(0);TE.fill(0);toRender()};
+document.getElementById('toRand').onclick=()=>{
+  const n=TM.length,k=TE.length;TM=[0,1];for(let i=2;i<n;i++)TM.push(i<5&&Math.random()<.5?1:0);
+  TE=intToBits(1+Math.floor(Math.random()*(2**(k-1)-1)),k);revealed=false;toRender();
+};
+document.getElementById('toPractice').onclick=e=>{practice=!practice;revealed=false;e.target.textContent='Practice mode: '+(practice?'on':'off');e.target.setAttribute('aria-pressed',practice);toRender()};
+document.getElementById('toReveal').onclick=()=>{revealed=true;toRender()};
+const TOP=[
+  ['2016, Q6(d)','01101000','0011',''],['2017, Q7(b)(ii)','01111000','0111',''],['2022, Q4(d)(i)','01110100','010',''],
+  ['Your notes: = 17','01000100','0101',''],['Negative exponent','01100000','1110','beyond'],['Negative mantissa','10100000','0000','beyond']
+];
+const tp=document.getElementById('toPresets');
+TOP.forEach(p=>{const b=document.createElement('button');if(p[3])b.className='beyond';b.innerHTML=p[0]+'<small class="mono">'+p[1]+' '+p[2]+'</small>';
+  b.onclick=()=>{TM=p[1].split('').map(Number);TE=p[2].split('').map(Number);setSeg('toM',TM.length);setSeg('toE',TE.length);revealed=false;toRender()};tp.append(b)});
+toRender();
+
+/* ---------- Tab 2 ---------- */
+let FM=8,FE=4;
+function toFixedBinary(x){ // positive x, returns {ip, fp, exact}
+  let ip=Math.floor(x),f=x-ip,fp='';let k=0;
+  while(f>0&&k<24){f*=2;if(f>=1){fp+='1';f-=1}else fp+='0';k++}
+  return {ip:ip.toString(2),fp,exact:f===0};
+}
+function frConvert(){
+  const raw=document.getElementById('frIn').value.trim().replace(/^[−–]/,'-');
+  const err=document.getElementById('frErr'),steps=document.getElementById('frSteps'),chk=document.getElementById('frCheck');
+  steps.innerHTML='';chk.className='status';chk.textContent='';document.getElementById('frFP').innerHTML='';
+  if(!/^-?\d*\.?\d+$/.test(raw)){err.textContent='Type a denary number such as 9.75 or 0.1875.';return}
+  const x=parseFloat(raw);
+  if(x===0){err.textContent='Zero cannot be normalised: its mantissa is all zeros.';return}
+  err.textContent='';
+  const emin=-(2**(FE-1)),emax=2**(FE-1)-1;
+  // exponent so mantissa is in [0.5,1) or [-1,-0.5)
+  let e=0;const a=Math.abs(x);
+  if(x>0){while(a/2**e>=1)e++;while(a/2**e<0.5)e--}
+  else{while(x/2**e<-1)e++;while(x/2**e>=-0.5)e--}
+  const beyond=x<0||e<0;document.getElementById('frBeyond').classList.toggle('hide',!beyond);
+  const li=(html,last)=>{const l=document.createElement('li');if(last)l.className='last';l.innerHTML='<span class="n">'+(steps.children.length+1)+'</span><div>'+html+'</div>';steps.append(l)};
+  if(e>emax||e<emin){
+    li('<b>Exponent needed: '+sgn(e)+'.</b> A '+FE+'-bit two\'s complement exponent only holds '+sgn(emin)+' to '+emax+', so '+raw+' cannot be stored in this format.',true);
+    chk.className='status no';chk.textContent=e>emax?'Overflow: the number is too big for this format.':'Underflow: the number is too small for this format.';return;
+  }
+  const scale=2**(FM-1);let Mint=Math.floor(x/2**e*scale);
+  const exact=Mint===x/2**e*scale;
+  const mBits=intToBits(Mint,FM),eBits=intToBits(e,FE);
+  if(x>0){
+    const fb=toFixedBinary(x);
+    const fixed=fb.ip+(fb.fp?'.'+fb.fp:'');
+    li('<b>Fixed point binary.</b> '+raw+' = <span class="mono">'+fixed+'</span>'+(fb.exact?'':'\u2026 (this does not end, so some precision will be lost)'));
+    const digits=(fb.ip+fb.fp).replace(/^0+/,'');
+    const norm='0.'+digits.slice(0,24);
+    li('<b>Normalise.</b> Move the point so it sits just before the first 1: <span class="mono">'+fixed+' \u2192 '+norm.replace(/0+$/,'')+'</span>. The point moved '+Math.abs(e)+' place'+(Math.abs(e)===1?'':'s')+' <b>'+(e>0?'left':e<0?'right':'nowhere')+'</b>.');
+  }else{
+    li('<b>Negative number.</b> A normalised negative mantissa starts 1.0, so its value is between '+MINUS+'1 and '+MINUS+'0.5. Find the power of 2 that scales '+raw+' into that range.');
+    li('<b>Mantissa value.</b> '+raw+' \u00F7 2'+(e<0?'\u207B':'')+String(Math.abs(e)).replace(/\d/g,d=>'\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079'[d])+' = '+sgn(x/2**e)+'. In two\'s complement fixed point, with '+MINUS+'1 as the first place value: <span class="mono">'+str(mBits).replace(/^(.)/,'$1.')+'</span>');
+  }
+  li('<b>Exponent.</b> '+(x>0?(e>0?'The point moved left, so the exponent goes up: ':e<0?'The point moved right, so the exponent goes down: ':'The point did not move: '):'')+'exponent = '+sgn(e)+' = <span class="mono">'+str(eBits)+'</span> in '+FE+'-bit two\'s complement.');
+  li('<b>Finish.</b> Fit the mantissa into '+FM+' bits'+(x>0?', padding with 0s on the right':'')+': mantissa <span class="mono">'+str(mBits)+'</span>, exponent <span class="mono">'+str(eBits)+'</span>.',true);
+  drawFP(document.getElementById('frFP'),mBits,eBits,null);
+  const stored=mVal(mBits)*2**eVal(eBits);
+  if(exact){chk.className='status ok';chk.innerHTML='Check: '+str(mBits).replace(/^(.)/,'$1.')+' \u00D7 2'+(e<0?'\u207B':'')+String(Math.abs(e)).replace(/\d/g,d=>'\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079'[d])+' = '+fmtC(stored)+' <span>(stored exactly)</span>'}
+  else{chk.className='status no';chk.innerHTML='Not stored exactly. <span>The mantissa has run out of bits, so the extra bits are truncated. Stored value: '+fmtC(stored)+', error: '+fmt(Math.abs(x-stored))+'. More mantissa bits would give more precision.</span>'}
+}
+seg('frM',v=>{FM=+v;frConvert()});seg('frE',v=>{FE=+v;frConvert()});
+document.getElementById('frGo').onclick=frConvert;
+document.getElementById('frIn').addEventListener('keydown',e=>{if(e.key==='Enter')frConvert()});
+const FRP=[['Your notes','9.75',8,4,''],['2017, Q7(b)(i)','4.125',8,4,''],['2018, Q5(b)(i)','16.125',12,4,''],['Small number','0.1875',8,4,'beyond'],['Negative number',MINUS+'0.75',8,4,'beyond'],['Not exact','0.1',8,4,'beyond']];
+const fpp=document.getElementById('frPresets');
+FRP.forEach(p=>{const b=document.createElement('button');if(p[4])b.className='beyond';b.innerHTML=p[0]+'<small class="mono">'+p[1]+' ('+p[2]+' + '+p[3]+')</small>';
+  b.onclick=()=>{document.getElementById('frIn').value=p[1];FM=p[2];FE=p[3];setSeg('frM',FM);setSeg('frE',FE);frConvert()};fpp.append(b)});
+frConvert();
+
+/* ---------- Tab 3 ---------- */
+let RM=8,RE=3,RC='exam';
+function rgRender(){
+  const t=document.getElementById('rgTable');
+  let emax,emin;
+  if(RC==='uns'){emax=2**RE-1;emin=0}else{emax=2**(RE-1)-1;emin=RC==='full'?-(2**(RE-1)):0}
+  const maxM=[0,...new Array(RM-1).fill(1)],minM=[0,1,...new Array(RM-2).fill(0)],negM=[1,...new Array(RM-1).fill(0)];
+  const eb=v=>RC==='uns'?v.toString(2).padStart(RE,'0'):str(intToBits(v,RE));
+  const rows=[
+    ['Largest positive',maxM,emax,'',''],
+    ['Smallest positive (normalised)',minM,emin,'',''],
+  ];
+  if(RC==='full')rows.push(['Most negative',negM,emax,'beyond','']);
+  t.innerHTML='<tr><th></th><th>Mantissa</th><th>Exponent</th><th>Working</th><th>Value</th></tr>'+rows.map(r=>{
+    const mv=mVal(r[1]),v=mv*2**r[2];
+    const pow='2'+(r[2]<0?'\u207B':'')+String(Math.abs(r[2])).replace(/\d/g,d=>'\u2070\u00B9\u00B2\u00B3\u2074\u2075\u2076\u2077\u2078\u2079'[d]);
+    return '<tr class="'+r[3]+'"><td><b>'+r[0]+'</b></td><td class="m">'+str(r[1]).replace(/^(.)/,'$1.')+'<br><span class="small">= '+sgn(mv)+'</span></td><td class="m">'+eb(r[2])+'<br><span class="small">= '+sgn(r[2])+'</span></td><td class="m">'+sgn(mv)+' \u00D7 '+pow+'</td><td class="m"><b>'+fmtC(v)+'</b></td></tr>';
+  }).join('');
+  document.getElementById('rgNote').innerHTML=RC==='exam'?'This matches the WJEC mark schemes (2019 Q11(b), 2023 Q14): the lowest exponent is 0, so the smallest normalised positive value is 0.5.'
+    :RC==='full'?'<span class="tag">Beyond the past papers</span> With a two\'s complement exponent the most negative exponent is '+sgn(emin)+', which stores much smaller numbers. The 2023 mark scheme also credits this approach.'
+    :'The 2019 Q11(b) mark scheme accepted an unsigned exponent because the question said "positive 4-bit exponent". If you assume this, say so in your answer.';
+}
+seg('rgM',v=>{RM=+v;rgRender()});seg('rgE',v=>{RE=+v;rgRender()});seg('rgC',v=>{RC=v;rgRender()});
+const RGP=[['2018, Q5(b)(ii)',5,3,'exam','5 + 3'],['2022, Q4(d)(ii)',8,3,'exam','8 + 3'],['2019, Q11(b)',4,4,'uns','4 + 4, unsigned'],['2023, Q14 method 2',5,3,'exam','5 + 3'],['2023, Q14 method 3',4,4,'exam','4 + 4']];
+const rp=document.getElementById('rgPresets');
+RGP.forEach(p=>{const b=document.createElement('button');b.innerHTML=p[0]+'<small>'+p[4]+'</small>';b.onclick=()=>{RM=p[1];RE=p[2];RC=p[3];setSeg('rgM',RM);setSeg('rgE',RE);setSeg('rgC',RC);rgRender()};rp.append(b)});
+rgRender();
+
+/* ---------- Tab 4 ---------- */
+const SORT=[
+  ['Numbers are stored exactly, with no rounding errors.','Integer','A mark scheme advantage of integers: numbers are stored accurately.'],
+  ['Fractions and decimal places can be represented.','Floating point','A mark scheme advantage of floating point.'],
+  ['Processing is less complex and faster.','Integer','Integer arithmetic is simpler for the CPU.'],
+  ['Very large and very small numbers can be stored.','Floating point','The exponent lets the point float a long way in either direction.'],
+  ['Zero has an exact representation.','Integer','A mark scheme advantage of integers.'],
+  ['A larger range of numbers can be represented with the same number of bits.','Floating point','8 bits as an integer reach 255; as 4 + 4 floating point they reach 28,672.'],
+  ['Usually needs less storage space.','Integer','A mark scheme advantage of integers.'],
+  ['Some values can only be stored approximately, causing rounding errors.','Floating point','A disadvantage of floating point: 0.1 cannot be stored exactly in binary.'],
+  ['A good choice for counting items, such as stock levels.','Integer','Counts are whole numbers and must be exact.'],
+  ['A good choice for scientific measurements.','Floating point','Measurements can be fractional and very large or very small.'],
+  ['Has a limited range and can overflow quickly.','Integer','A disadvantage of integers: 8 bits only reach 255 unsigned.'],
+  ['Stores a mantissa and an exponent.','Floating point','mantissa \u00D7 2^exponent']
+];
+let sR=0,sD=0;
+function buildSort(){
+  const cards=document.getElementById('cards');cards.innerHTML='';sR=0;sD=0;tally();
+  SORT.map((_,i)=>i).sort(()=>Math.random()-.5).forEach(idx=>{
+    const [txt,ans,why]=SORT[idx];
+    const c=document.createElement('div');c.className='card';
+    const p=document.createElement('p');p.textContent=txt;
+    const ch=document.createElement('div');ch.className='choices';
+    const w=document.createElement('p');w.className='why';
+    ['Integer','Floating point'].forEach(opt=>{
+      const b=document.createElement('button');b.textContent=opt;
+      b.onclick=()=>{if(c.dataset.done)return;c.dataset.done=1;sD++;
+        if(opt===ans){b.classList.add('picked-right');c.classList.add('right');sR++;w.textContent='Correct. '+why}
+        else{b.classList.add('picked-wrong');c.classList.add('wrong');[...ch.children].find(x=>x.textContent===ans).classList.add('picked-right');w.textContent='It is '+ans.toLowerCase()+'. '+why}
+        tally()};
+      ch.append(b)});
+    c.append(p,ch,w);cards.append(c);
+  });
+}
+function tally(){document.getElementById('sortTally').textContent=sD<SORT.length?sD+' of '+SORT.length+' answered, '+sR+' correct':'All done: '+sR+' out of '+SORT.length+' correct.'}
+document.getElementById('sortReset').onclick=buildSort;
+buildSort();
+</script>
+</body>
+</html>
