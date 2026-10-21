@@ -2,7 +2,9 @@
  * Hash router and site-wide controls (theme, mobile menu, search box).
  * Routes:
  *   #/                         home
- *   #/topic/:id[/:tab]         topic (tabs: notes, flashcards, questions, exam, tracing)
+ *   #/topic/:id[/:tab]         revision topic (tabs: notes, flashcards, questions, exam, tracing)
+ *   #/units                    course units
+ *   #/unit/:u[/topic/:t[/lesson/:l]]  a unit, a specification topic, or a lesson and its resources
  *   #/quiz[?topic=id]          quiz setup
  *   #/quiz/run, #/quiz/results quiz runner and results
  *   #/dashboard, #/about       dashboard and about pages
@@ -42,6 +44,12 @@
     if (!p.length) return { view: 'home', nav: 'home' };
     switch (p[0]) {
       case 'topic': return { view: 'topic', nav: 'home', params: { id: p[1], tab: p[2] } };
+      case 'units': return { view: 'units', nav: 'units', title: 'Course units' };
+      case 'unit':
+        if (p[2] === 'topic' && p[4] === 'lesson') return { view: 'lesson', nav: 'units', params: { unit: p[1], topic: p[3], lesson: p[5] } };
+        if (p[2] === 'topic') return { view: 'courseTopic', nav: 'units', params: { unit: p[1], topic: p[3] } };
+        if (p.length === 2) return { view: 'unit', nav: 'units', params: { unit: p[1] } };
+        return { view: 'notFound', nav: null, title: 'Page not found' };
       case 'quiz':
         if (p[1] === 'run') return { view: 'quizRun', nav: 'quiz', title: 'Quiz' };
         if (p[1] === 'results') return { view: 'quizResults', nav: 'quiz', title: 'Quiz results' };

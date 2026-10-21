@@ -43,6 +43,14 @@
         h('p', { class: 'muted small' }, 'This mapping was made by reading the WJEC specification (version 2, March 2019). It has not been verified by WJEC. Always check the current specification for your course.')));
     }
 
+    var inCourse = RS.course.topicsUsingRevision(topic.id);
+    if (inCourse.length) {
+      app.appendChild(h('p', { class: 'muted small course-links' }, 'Lessons for this topic: ',
+        inCourse.map(function (t, i) {
+          return [i ? ' · ' : '', h('a', { href: '#/unit/' + t.unit + '/topic/' + t.number }, 'Unit ' + t.unit + ', Topic ' + t.number + ' (' + t.title + ')')];
+        })));
+    }
+
     var tablist = h('nav', { class: 'tabs', 'aria-label': topic.title + ' sections' });
     TABS.forEach(function (t) {
       if (t.id === 'tracing' && !topic.traces.length) return;

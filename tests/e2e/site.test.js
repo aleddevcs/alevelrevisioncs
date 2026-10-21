@@ -63,7 +63,7 @@ test('every page and topic tab renders without JavaScript errors', async () => {
   await go(page, '#/');
   const topics = await page.evaluate(() => window.RS.content.topics().map((t) => ({ id: t.id, traces: t.traces.length })));
   assert.equal(topics.length, 10);
-  assert.equal(await page.locator('.topic-card').count(), 10);
+  assert.equal(await page.locator('.topic-grid:not(.unit-grid) .topic-card').count(), 10);
 
   const hashes = ['#/quiz', '#/dashboard', '#/about', '#/search?q=cache', '#/question/proc-q1'];
   for (const t of topics) {
@@ -86,7 +86,7 @@ test('navigation links, breadcrumbs and the not-found page work', async () => {
   assert.equal(await page.getAttribute('.site-nav a[data-nav="dashboard"]', 'aria-current'), 'page');
 
   await go(page, '#/');
-  await page.click('.topic-card >> nth=2');
+  await page.click('.topic-grid:not(.unit-grid) .topic-card >> nth=2');
   await page.waitForSelector('.topic-header h1');
   await page.click('.tab:has-text("Flashcards")');
   await page.waitForSelector('.flashcard');
@@ -278,7 +278,7 @@ test('theme toggle switches to dark mode and is remembered', async () => {
 
 test('layout fits a phone screen and the mobile menu works', async () => {
   const page = await openPage({ viewport: { width: 375, height: 740 }, isMobile: true, hasTouch: true });
-  for (const h of ['#/', '#/topic/databases/notes', '#/topic/boolean-logic/tracing', '#/quiz', '#/dashboard']) {
+  for (const h of ['#/', '#/topic/databases/notes', '#/topic/boolean-logic/tracing', '#/quiz', '#/dashboard', '#/unit/1', '#/unit/1/topic/4', '#/unit/1/topic/3/lesson/1']) {
     await go(page, h);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     assert.ok(overflow <= 0, `${h} scrolls horizontally by ${overflow}px`);
@@ -292,11 +292,60 @@ test('layout fits a phone screen and the mobile menu works', async () => {
   await page.context().close();
 });
 
+test('course units, topics and lessons link to working resources', async () => {
+  const page = await openPage();
+  await go(page, '#/');
+  assert.equal(await page.locator('.unit-grid .unit-card').count(), 5);
+  await page.click('.site-nav a[data-nav="units"]');
+  await page.waitForSelector('h1:has-text("Course units")');
+  await page.click('.unit-card >> nth=0');
+  await page.waitForSelector('.course-header h1');
+  assert.equal(await page.locator('.course-row').count(), 17, 'Unit 1 has 17 topics');
+
+  await go(page, '#/unit/1/topic/4');
+  assert.equal(await page.locator('a.course-row').count(), 3);
+  assert.equal(await page.locator('.course-row.is-planned').count(), 1, 'lesson 4 shows as coming soon');
+  await go(page, '#/unit/3/topic/1');
+  assert.match(await page.textContent('.empty-state'), /coming soon/);
+
+  // Every lesson page renders, and every resource link on it returns the file.
+  const lessons = await page.evaluate(() => window.RS.course.allLessons().map((l) => `#/unit/${l.unit}/topic/${l.topic}/lesson/${l.number}`));
+  assert.ok(lessons.length >= 13);
+  for (const hash of lessons) {
+    await go(page, hash);
+    const hrefs = await page.$$eval('.activity-card a[target=_blank], .resource-list a[download]', (as) => as.map((a) => a.href));
+    assert.ok(hrefs.length > 0, `${hash} has resources`);
+    for (const href of hrefs) {
+      const res = await page.request.get(href);
+      assert.equal(res.status(), 200, `${hash}: ${href}`);
+    }
+  }
+
+  // An activity can be shown inside the page.
+  await go(page, '#/unit/1/topic/2/lesson/3');
+  await page.click('.activity-card button:has-text("Show on this page") >> nth=0');
+  const frame = page.frameLocator('.activity-frame iframe').first();
+  await frame.locator('body').waitFor();
+  assert.ok((await frame.locator('body').textContent()).length > 20);
+
+  // Topic resources and links to revision content.
+  await go(page, '#/unit/1/topic/2');
+  assert.match(await page.textContent('.resource-list'), /cheat sheet/i);
+  await page.click('.revision-links a.chip');
+  await page.waitForSelector('.topic-header h1:has-text("Boolean logic")');
+  assert.match(await page.textContent('.course-links'), /Unit 1, Topic 2/);
+
+  await go(page, '#/unit/9');
+  assert.equal(await page.textContent('#app h1'), 'Page not found');
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
 test('the site works when opened directly from disk (file://)', async () => {
   const page = await openPage();
   await page.goto('file://' + path.resolve(__dirname, '..', '..', 'index.html'));
   await page.waitForSelector('.topic-card');
-  assert.equal(await page.locator('.topic-card').count(), 10);
+  assert.equal(await page.locator('.topic-grid:not(.unit-grid) .topic-card').count(), 10);
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });

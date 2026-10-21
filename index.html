@@ -35,7 +35,8 @@
 
       <nav class="site-nav" id="site-nav" aria-label="Main">
         <ul>
-          <li><a href="#/" data-nav="home">Topics</a></li>
+          <li><a href="#/" data-nav="home">Home</a></li>
+          <li><a href="#/units" data-nav="units">Units</a></li>
           <li><a href="#/quiz" data-nav="quiz">Quiz</a></li>
           <li><a href="#/dashboard" data-nav="dashboard">Dashboard</a></li>
           <li><a href="#/about" data-nav="about">About</a></li>
@@ -85,6 +86,7 @@
   <script src="js/utils.js"></script>
   <script src="js/icons.js"></script>
   <script src="js/content.js"></script>
+  <script src="js/course.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/quiz-engine.js"></script>
   <script src="js/progress.js"></script>
@@ -102,10 +104,18 @@
   <script src="data/topics/09-systems-development.js"></script>
   <script src="data/topics/10-boolean-logic.js"></script>
 
+  <!-- Course catalogue: one file per unit listing its topics, lessons and resource files. -->
+  <script src="data/course/unit1.js"></script>
+  <script src="data/course/unit2.js"></script>
+  <script src="data/course/unit3.js"></script>
+  <script src="data/course/unit4.js"></script>
+  <script src="data/course/unit5.js"></script>
+
   <!-- Views and router -->
   <script src="js/components.js"></script>
   <script src="js/views/home.js"></script>
   <script src="js/views/topic.js"></script>
+  <script src="js/views/course.js"></script>
   <script src="js/views/quiz.js"></script>
   <script src="js/views/dashboard.js"></script>
   <script src="js/views/search.js"></script>

@@ -29,7 +29,12 @@
         'You have an unfinished quiz. ', h('a', { href: '#/quiz/run' }, 'Resume quiz'), '.'));
     }
 
-    app.appendChild(h('h2', { class: 'section-title' }, 'Topics'));
+    app.appendChild(h('h2', { class: 'section-title' }, 'Your course'));
+    app.appendChild(h('p', { class: 'muted' }, 'Lessons, slides and interactive activities, organised by specification unit and topic.'));
+    app.appendChild(RS.views.units.unitGrid());
+
+    app.appendChild(h('h2', { class: 'section-title' }, 'Revision by topic'));
+    app.appendChild(h('p', { class: 'muted' }, 'Notes, flashcards, practice questions, exam-style questions and tracing exercises.'));
     var grid = h('ul', { class: 'topic-grid', role: 'list' });
     RS.content.topics().forEach(function (t) {
       var s = RS.progress.topicStats(t, state);
