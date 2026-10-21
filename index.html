@@ -7,7 +7,7 @@
   <meta name="description" content="Interactive A-level Computer Science revision: notes, flashcards, practice quizzes, exam-style questions and algorithm tracing.">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=3">
   <script>
     // Apply the saved theme before first paint to avoid a flash of the wrong theme.
     (function () {
@@ -82,44 +82,45 @@
     </div>
   </footer>
 
-  <!-- Core helpers -->
-  <script src="js/utils.js"></script>
-  <script src="js/icons.js"></script>
-  <script src="js/content.js"></script>
-  <script src="js/course.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/quiz-engine.js"></script>
-  <script src="js/progress.js"></script>
-  <script src="js/search.js"></script>
+  <!-- Core helpers. The ?v= number forces browsers to fetch fresh files after an update:
+       increase it (everywhere in this file) whenever the site changes. -->
+  <script src="js/utils.js?v=3"></script>
+  <script src="js/icons.js?v=3"></script>
+  <script src="js/content.js?v=3"></script>
+  <script src="js/course.js?v=3"></script>
+  <script src="js/storage.js?v=3"></script>
+  <script src="js/quiz-engine.js?v=3"></script>
+  <script src="js/progress.js?v=3"></script>
+  <script src="js/search.js?v=3"></script>
 
   <!-- Content: one file per topic. To add a topic, create a file in data/topics/ and add a script tag here. -->
-  <script src="data/topics/01-processor.js"></script>
-  <script src="data/topics/02-memory-storage.js"></script>
-  <script src="data/topics/03-data-representation.js"></script>
-  <script src="data/topics/04-data-structures.js"></script>
-  <script src="data/topics/05-algorithms.js"></script>
-  <script src="data/topics/06-programming.js"></script>
-  <script src="data/topics/07-networks.js"></script>
-  <script src="data/topics/08-databases.js"></script>
-  <script src="data/topics/09-systems-development.js"></script>
-  <script src="data/topics/10-boolean-logic.js"></script>
+  <script src="data/topics/01-processor.js?v=3"></script>
+  <script src="data/topics/02-memory-storage.js?v=3"></script>
+  <script src="data/topics/03-data-representation.js?v=3"></script>
+  <script src="data/topics/04-data-structures.js?v=3"></script>
+  <script src="data/topics/05-algorithms.js?v=3"></script>
+  <script src="data/topics/06-programming.js?v=3"></script>
+  <script src="data/topics/07-networks.js?v=3"></script>
+  <script src="data/topics/08-databases.js?v=3"></script>
+  <script src="data/topics/09-systems-development.js?v=3"></script>
+  <script src="data/topics/10-boolean-logic.js?v=3"></script>
 
   <!-- Course catalogue: one file per unit listing its topics, lessons and resource files. -->
-  <script src="data/course/unit1.js"></script>
-  <script src="data/course/unit2.js"></script>
-  <script src="data/course/unit3.js"></script>
-  <script src="data/course/unit4.js"></script>
-  <script src="data/course/unit5.js"></script>
+  <script src="data/course/unit1.js?v=3"></script>
+  <script src="data/course/unit2.js?v=3"></script>
+  <script src="data/course/unit3.js?v=3"></script>
+  <script src="data/course/unit4.js?v=3"></script>
+  <script src="data/course/unit5.js?v=3"></script>
 
   <!-- Views and router -->
-  <script src="js/components.js"></script>
-  <script src="js/views/home.js"></script>
-  <script src="js/views/topic.js"></script>
-  <script src="js/views/course.js"></script>
-  <script src="js/views/quiz.js"></script>
-  <script src="js/views/dashboard.js"></script>
-  <script src="js/views/search.js"></script>
-  <script src="js/views/about.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/components.js?v=3"></script>
+  <script src="js/views/home.js?v=3"></script>
+  <script src="js/views/topic.js?v=3"></script>
+  <script src="js/views/course.js?v=3"></script>
+  <script src="js/views/quiz.js?v=3"></script>
+  <script src="js/views/dashboard.js?v=3"></script>
+  <script src="js/views/search.js?v=3"></script>
+  <script src="js/views/about.js?v=3"></script>
+  <script src="js/app.js?v=3"></script>
 </body>
 </html>

@@ -13,7 +13,7 @@ const DOM_SCRIPTS = /^js\/(components\.js|app\.js|views\/)/;
 
 function scriptPaths() {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-  return [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
+  return [...html.matchAll(/<script src="([^"?]+)(?:\?[^"]*)?"><\/script>/g)].map((m) => m[1]);
 }
 
 function memoryStorage(initial) {

@@ -247,6 +247,13 @@ scripts/serve.js            Tiny local web server (used by npm start and tests)
 tests/                      Unit, content and end-to-end tests
 ```
 
+## Browser caching after an update
+
+GitHub Pages lets browsers keep files for about 10 minutes. To make sure visitors get matching new files
+after an update, every script and stylesheet link in `index.html` ends in a version number such as
+`?v=3`. **Increase it everywhere in `index.html` whenever the site changes** (a test checks they all match).
+If a page still looks out of date, a hard refresh (Ctrl + Shift + R, or Cmd + Shift + R on a Mac) fixes it.
+
 ## Known limitations
 
 - Exam-style answers are **self-assessed** against indicative points; the site cannot mark extended writing.
