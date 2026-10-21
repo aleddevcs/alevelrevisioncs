@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lesson 3 Practice</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --navy-dark:#121C33; --teal:#1C7293; --teal-dark:#155a72;
+    --amber:#F2A541; --amber-dark:#c97f1f; --bg:#F3F6FB; --card:#FFFFFF;
+    --text:#1B2A4A; --muted:#5B6B85; --border:#DCE3EE;
+    --green:#2E9E5B; --green-bg:#E7F7EE; --red:#D64545; --red-bg:#FDEAEA;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Calibri','Segoe UI',system-ui,-apple-system,sans-serif;
+    padding: env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px) 0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{ max-width:980px; margin:0 auto; padding:2.2rem 1.3rem 3.5rem; }
+  h1{ font-family:Cambria,Georgia,'Times New Roman',serif; font-size:clamp(1.6rem,4vw,2.2rem); margin:0 0 .4rem; font-weight:700; color:var(--navy-dark); }
+  .lede{ color:var(--muted); font-size:1.02rem; max-width:64ch; margin:0 0 1.6rem; }
+  .ol{ text-decoration:overline; text-decoration-thickness:1.5px; }
+
+  .tabs{ display:flex; gap:.3rem; margin-bottom:1.3rem; flex-wrap:wrap; border-bottom:2px solid var(--border); }
+  .tabs button{
+    border:none; background:none; font-family:inherit; font-size:.92rem; font-weight:700;
+    color:var(--muted); padding:.6rem .25rem; margin-right:.9rem; cursor:pointer;
+    border-bottom:3px solid transparent; margin-bottom:-2px; white-space:nowrap;
+  }
+  .tabs button.active{ color:var(--navy-dark); border-bottom-color:var(--amber); }
+  .badge{ display:inline-block; min-width:1.1rem; height:1.1rem; padding:0 .3rem; border-radius:999px; background:var(--border); color:var(--muted); font-size:.66rem; font-weight:700; line-height:1.1rem; text-align:center; margin-left:.35rem; vertical-align:middle; }
+  .badge.done{ background:var(--green); color:#fff; }
+  .panel-view{ display:none; }
+  .panel-view.active{ display:block; }
+
+  .pills{ display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.1rem; }
+  .pill{
+    border:2px solid var(--border); background:#fff; color:var(--navy);
+    font-family:inherit; font-weight:700; font-size:.88rem; padding:.5rem 1rem;
+    border-radius:999px; cursor:pointer; display:flex; align-items:center; gap:.4rem;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .pill:hover{ border-color:var(--teal); }
+  .pill.active{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .pill .tick{ display:none; font-size:.85rem; }
+  .pill.solved .tick{ display:inline; }
+  .pill.active .tick{ color:var(--amber); }
+  .pill:not(.active) .tick{ color:var(--green); }
+
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.3rem 1.4rem; margin-bottom:1.2rem; }
+  .instructions{ color:var(--muted); font-size:.94rem; margin:0 0 1.1rem; line-height:1.5; }
+
+  /* ---- single-step MCQ (expand / factorise) ---- */
+  .expr-line{ font-family:Cambria,Georgia,serif; font-size:1.7rem; font-weight:700; color:var(--navy-dark); margin:0 0 1.2rem; }
+  .mcq-options{ display:grid; grid-template-columns:1fr 1fr; gap:.7rem; }
+  @media (max-width:640px){ .mcq-options{ grid-template-columns:1fr; } }
+  .mcq-opt{
+    display:flex; align-items:center; gap:.7rem; text-align:left;
+    border:2px solid var(--border); background:#fff; color:var(--navy); font-family:inherit;
+    font-size:1.05rem; font-weight:600; padding:.75rem .9rem; border-radius:10px; cursor:pointer;
+  }
+  .mcq-opt:hover{ border-color:var(--teal); }
+  .mcq-opt .letter{ flex:none; width:1.8rem; height:1.8rem; border-radius:50%; background:#E7ECF5; color:var(--navy); display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:700; }
+  .mcq-opt.selected{ border-color:var(--teal); }
+  .mcq-opt.correct{ border-color:var(--green); background:var(--green-bg); }
+  .mcq-opt.correct .letter{ background:var(--green); color:#fff; }
+  .mcq-opt.wrong{ border-color:var(--red); background:var(--red-bg); }
+  .mcq-opt.wrong .letter{ background:var(--red); color:#fff; }
+
+  /* ---- step proof builder ---- */
+  .proof-start{ font-family:Cambria,Georgia,serif; font-size:1.55rem; font-weight:700; color:var(--navy-dark); margin:0 0 1.3rem; }
+  .step{ margin-bottom:1.1rem; }
+  .step-num{ font-size:.78rem; font-weight:700; color:var(--teal-dark); letter-spacing:.04em; margin-bottom:.5rem; }
+  .step-options{ display:flex; flex-direction:column; gap:.5rem; }
+  .step-opt{
+    display:block; width:100%; text-align:left; border:2px solid var(--border); background:#fff;
+    color:var(--navy); font-family:inherit; font-size:.98rem; padding:.6rem .9rem; border-radius:10px; cursor:pointer;
+  }
+  .step-opt:hover{ border-color:var(--teal); }
+  .step-opt .sx{ font-family:Cambria,Georgia,serif; font-weight:700; font-size:1.08rem; }
+  .step-opt .sl{ color:var(--teal-dark); font-style:italic; font-size:.86rem; margin-left:.5rem; }
+  .step-opt.selected{ border-color:var(--teal); background:#EAF3FF; }
+  .step-opt.correct{ border-color:var(--green); background:var(--green-bg); }
+  .step-opt.correct .sl{ color:var(--green); }
+  .step-opt.wrong{ border-color:var(--red); background:var(--red-bg); }
+  .step-opt.wrong .sl{ color:var(--red); }
+
+  .proved{ margin-top:1.1rem; padding:1rem 1.2rem; background:var(--navy-dark); border-radius:14px; color:#fff; display:none; }
+  .proved.show{ display:block; }
+  .proved .pt{ font-family:Cambria,Georgia,serif; font-size:1.05rem; margin:0 0 .5rem; color:var(--amber); }
+  .proved .chain{ display:flex; flex-wrap:wrap; align-items:center; gap:.4rem; font-family:Cambria,Georgia,serif; font-size:1.1rem; }
+  .proved .chain span.arrow{ color:#8095bd; font-family:inherit; }
+
+  .btn-row{ display:flex; gap:.6rem; margin-top:1.1rem; flex-wrap:wrap; align-items:center; }
+  .btn{ border:none; font-family:inherit; font-weight:700; font-size:.9rem; padding:.55rem 1.15rem; border-radius:999px; cursor:pointer; }
+  .btn.primary{ background:var(--teal); color:#fff; }
+  .btn.primary:hover{ background:var(--teal-dark); }
+  .btn.ghost{ background:#fff; border:1.5px solid var(--border); color:var(--muted); }
+  .btn.ghost:hover{ border-color:var(--teal); color:var(--teal-dark); }
+  .feedback{ font-size:.92rem; font-weight:600; }
+  .feedback.ok{ color:var(--green); }
+  .feedback.bad{ color:var(--red); }
+  .feedback.info{ color:var(--teal-dark); }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Lesson 3 practice</h1>
+  <p class="lede">Expanding, factorising, absorption (basic and extended), then mixing everything together — the same skills from today's lesson, isolated one at a time.</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="expand">Expand <span class="badge" id="badge-expand">0/4</span></button>
+    <button class="tab-btn" data-tab="factorise">Factorise <span class="badge" id="badge-factorise">0/4</span></button>
+    <button class="tab-btn" data-tab="absorb">Absorption <span class="badge" id="badge-absorb">0/3</span></button>
+    <button class="tab-btn" data-tab="ext">Extended (NOT A) <span class="badge" id="badge-ext">0/4</span></button>
+    <button class="tab-btn" data-tab="mix">Mix it up <span class="badge" id="badge-mix">0/3</span></button>
+  </div>
+
+  <div class="panel-view active" id="panel-expand"></div>
+  <div class="panel-view" id="panel-factorise"></div>
+  <div class="panel-view" id="panel-absorb"></div>
+  <div class="panel-view" id="panel-ext"></div>
+  <div class="panel-view" id="panel-mix"></div>
+</div>
+
+<script>
+(function(){
+  function bar(l){ return '<span class="ol">'+l+'<\/span>'; }
+  function el(tag, cls, html){ var d=document.createElement(tag); if(cls) d.className=cls; if(html!=null) d.innerHTML=html; return d; }
+
+  // Fisher-Yates shuffle that tracks where the correct option ends up
+  function shuffleOptions(options, correctIndex){
+    var arr = options.map(function(o, i){ return { opt: o, wasCorrect: i === correctIndex }; });
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    var newCorrect = 0;
+    for (var k = 0; k < arr.length; k++) { if (arr[k].wasCorrect) { newCorrect = k; break; } }
+    return { options: arr.map(function(x){ return x.opt; }), correct: newCorrect };
+  }
+
+  /* =========================================================
+     GENERIC: single-step multiple choice (Expand / Factorise)
+     ========================================================= */
+  function buildMCQSet(panelId, badgeId, title, instructions, questions){
+    var panel = document.getElementById(panelId);
+    var state = { current: 0, solved: {} };
+
+    var pillsWrap = el('div','pills');
+    var cardWrap = el('div');
+    panel.appendChild(pillsWrap);
+    panel.appendChild(cardWrap);
+
+    function renderPills(){
+      pillsWrap.innerHTML = '';
+      questions.forEach(function(q, i){
+        var p = el('button','pill'+(i===state.current?' active':'')+(state.solved[i]?' solved':''),
+          '<span class="tick">\u2713<\/span>Q'+(i+1));
+        p.addEventListener('click', function(){ state.current = i; render(); });
+        pillsWrap.appendChild(p);
+      });
+    }
+
+    function updateBadge(){
+      var n = questions.filter(function(_,i){ return state.solved[i]; }).length;
+      var b = document.getElementById(badgeId);
+      b.textContent = n + '/' + questions.length;
+      b.classList.toggle('done', n === questions.length);
+    }
+
+    function render(){
+      renderPills();
+      var q = questions[state.current];
+      var shuffled = shuffleOptions(q.options, q.correct);
+      var card = el('div','card');
+      card.appendChild(el('p','instructions', instructions));
+      card.appendChild(el('p','expr-line', q.expr));
+      var opts = el('div','mcq-options');
+      var letters = ['A','B','C','D'];
+      var chosen = null, revealed = false;
+      shuffled.options.forEach(function(opt, i){
+        var b = el('button','mcq-opt','<span class="letter">'+letters[i]+'<\/span><span>'+opt.text+'<\/span>');
+        b.type = 'button';
+        b.addEventListener('click', function(){
+          if(revealed) return;
+          chosen = i; revealed = true;
+          Array.prototype.forEach.call(opts.children, function(c, ci){
+            c.classList.toggle('correct', ci === shuffled.correct);
+            c.classList.toggle('wrong', ci === i && i !== shuffled.correct);
+          });
+          fb.textContent = (i === shuffled.correct) ? 'Correct \u2014 ' + q.why : 'Not quite \u2014 ' + q.why;
+          fb.className = 'feedback ' + (i === shuffled.correct ? 'ok' : 'bad');
+          if(i === shuffled.correct){ state.solved[state.current] = true; updateBadge(); setTimeout(renderPills, 10); }
+        });
+        opts.appendChild(b);
+      });
+      card.appendChild(opts);
+      var row = el('div','btn-row');
+      var fb = el('span','feedback','');
+      row.appendChild(fb);
+      card.appendChild(row);
+      cardWrap.innerHTML = ''; cardWrap.appendChild(card);
+    }
+
+    render(); updateBadge();
+  }
+
+  /* =========================================================
+     GENERIC: multi-step proof builder (Absorption / Extended / Mix)
+     ========================================================= */
+  function buildProofSet(panelId, badgeId, instructions, problems){
+    var panel = document.getElementById(panelId);
+    var state = { current: 0, solved: {} };
+
+    var pillsWrap = el('div','pills');
+    var cardWrap = el('div');
+    panel.appendChild(pillsWrap);
+    panel.appendChild(cardWrap);
+
+    function renderPills(){
+      pillsWrap.innerHTML = '';
+      problems.forEach(function(p, i){
+        var b = el('button','pill'+(i===state.current?' active':'')+(state.solved[i]?' solved':''),
+          '<span class="tick">\u2713<\/span>Q'+(i+1));
+        b.addEventListener('click', function(){ state.current = i; render(); });
+        pillsWrap.appendChild(b);
+      });
+    }
+
+    function updateBadge(){
+      var n = problems.filter(function(_,i){ return state.solved[i]; }).length;
+      var b = document.getElementById(badgeId);
+      b.textContent = n + '/' + problems.length;
+      b.classList.toggle('done', n === problems.length);
+    }
+
+    function render(){
+      renderPills();
+      var prob = problems[state.current];
+      var card = el('div','card');
+      card.appendChild(el('p','instructions', instructions));
+      card.appendChild(el('p','proof-start', prob.expr));
+
+      var chosen = new Array(prob.steps.length).fill(null);
+      var stepEls = [];
+      var stepCorrectIdx = [];
+
+      prob.steps.forEach(function(step, si){
+        var shuffledStep = shuffleOptions(step.options, step.correct);
+        stepCorrectIdx.push(shuffledStep.correct);
+        var stepDiv = el('div','step');
+        stepDiv.appendChild(el('div','step-num','STEP '+(si+1)));
+        var optsDiv = el('div','step-options');
+        shuffledStep.options.forEach(function(opt, oi){
+          var b = el('button','step-opt','<span class="sx">= '+opt.expr+'<\/span><span class="sl">'+opt.law+'<\/span>');
+          b.type = 'button';
+          b.addEventListener('click', function(){
+            chosen[si] = oi;
+            Array.prototype.forEach.call(optsDiv.children, function(c, ci){
+              c.classList.toggle('selected', ci === oi);
+              c.classList.remove('correct','wrong');
+            });
+          });
+          optsDiv.appendChild(b);
+        });
+        stepDiv.appendChild(optsDiv);
+        card.appendChild(stepDiv);
+        stepEls.push(optsDiv);
+      });
+
+      var provedDiv = el('div','proved');
+      provedDiv.innerHTML = '<p class="pt">Proved</p><div class="chain">' +
+        [prob.expr].concat(prob.steps.map(function(s){ return s.options[s.correct].expr; }))
+          .map(function(e){ return '<span>'+e+'<\/span>'; }).join('<span class="arrow"> \u2192 <\/span>') + '<\/div>';
+      card.appendChild(provedDiv);
+
+      var row = el('div','btn-row');
+      var checkBtn = el('button','btn primary','Check'); checkBtn.type='button';
+      var revealBtn = el('button','btn ghost','Reveal answer'); revealBtn.type='button';
+      var fb = el('span','feedback','');
+      row.appendChild(checkBtn); row.appendChild(revealBtn); row.appendChild(fb);
+      card.appendChild(row);
+
+      checkBtn.addEventListener('click', function(){
+        var allMade = chosen.every(function(c){ return c !== null; });
+        if(!allMade){ fb.textContent = 'Choose an option for every step first.'; fb.className = 'feedback bad'; return; }
+        var allCorrect = true;
+        prob.steps.forEach(function(step, si){
+          var ok = chosen[si] === stepCorrectIdx[si];
+          Array.prototype.forEach.call(stepEls[si].children, function(c, ci){
+            c.classList.remove('correct','wrong');
+            if(ci === chosen[si]) c.classList.toggle(ok ? 'correct' : 'wrong', true);
+          });
+          if(!ok) allCorrect = false;
+        });
+        if(allCorrect){
+          fb.textContent = 'All correct \u2014 proof complete.'; fb.className = 'feedback ok';
+          provedDiv.classList.add('show');
+          if(!state.solved[state.current]){ state.solved[state.current] = true; updateBadge(); setTimeout(renderPills, 10); }
+        } else {
+          fb.textContent = 'Not quite \u2014 check the red steps.'; fb.className = 'feedback bad';
+        }
+      });
+
+      revealBtn.addEventListener('click', function(){
+        prob.steps.forEach(function(step, si){
+          chosen[si] = stepCorrectIdx[si];
+          Array.prototype.forEach.call(stepEls[si].children, function(c, ci){
+            c.classList.remove('selected','wrong');
+            c.classList.toggle('correct', ci === stepCorrectIdx[si]);
+          });
+        });
+        fb.textContent = 'Answer revealed.'; fb.className = 'feedback info';
+        provedDiv.classList.add('show');
+      });
+
+      cardWrap.innerHTML = ''; cardWrap.appendChild(card);
+    }
+
+    render(); updateBadge();
+  }
+
+  /* =========================================================
+     TAB 1 — EXPAND
+     ========================================================= */
+  buildMCQSet('panel-expand', 'badge-expand',
+    'Expand',
+    'Expand each bracket fully. Look at the operator OUTSIDE the bracket to choose the right form.',
+    [
+      { expr: 'A.(B + C)', correct: 0,
+        options: [
+          { text: 'A.B + A.C' }, { text: 'A.B + C' },
+          { text: 'A + B.C' }, { text: 'A.B.C' }
+        ], why: 'AND outside the bracket \u2192 AND over OR: A.(B+C) = A.B + A.C.' },
+      { expr: 'C.(A + '+bar('A')+')', correct: 2,
+        options: [
+          { text: 'C + A.'+bar('A') }, { text: 'C.A + '+bar('A') },
+          { text: 'C.A + C.'+bar('A') }, { text: 'C + A + '+bar('A') }
+        ], why: 'Distribute C into both terms inside the bracket: C.A + C.'+bar('A')+'.' },
+      { expr: 'A + (B.C)', correct: 1,
+        options: [
+          { text: 'A.B + A.C' }, { text: '(A+B).(A+C)' },
+          { text: 'A+B . A+C' }, { text: '(A.B)+(A.C)' }
+        ], why: 'OR outside the bracket \u2192 OR over AND: A+(B.C) = (A+B).(A+C).' },
+      { expr: 'B + (A.C)', correct: 3,
+        options: [
+          { text: 'B.A + B.C' }, { text: 'A.(B+C)' },
+          { text: '(A+B).C' }, { text: '(B+A).(B+C)' }
+        ], why: 'OR over AND again, with B distributed into both brackets: (B+A).(B+C).' }
+    ]
+  );
+
+  /* =========================================================
+     TAB 2 — FACTORISE
+     ========================================================= */
+  buildMCQSet('panel-factorise', 'badge-factorise',
+    'Factorise',
+    'Spot the common factor or term, then rewrite with a bracket.',
+    [
+      { expr: 'A.B + A.C', correct: 1,
+        options: [
+          { text: 'A + B.C' }, { text: 'A.(B + C)' },
+          { text: '(A+B).(A+C)' }, { text: 'A.B.C' }
+        ], why: 'A is common to both terms: A.(B + C).' },
+      { expr: 'C.A + C.'+bar('A'), correct: 0,
+        options: [
+          { text: 'C.(A + '+bar('A')+')' }, { text: 'C + A.'+bar('A') },
+          { text: '(C+A).(C+'+bar('A')+')' }, { text: 'C.A.'+bar('A') }
+        ], why: 'C is common to both terms: C.(A + '+bar('A')+').' },
+      { expr: '(A+B).(A+C)', correct: 2,
+        options: [
+          { text: 'A.B + A.C' }, { text: '(A+B+C)' },
+          { text: 'A + (B.C)' }, { text: 'A.(B+C)' }
+        ], why: 'A is the common term in both brackets: A + (B.C).' },
+      { expr: '(C+A).(C+B)', correct: 3,
+        options: [
+          { text: 'C.(A+B)' }, { text: '(C+A+B)' },
+          { text: 'C.A + C.B' }, { text: 'C + (A.B)' }
+        ], why: 'C is the common term in both brackets: C + (A.B).' }
+    ]
+  );
+
+  /* =========================================================
+     TAB 3 — ABSORPTION (basic)
+     ========================================================= */
+  buildProofSet('panel-absorb', 'badge-absorb',
+    'Use the \u201cforce factorise\u201d method: rewrite using Identity so there\u2019s something to factorise, then let Annulment do the work. Pick the correct line \u2014 and the correct law \u2014 at each step.',
+    [
+      { expr: 'B + B.C',
+        steps: [
+          { correct: 0, options: [
+            { expr: 'B.1 + B.C', law: 'Identity' },
+            { expr: 'B + B.C', law: 'Identity' },
+            { expr: 'B.0 + B.C', law: 'Identity' },
+            { expr: 'B.1 + B.C', law: 'Annulment' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'B.(1 + C)', law: 'Factorise' },
+            { expr: 'B.(1.C)', law: 'Factorise' },
+            { expr: 'B.(1 + C)', law: 'Identity' },
+            { expr: 'B + (1.C)', law: 'Distributive' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'B.1', law: 'Annulment (1+C=1)' },
+            { expr: 'B.C', law: 'Annulment (1+C=1)' },
+            { expr: 'B.1', law: 'Identity' },
+            { expr: 'B.0', law: 'Annulment (1+C=1)' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'B', law: 'Identity' },
+            { expr: '1', law: 'Identity' },
+            { expr: 'B', law: 'Annulment' },
+            { expr: '0', law: 'Annulment' }
+          ]}
+        ]
+      },
+      { expr: 'C.(C + A)',
+        steps: [
+          { correct: 0, options: [
+            { expr: '(C+0).(C+A)', law: 'Identity' },
+            { expr: '(C+1).(C+A)', law: 'Identity' },
+            { expr: '(C+0).(C+A)', law: 'Annulment' },
+            { expr: 'C.(C+A+0)', law: 'Identity' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'C + (0.A)', law: 'Factorise (OR over AND)' },
+            { expr: 'C.(0 + A)', law: 'Factorise (OR over AND)' },
+            { expr: 'C + (0.A)', law: 'Distributive (AND over OR)' },
+            { expr: 'C + 0.A', law: 'Identity' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'C + 0', law: 'Annulment (0.A=0)' },
+            { expr: 'C + A', law: 'Annulment (0.A=0)' },
+            { expr: 'C + 0', law: 'Identity' },
+            { expr: 'C . 0', law: 'Annulment (0.A=0)' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'C', law: 'Identity' },
+            { expr: '0', law: 'Identity' },
+            { expr: 'C', law: 'Annulment' },
+            { expr: 'C + A', law: 'Identity' }
+          ]}
+        ]
+      },
+      { expr: 'D + D.'+bar('A'),
+        steps: [
+          { correct: 0, options: [
+            { expr: 'D.1 + D.'+bar('A'), law: 'Identity' },
+            { expr: 'D + D.'+bar('A'), law: 'Identity' },
+            { expr: 'D.0 + D.'+bar('A'), law: 'Identity' },
+            { expr: 'D.1 + D.'+bar('A'), law: 'Annulment' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'D.(1 + '+bar('A')+')', law: 'Factorise' },
+            { expr: 'D.(1 . '+bar('A')+')', law: 'Factorise' },
+            { expr: 'D.(1 + '+bar('A')+')', law: 'Identity' },
+            { expr: 'D + (1.'+bar('A')+')', law: 'Distributive' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'D.1', law: 'Annulment (1+'+bar('A')+'=1)' },
+            { expr: 'D.'+bar('A'), law: 'Annulment (1+'+bar('A')+'=1)' },
+            { expr: 'D.1', law: 'Identity' },
+            { expr: 'D.0', law: 'Annulment (1+'+bar('A')+'=1)' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'D', law: 'Identity' },
+            { expr: '1', law: 'Identity' },
+            { expr: 'D', law: 'Annulment' },
+            { expr: '0', law: 'Annulment' }
+          ]}
+        ]
+      }
+    ]
+  );
+
+  /* =========================================================
+     TAB 4 — EXTENDED ABSORPTION (NOT A)
+     ========================================================= */
+  buildProofSet('panel-ext', 'badge-ext',
+    'Same idea, but one term is negated. Pick the correct line and law at each step.',
+    [
+      { expr: bar('A')+'.(A + C)',
+        steps: [
+          { correct: 0, options: [
+            { expr: bar('A')+'.A + '+bar('A')+'.C', law: 'AND over OR' },
+            { expr: bar('A')+'.A . '+bar('A')+'.C', law: 'AND over OR' },
+            { expr: bar('A')+' + A.C', law: 'AND over OR' },
+            { expr: bar('A')+'.A + '+bar('A')+'.C', law: 'OR over AND' }
+          ]},
+          { correct: 0, options: [
+            { expr: '0 + '+bar('A')+'.C', law: 'Complement ('+bar('A')+'.A=0)' },
+            { expr: '1 + '+bar('A')+'.C', law: 'Complement ('+bar('A')+'.A=0)' },
+            { expr: '0 + '+bar('A')+'.C', law: 'Annulment' },
+            { expr: 'A + '+bar('A')+'.C', law: 'Complement ('+bar('A')+'.A=0)' }
+          ]},
+          { correct: 0, options: [
+            { expr: bar('A')+'.C', law: 'Identity' },
+            { expr: 'C', law: 'Identity' },
+            { expr: bar('A')+'.C', law: 'Annulment' },
+            { expr: '0', law: 'Identity' }
+          ]}
+        ]
+      },
+      { expr: bar('A')+'+(A.C)',
+        steps: [
+          { correct: 0, options: [
+            { expr: '('+bar('A')+'+A).('+bar('A')+'+C)', law: 'OR over AND' },
+            { expr: bar('A')+'.A + '+bar('A')+'.C', law: 'OR over AND' },
+            { expr: '('+bar('A')+'+A)+('+bar('A')+'+C)', law: 'OR over AND' },
+            { expr: '('+bar('A')+'+A).('+bar('A')+'+C)', law: 'AND over OR' }
+          ]},
+          { correct: 0, options: [
+            { expr: '1.('+bar('A')+'+C)', law: 'Complement ('+bar('A')+'+A=1)' },
+            { expr: '0.('+bar('A')+'+C)', law: 'Complement ('+bar('A')+'+A=1)' },
+            { expr: '1.('+bar('A')+'+C)', law: 'Annulment' },
+            { expr: 'A.('+bar('A')+'+C)', law: 'Complement ('+bar('A')+'+A=1)' }
+          ]},
+          { correct: 0, options: [
+            { expr: bar('A')+'+C', law: 'Identity' },
+            { expr: 'C', law: 'Identity' },
+            { expr: bar('A')+'+C', law: 'Annulment' },
+            { expr: '1', law: 'Identity' }
+          ]}
+        ]
+      },
+      { expr: 'B.('+bar('B')+'.C)',
+        steps: [
+          { correct: 0, options: [
+            { expr: '(B.'+bar('B')+').C', law: 'Associative' },
+            { expr: 'B.'+bar('B')+' + C', law: 'Associative' },
+            { expr: '(B+'+bar('B')+').C', law: 'Associative' },
+            { expr: '(B.'+bar('B')+').C', law: 'Commutative' }
+          ]},
+          { correct: 0, options: [
+            { expr: '0.C', law: 'Complement (B.'+bar('B')+'=0)' },
+            { expr: '1.C', law: 'Complement (B.'+bar('B')+'=0)' },
+            { expr: '0.C', law: 'Annulment' },
+            { expr: 'B.C', law: 'Complement (B.'+bar('B')+'=0)' }
+          ]},
+          { correct: 0, options: [
+            { expr: '0', law: 'Annulment' },
+            { expr: 'C', law: 'Annulment' },
+            { expr: '0', law: 'Identity' },
+            { expr: '1', law: 'Annulment' }
+          ]}
+        ]
+      },
+      { expr: bar('A')+'+(A+D)',
+        steps: [
+          { correct: 0, options: [
+            { expr: '('+bar('A')+'+A)+D', law: 'Associative' },
+            { expr: bar('A')+'.A + D', law: 'Associative' },
+            { expr: '('+bar('A')+'.A)+D', law: 'Associative' },
+            { expr: '('+bar('A')+'+A)+D', law: 'Commutative' }
+          ]},
+          { correct: 0, options: [
+            { expr: '1+D', law: 'Complement ('+bar('A')+'+A=1)' },
+            { expr: '0+D', law: 'Complement ('+bar('A')+'+A=1)' },
+            { expr: '1+D', law: 'Annulment' },
+            { expr: 'A+D', law: 'Complement ('+bar('A')+'+A=1)' }
+          ]},
+          { correct: 0, options: [
+            { expr: '1', law: 'Annulment' },
+            { expr: 'D', law: 'Annulment' },
+            { expr: '1', law: 'Identity' },
+            { expr: '0', law: 'Annulment' }
+          ]}
+        ]
+      }
+    ]
+  );
+
+  /* =========================================================
+     TAB 5 — MIX IT UP
+     ========================================================= */
+  buildProofSet('panel-mix', 'badge-mix',
+    'These combine more than one technique from today. Work through in order \u2014 they get harder.',
+    [
+      { expr: 'A.B + A.'+bar('B'),
+        steps: [
+          { correct: 0, options: [
+            { expr: 'A.(B + '+bar('B')+')', law: 'Factorise' },
+            { expr: 'A.(B . '+bar('B')+')', law: 'Factorise' },
+            { expr: 'A + (B.'+bar('B')+')', law: 'Distributive' },
+            { expr: 'A.(B + '+bar('B')+')', law: 'Identity' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'A.1', law: 'Complement (B+'+bar('B')+'=1)' },
+            { expr: 'A.0', law: 'Complement (B+'+bar('B')+'=1)' },
+            { expr: 'A.1', law: 'Annulment' },
+            { expr: 'A.B', law: 'Complement (B+'+bar('B')+'=1)' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'A', law: 'Identity' },
+            { expr: '1', law: 'Identity' },
+            { expr: 'A', law: 'Annulment' },
+            { expr: '0', law: 'Identity' }
+          ]}
+        ]
+      },
+      { expr: 'D.(D+F) + F.(D+E)',
+        steps: [
+          { correct: 0, options: [
+            { expr: 'D + F.(D+E)', law: 'Absorption (D.(D+F)=D)' },
+            { expr: 'D.F + F.(D+E)', law: 'Absorption (D.(D+F)=D)' },
+            { expr: 'D + F.(D+E)', law: 'Identity' },
+            { expr: 'D.(D+F+E)', law: 'Absorption (D.(D+F)=D)' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'D + F.D + F.E', law: 'AND over OR' },
+            { expr: 'D + F + D.E', law: 'AND over OR' },
+            { expr: 'D.F.D + F.E', law: 'AND over OR' },
+            { expr: 'D + F.D + F.E', law: 'OR over AND' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'D + F.E', law: 'Absorption (D+F.D=D)' },
+            { expr: 'F.E', law: 'Absorption (D+F.D=D)' },
+            { expr: 'D + F.E', law: 'Identity' },
+            { expr: 'D.F.E', law: 'Absorption (D+F.D=D)' }
+          ]}
+        ]
+      },
+      { expr: 'B.(A+B) + '+bar('A')+'.(A+B)',
+        steps: [
+          { correct: 0, options: [
+            { expr: 'B + '+bar('A')+'.(A+B)', law: 'Absorption (B.(A+B)=B)' },
+            { expr: 'B.A + '+bar('A')+'.(A+B)', law: 'Absorption (B.(A+B)=B)' },
+            { expr: 'B + '+bar('A')+'.(A+B)', law: 'Identity' },
+            { expr: '(A+B) + '+bar('A')+'.(A+B)', law: 'Absorption (B.(A+B)=B)' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'B + '+bar('A')+'.B', law: 'Extended absorption ('+bar('A')+'.(A+B)='+bar('A')+'.B)' },
+            { expr: 'B + '+bar('A')+'+B', law: 'Extended absorption ('+bar('A')+'.(A+B)='+bar('A')+'.B)' },
+            { expr: 'B + A.B', law: 'Extended absorption ('+bar('A')+'.(A+B)='+bar('A')+'.B)' },
+            { expr: 'B + '+bar('A')+'.B', law: 'Complement' }
+          ]},
+          { correct: 0, options: [
+            { expr: 'B', law: 'Absorption (B+B.'+bar('A')+'=B)' },
+            { expr: bar('A')+'.B', law: 'Absorption (B+B.'+bar('A')+'=B)' },
+            { expr: 'B', law: 'Identity' },
+            { expr: '1', law: 'Absorption (B+B.'+bar('A')+'=B)' }
+          ]}
+        ]
+      }
+    ]
+  );
+
+  /* =========================================================
+     TOP-LEVEL TABS
+     ========================================================= */
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('.panel-view').forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>

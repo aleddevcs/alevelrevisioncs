@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duplex detective</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5F8; --panel:#FFFFFF; --ink:#14213D; --muted:#55627A; --line:#D5DDE6;
+  --navy:#1B2A4A; --teal:#0F8B8D; --orange:#E8791F; --bad:#C4342D; --good:#1E7F48;
+  --soft:#E9EEF3; --onaccent:#FFFFFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1726; --panel:#17223A; --ink:#E8EDF5; --muted:#9AA8BF; --line:#2B3A56;
+    --navy:#8FB0E8; --teal:#3CC4C2; --orange:#F5A04D; --bad:#F07167; --good:#5BD08D;
+    --soft:#1E2B46; --onaccent:#0F1726;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1726; --panel:#17223A; --ink:#E8EDF5; --muted:#9AA8BF; --line:#2B3A56;
+  --navy:#8FB0E8; --teal:#3CC4C2; --orange:#F5A04D; --bad:#F07167; --good:#5BD08D;
+  --soft:#1E2B46; --onaccent:#0F1726;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.5}
+.wrap{max-width:880px;margin:0 auto;padding:26px 18px 48px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:2.1rem;line-height:1.15;margin:0}
+.sub{color:var(--muted);margin:4px 0 0}
+.score{font:600 1rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted);white-space:nowrap}
+.score b{color:var(--teal);font-size:1.25rem}
+.bar{height:6px;background:var(--soft);border-radius:3px;overflow:hidden;margin:0 0 18px}
+.bar span{display:block;height:100%;background:var(--teal);width:0;transition:width .3s}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+.case{border:2px solid var(--navy);position:relative}
+.tab{font:600 .85rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted);margin-bottom:6px}
+.case h2{font-size:1.45rem;margin:0 0 8px;line-height:1.25}
+.case p{margin:0;font-size:1.1rem;max-width:62ch}
+.step{margin-top:22px}
+.step h3{display:flex;align-items:center;gap:10px;font-size:1.05rem;margin:0 0 10px}
+.num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--navy);color:var(--onaccent);font-size:.95rem;flex:none}
+.step.off{opacity:.45;pointer-events:none}
+.methods{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:600px){.methods{grid-template-columns:1fr}}
+.m{
+  display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;
+  background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:12px 14px;
+  font:700 1.05rem "Atkinson Hyperlegible",system-ui,sans-serif;cursor:pointer
+}
+.m small{font-weight:400;color:var(--muted);font-size:.85rem}
+.m svg{width:100%;max-width:150px;height:34px}
+.m[aria-pressed="true"]{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 10%,transparent)}
+.m.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
+.m.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent)}
+textarea{
+  width:100%;min-height:72px;resize:vertical;font:inherit;font-size:1rem;padding:10px 12px;
+  border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)
+}
+.hint{color:var(--muted);font-size:.85rem;margin:6px 0 0}
+button{font:700 1rem "Atkinson Hyperlegible",system-ui,sans-serif;border-radius:8px;padding:10px 18px;cursor:pointer;border:2px solid transparent}
+.go{background:var(--orange);color:#1b1206}
+.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.m:disabled,.opt:disabled{opacity:1;cursor:default}
+.m:disabled:not(.right):not(.wrong),.opt:disabled:not(.right):not(.wrong){opacity:.6}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:0 8px 8px 0;border-left:4px solid var(--good);background:var(--bg)}
+.verdict.no{border-left-color:var(--bad)}
+.verdict p{margin:4px 0}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{
+  text-align:left;background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:8px;
+  padding:10px 14px;font-weight:400;font-size:1rem
+}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent)}
+.opt .fb{display:block;margin-top:6px;font-size:.9rem;color:var(--muted)}
+.model{margin-top:14px;padding:14px;border-radius:8px;background:var(--soft)}
+.model .yours{margin-top:8px;font-style:italic;color:var(--muted)}
+.start label{display:block;font-weight:700;margin:14px 0 6px}
+.start input{width:100%;max-width:420px;font:inherit;padding:9px 12px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.start ol{padding-left:1.3em;margin:8px 0 0}
+.start li{margin-bottom:4px}
+.big{font:600 3rem "IBM Plex Mono",ui-monospace,monospace;color:var(--teal);line-height:1}
+.split{display:flex;gap:28px;flex-wrap:wrap;margin:10px 0 18px;color:var(--muted)}
+.split b{color:var(--ink);font-size:1.15rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:700}
+.tw{overflow-x:auto}
+.ok{color:var(--good);font-weight:700} .x{color:var(--bad);font-weight:700}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Duplex detective</h1>
+      <p class="sub">Simplex, half duplex or full duplex? Crack each case with your partner.</p>
+    </div>
+    <div class="score hide" id="scoreBox">Score <b id="score">0</b> / <span id="max">24</span></div>
+  </header>
+  <div class="bar hide" id="barBox"><span id="bar"></span></div>
+  <main id="app"></main>
+</div>
+
+<script>
+(function(){
+const METHODS={
+  simplex:{name:'Simplex',short:'One direction only'},
+  half:{name:'Half duplex',short:'Both directions, taking turns'},
+  full:{name:'Full duplex',short:'Both directions at once'}
+};
+const CARDS=[
+ {t:'Keyboard and computer',x:'You type an essay. Each key press is sent from the keyboard to the computer.',a:'simplex',
+  m:'Data travels in one direction only: from the keyboard to the computer.',
+  n:'Keyboard is the example the mark scheme gives for simplex. Strictly, a USB keyboard does get tiny messages back (like switching the Caps Lock light on), but you will not lose marks for calling it simplex.'},
+ {t:'Walkie-talkies',x:'Two stewards at a festival use walkie-talkies. One holds the button to speak while the other listens, then they swap.',a:'half',
+  m:'Data can travel in both directions, but only one direction at a time: one steward talks while the other listens.',
+  n:'The push-to-talk button is the clue. Walkie-talkie is the mark scheme example for half duplex.'},
+ {t:'Mobile phone call',x:'You ring a friend. You both start talking at once and can hear each other over the top.',a:'full',
+  m:'Data travels in both directions at the same time: both callers can speak and hear simultaneously.',
+  n:'Being able to talk over each other is the giveaway for full duplex.'},
+ {t:'TV broadcast',x:'A transmitter on a hill sends digital TV channels to thousands of homes. The aerials only receive.',a:'simplex',
+  m:'Data travels in one direction only: from the transmitter to the TV aerials.',
+  n:'Careful: streaming a programme on a smart TV is different. That uses your broadband, which is full duplex.'},
+ {t:'Home broadband',x:'Your laptop uploads a video to the cloud while also downloading a game update over the same broadband connection.',a:'full',
+  m:'Data travels in both directions at the same time: uploading and downloading happen simultaneously.',
+  n:'Broadband is the mark scheme example for full duplex.'},
+ {t:'Basic baby monitor',x:'A baby monitor sends sound from the baby\u2019s room to a parent unit downstairs. The parent unit has a speaker but no microphone.',a:'simplex',
+  m:'Data travels in one direction only: from the baby\u2019s room to the parent unit.',
+  n:'No microphone on the parent unit means nothing can ever be sent back.'},
+ {t:'Talk-back baby monitor',x:'An upgraded monitor has a \u201ctalk\u201d button on the parent unit. While it is held down, the parent can speak to the baby, but sound from the baby\u2019s room cuts out.',a:'half',
+  m:'Data can travel in both directions, but only one direction at a time: the baby\u2019s sound cuts out while the parent talks.',
+  n:'Same type of device as the basic baby monitor, but a different method. The talk button and the sound cutting out make it half duplex.'},
+ {t:'Pilot and air traffic control',x:'A pilot and an air traffic controller share one radio frequency. Each ends what they say with \u201cover\u201d so the other knows it is their turn.',a:'half',
+  m:'Data can travel in both directions, but only one direction at a time: they take turns on the same frequency.',
+  n:'Saying \u201cover\u201d is a human rule for taking turns. If both transmit at once, neither is heard.'},
+ {t:'Satnav in a car',x:'A satnav works out its position from signals sent by GPS satellites. The satellites never receive anything from the car.',a:'simplex',
+  m:'Data travels in one direction only: from the satellites to the satnav.',
+  n:'GPS receivers only listen. That is why your phone can find its location without any signal to send back.'},
+ {t:'Games controller',x:'You press buttons on a wireless controller to move your character. At the same moment, the console makes the controller rumble when you get hit.',a:'full',
+  m:'Data travels in both directions at the same time: button presses go to the console while rumble signals come back.',
+  n:'Two kinds of data at the same moment, one each way. That makes it full duplex.'},
+ {t:'Old network hub',x:'Two computers are connected through an old network hub on a shared cable. If both send at the same moment, the signals clash, so each must wait until the line is quiet.',a:'half',
+  m:'Data can travel in both directions, but only one direction at a time: the computers take turns on the shared cable.',
+  n:'Signals clashing is called a collision. You will find out how networks detect and deal with collisions in Lesson 3.'},
+ {t:'Video call on Teams',x:'Your class joins a video call. You can see and hear your teacher while your webcam and microphone are sending to them.',a:'full',
+  m:'Data travels in both directions at the same time: your camera and microphone send while you receive the teacher\u2019s video and sound.',
+  n:'Even if you are muted, the connection itself can carry data both ways at once.'}
+];
+const DISTRACT={
+  simplex:[
+    ['Data is sent one bit at a time along a single wire.','That describes serial transmission. Simplex is about the direction data travels, not how many bits are sent at once.'],
+    ['Only one device is involved, so data does not need to come back.','There are always two devices. Simplex means data only flows one way between them.'],
+    ['Data can travel in both directions, but only one direction at a time.','That is half duplex. In this case nothing is ever sent back.']
+  ],
+  half:[
+    ['Data can travel in both directions.','True, but full duplex does that too. You must say only one direction at a time to earn the mark.'],
+    ['Data travels in both directions at the same time.','That is full duplex. Here the two sides have to take turns.'],
+    ['It is slower than full duplex because the line is shared.','This may be true, but it does not describe how the method works, so it would not earn the description mark.']
+  ],
+  full:[
+    ['Data can travel in both directions.','This does not tell it apart from half duplex. You need \u201cat the same time\u201d.'],
+    ['Several bits are sent at the same time on separate wires.','That describes parallel transmission. Full duplex is about direction.'],
+    ['Data travels in both directions, but only one way at a time.','That is half duplex.']
+  ]
+};
+const ICON={
+  simplex:'<svg viewBox="0 0 150 34" aria-hidden="true"><rect x="2" y="5" width="26" height="24" rx="4" fill="var(--navy)"/><rect x="122" y="5" width="26" height="24" rx="4" fill="var(--navy)"/><line x1="34" y1="17" x2="110" y2="17" stroke="var(--teal)" stroke-width="3"/><path d="M110 11 L119 17 L110 23Z" fill="var(--teal)"/></svg>',
+  half:'<svg viewBox="0 0 150 34" aria-hidden="true"><rect x="2" y="5" width="26" height="24" rx="4" fill="var(--navy)"/><rect x="122" y="5" width="26" height="24" rx="4" fill="var(--navy)"/><line x1="34" y1="12" x2="110" y2="12" stroke="var(--navy)" stroke-width="3"/><path d="M110 6 L119 12 L110 18Z" fill="var(--navy)"/><line x1="40" y1="24" x2="116" y2="24" stroke="var(--muted)" stroke-width="3" stroke-dasharray="6 5"/><path d="M40 18 L31 24 L40 30Z" fill="var(--muted)"/></svg>',
+  full:'<svg viewBox="0 0 150 34" aria-hidden="true"><rect x="2" y="5" width="26" height="24" rx="4" fill="var(--navy)"/><rect x="122" y="5" width="26" height="24" rx="4" fill="var(--navy)"/><line x1="34" y1="12" x2="110" y2="12" stroke="var(--orange)" stroke-width="3"/><path d="M110 6 L119 12 L110 18Z" fill="var(--orange)"/><line x1="40" y1="24" x2="116" y2="24" stroke="var(--orange)" stroke-width="3"/><path d="M40 18 L31 24 L40 30Z" fill="var(--orange)"/></svg>'
+};
+
+const app=document.getElementById('app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+let S;
+function reset(){
+  const order=shuffle(CARDS.map((_,i)=>i));
+  const a=order.indexOf(5), b=order.indexOf(6); if(b<a){order[a]=6; order[b]=5;} // basic monitor before talk-back
+  S={pair:'',order,i:0,score:0,log:[]};
+  document.getElementById('max').textContent=CARDS.length*2;
+}
+
+function startScreen(){
+  reset();
+  document.getElementById('scoreBox').classList.add('hide');
+  document.getElementById('barBox').classList.add('hide');
+  app.innerHTML=`<div class="panel start">
+    <h2 style="margin:0 0 6px;font-size:1.3rem">How it works</h2>
+    <p style="margin:0">There are ${CARDS.length} cases. For each one, work through four steps together:</p>
+    <ol>
+      <li>Read the scenario.</li>
+      <li>Choose simplex, half duplex or full duplex.</li>
+      <li>Write a one-line justification.</li>
+      <li>Pick the explanation that would earn the mark in an exam.</li>
+    </ol>
+    <p style="margin:12px 0 0;color:var(--muted)">One point for the right method and one for the right explanation on your first try. Some cases are trickier than they look.</p>
+    <label for="pair">Your names</label>
+    <input id="pair" type="text" placeholder="e.g. Cerys and Tomos" autocomplete="off">
+    <div class="row"><button class="go" id="begin">Start the first case</button></div>
+  </div>`;
+  document.getElementById('begin').onclick=()=>{
+    S.pair=document.getElementById('pair').value.trim();
+    document.getElementById('scoreBox').classList.remove('hide');
+    document.getElementById('barBox').classList.remove('hide');
+    caseScreen();
+  };
+}
+
+function updateTop(){
+  document.getElementById('score').textContent=S.score;
+  document.getElementById('bar').style.width=(S.i/CARDS.length*100)+'%';
+}
+
+function caseScreen(){
+  updateTop();
+  const c=CARDS[S.order[S.i]];
+  const rec={card:c,choice:null,just:'',methodOk:false,explOk:false,self:null};
+  app.innerHTML=`<div class="panel case">
+      <div class="tab" style="display:flex;align-items:center;gap:10px"><span class="num">1</span>Read case ${S.i+1} of ${CARDS.length}</div>
+      <h2>${esc(c.t)}</h2>
+      <p>${esc(c.x)}</p>
+    </div>
+    <div class="panel step" id="s2"><h3><span class="num">2</span>Which method is it?</h3>
+      <div class="methods">${Object.keys(METHODS).map(k=>`<button class="m" data-k="${k}" aria-pressed="false">${ICON[k]}${METHODS[k].name}<small>${METHODS[k].short}</small></button>`).join('')}</div>
+    </div>
+    <div class="panel step off" id="s3"><h3><span class="num">3</span>Why? Write one line together</h3>
+      <label for="just" class="hide">Justification</label>
+      <textarea id="just" placeholder="It is ... because ..."></textarea>
+      <p class="hint" id="jhint">Mention the direction data travels, and whether it can go both ways at the same time.</p>
+      <div class="row"><button class="go" id="lock" disabled>Lock in our answer</button></div>
+      <div id="verdict"></div>
+    </div>
+    <div class="panel step off" id="s4"><h3><span class="num">4</span>Which explanation would earn the mark?</h3>
+      <div class="opts" id="opts"></div>
+      <div id="model"></div>
+    </div>`;
+  const s3=document.getElementById('s3'), s4=document.getElementById('s4');
+  const just=document.getElementById('just'), lock=document.getElementById('lock');
+  const mBtns=[...app.querySelectorAll('.m')];
+  const canLock=()=>{lock.disabled=!(rec.choice && just.value.trim().length>=12);};
+  mBtns.forEach(b=>b.onclick=()=>{
+    if(rec.locked) return;
+    rec.choice=b.dataset.k;
+    mBtns.forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+    s3.classList.remove('off'); canLock();
+  });
+  just.addEventListener('input',canLock);
+  lock.onclick=()=>{
+    rec.locked=true; rec.just=just.value.trim(); just.readOnly=true; lock.classList.add('hide');
+    rec.methodOk=rec.choice===c.a; if(rec.methodOk) S.score++;
+    mBtns.forEach(x=>{x.disabled=true; if(x.dataset.k===c.a) x.classList.add('right'); else if(x.dataset.k===rec.choice) x.classList.add('wrong');});
+    document.getElementById('verdict').innerHTML=`<div class="verdict ${rec.methodOk?'':'no'}">
+      <p><b>${rec.methodOk?'Correct.':'Not this time.'}</b> It\u2019s ${METHODS[c.a].name.toLowerCase()}.</p><p>${esc(c.n)}</p></div>`;
+    updateTop();
+    s4.classList.remove('off');
+    buildOptions(c,rec);
+    s4.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+  };
+}
+
+function buildOptions(c,rec){
+  const d=shuffle(DISTRACT[c.a]).slice(0,2).map(([t,f])=>({t,f,ok:false}));
+  const opts=shuffle([{t:c.m,f:'This earns the mark: it gives the direction and whether data can travel both ways at once.',ok:true},...d]);
+  const box=document.getElementById('opts');
+  box.innerHTML=opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o.t)}</button>`).join('');
+  const btns=[...box.querySelectorAll('.opt')];
+  btns.forEach(b=>b.onclick=()=>{
+    const o=opts[+b.dataset.i];
+    rec.explOk=o.ok; if(o.ok) S.score++;
+    btns.forEach((x,i)=>{
+      x.disabled=true;
+      const oi=opts[i];
+      if(oi.ok){x.classList.add('right'); x.insertAdjacentHTML('beforeend',`<span class="fb">${esc(oi.f)}</span>`);}
+      else if(x===b){x.classList.add('wrong'); x.insertAdjacentHTML('beforeend',`<span class="fb">${esc(oi.f)}</span>`);}
+    });
+    updateTop();
+    document.getElementById('model').innerHTML=`<div class="model">
+      <b>Compare with what you wrote.</b>
+      <div class="yours">\u201c${esc(rec.just)}\u201d</div>
+      <p style="margin:10px 0 0">Would your justification have earned the mark?</p>
+      <div class="row" style="margin-top:8px">
+        <button class="ghost" data-s="yes">Yes</button>
+        <button class="ghost" data-s="no">Not quite</button>
+      </div>
+      <div class="row hide" id="nextRow"><button class="go" id="next">${S.i+1<CARDS.length?'Next case':'See our results'}</button></div>
+    </div>`;
+    const sb=[...document.querySelectorAll('[data-s]')];
+    sb.forEach(x=>x.onclick=()=>{
+      rec.self=x.dataset.s;
+      sb.forEach(y=>{y.style.borderColor=y===x?'var(--teal)':'var(--line)';});
+      document.getElementById('nextRow').classList.remove('hide');
+    });
+    document.getElementById('next').onclick=()=>{
+      S.log.push(rec); S.i++;
+      if(S.i<CARDS.length){caseScreen(); window.scrollTo(0,0);} else results();
+    };
+  });
+}
+
+function results(){
+  updateTop();
+  const m=S.log.filter(r=>r.methodOk).length, e=S.log.filter(r=>r.explOk).length, y=S.log.filter(r=>r.self==='yes').length;
+  const tricky=S.log.filter(r=>!r.methodOk).map(r=>r.card.t);
+  app.innerHTML=`<div class="panel">
+    <h2 style="margin:0 0 6px;font-size:1.3rem">${S.pair?esc(S.pair)+': case':'Case'} file closed</h2>
+    <div class="big">${S.score} / ${CARDS.length*2}</div>
+    <div class="split"><span>Methods correct <b>${m}/${CARDS.length}</b></span><span>Mark-earning explanations <b>${e}/${CARDS.length}</b></span><span>Justifications you rated as mark-worthy <b>${y}/${CARDS.length}</b></span></div>
+    ${tricky.length?`<p style="margin:0 0 12px">Cases to talk through: ${tricky.map(esc).join(', ')}.</p>`:'<p style="margin:0 0 12px">Every method correct. Now check your justifications as carefully as the examiner would.</p>'}
+    <div class="tw"><table>
+      <thead><tr><th>Case</th><th>Answer</th><th>You chose</th><th>Your justification</th><th>Explanation</th></tr></thead>
+      <tbody>${S.log.map(r=>`<tr><td>${esc(r.card.t)}</td><td>${METHODS[r.card.a].name}</td><td class="${r.methodOk?'ok':'x'}">${METHODS[r.choice].name}</td><td>${esc(r.just)}</td><td class="${r.explOk?'ok':'x'}">${r.explOk?'Earned':'Missed'}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <div class="row">
+      <button class="go" id="copy">Copy our results</button>
+      <button class="ghost" id="again">Start again</button>
+      <span id="copied" class="hint" aria-live="polite"></span>
+    </div>
+  </div>`;
+  document.getElementById('again').onclick=()=>{startScreen(); window.scrollTo(0,0);};
+  document.getElementById('copy').onclick=async()=>{
+    const txt=`Duplex detective${S.pair?' - '+S.pair:''}\nScore: ${S.score}/${CARDS.length*2} (methods ${m}/${CARDS.length}, explanations ${e}/${CARDS.length})\n\n`+
+      S.log.map(r=>`${r.card.t}: ${METHODS[r.choice].name}${r.methodOk?'':' (answer: '+METHODS[r.card.a].name+')'}\n  "${r.just}"`).join('\n');
+    const out=document.getElementById('copied');
+    try{await navigator.clipboard.writeText(txt); out.textContent='Copied. Paste it into the Teams post.';}
+    catch(err){out.textContent='Copy is blocked here. Select the table and copy it instead.';}
+  };
+}
+
+startScreen();
+})();
+</script>
+</body>
+</html>

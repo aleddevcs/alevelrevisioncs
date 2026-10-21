@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lesson 2 Practice</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --navy-dark:#121C33; --teal:#1C7293; --teal-dark:#155a72;
+    --amber:#F2A541; --amber-dark:#c97f1f; --bg:#F3F6FB; --card:#FFFFFF;
+    --text:#1B2A4A; --muted:#5B6B85; --border:#DCE3EE;
+    --green:#2E9E5B; --green-bg:#E7F7EE; --red:#D64545; --red-bg:#FDEAEA;
+    --bit:clamp(34px, 9vw, 52px);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Calibri','Segoe UI',system-ui,-apple-system,sans-serif;
+    padding: env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px) 0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{ max-width:980px; margin:0 auto; padding:2.2rem 1.3rem 3.5rem; }
+  h1{ font-family:Cambria,Georgia,'Times New Roman',serif; font-size:clamp(1.6rem,4vw,2.2rem); margin:0 0 .4rem; font-weight:700; color:var(--navy-dark); }
+  .lede{ color:var(--muted); font-size:1.02rem; max-width:62ch; margin:0 0 1.6rem; }
+  .ol{ text-decoration:overline; text-decoration-thickness:1.5px; }
+  .hide{ display:none !important; }
+
+  .tabs{ display:flex; gap:.4rem; margin-bottom:1.3rem; flex-wrap:wrap; border-bottom:2px solid var(--border); }
+  .tabs button{
+    border:none; background:none; font-family:inherit; font-size:.98rem; font-weight:700;
+    color:var(--muted); padding:.65rem .3rem; margin-right:1.2rem; cursor:pointer;
+    border-bottom:3px solid transparent; margin-bottom:-2px;
+  }
+  .tabs button.active{ color:var(--navy-dark); border-bottom-color:var(--amber); }
+  .badge{ display:inline-block; min-width:1.1rem; height:1.1rem; padding:0 .3rem; border-radius:999px; background:var(--border); color:var(--muted); font-size:.68rem; font-weight:700; line-height:1.1rem; text-align:center; margin-left:.4rem; vertical-align:middle; }
+  .badge.done{ background:var(--green); color:#fff; }
+  .panel-view{ display:none; }
+  .panel-view.active{ display:block; }
+
+  .sub-toggle{ display:inline-flex; background:#E7ECF5; border-radius:999px; padding:4px; gap:2px; margin-bottom:1.1rem; }
+  .sub-toggle button{ border:none; background:transparent; font-family:inherit; font-size:.88rem; font-weight:700; color:var(--muted); padding:.45rem 1rem; border-radius:999px; cursor:pointer; }
+  .sub-toggle button.active{ background:var(--navy); color:#fff; }
+
+  .pills{ display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.1rem; }
+  .pill{ border:2px solid var(--border); background:#fff; color:var(--navy); font-family:inherit; font-weight:700; font-size:.88rem; padding:.5rem 1rem; border-radius:999px; cursor:pointer; display:flex; align-items:center; gap:.4rem; transition:border-color .15s ease, background .15s ease; }
+  .pill:hover{ border-color:var(--teal); }
+  .pill.active{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .pill .tick{ display:none; font-size:.85rem; }
+  .pill.solved .tick{ display:inline; }
+  .pill.active .tick{ color:var(--amber); }
+  .pill:not(.active) .tick{ color:var(--green); }
+  .pill.ext{ border-style:dashed; }
+
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.3rem; margin-bottom:1.2rem; }
+  .prompt{ font-size:1.05rem; margin:0 0 .35rem; color:var(--navy-dark); }
+  .hint{ color:var(--muted); font-size:.92rem; margin:0 0 1.1rem; line-height:1.5; }
+  .step-label{ font-size:.82rem; font-weight:700; color:var(--teal-dark); margin:1.1rem 0 .45rem; }
+  .step-label:first-of-type{ margin-top:0; }
+
+  /* ---- bit grids ---- */
+  .bitrow{ margin-bottom:.9rem; }
+  .row-label{ font-size:.78rem; font-weight:700; color:var(--muted); margin-bottom:.3rem; letter-spacing:.02em; }
+  .bits-grid{ display:grid; grid-template-columns:repeat(8, var(--bit)); gap:6px; }
+  .pos{ text-align:center; font-size:.72rem; color:var(--muted); font-weight:600; }
+  .bit{
+    width:var(--bit); height:var(--bit); display:flex; align-items:center; justify-content:center;
+    border:2px solid var(--navy); background:#fff; color:var(--navy);
+    font-family:inherit; font-size:1.15rem; font-weight:700; padding:0; border-radius:6px;
+  }
+  .bit.fixed{ cursor:default; }
+  .bit.hl{ background:var(--amber); border-color:var(--amber); color:#fff; }
+  button.bit{ cursor:pointer; }
+  button.bit:hover{ background:#EAF3FF; }
+  button.bit:focus-visible{ outline:3px solid var(--teal); outline-offset:2px; }
+  button.bit.empty{ border-color:#B6C0D4; color:#B6C0D4; }
+  .bit.correct{ background:var(--green-bg); border-color:var(--green); color:var(--green); }
+  .bit.incorrect{ background:var(--red-bg); border-color:var(--red); color:var(--red); }
+  .bit.revealed{ background:#FFF4E2; border-color:var(--amber-dark); color:var(--amber-dark); font-style:italic; }
+
+  .choice-row{ display:flex; gap:.5rem; flex-wrap:wrap; }
+  .choice{
+    border:2px solid var(--border); background:#fff; color:var(--navy); font-family:inherit; font-weight:700;
+    font-size:.95rem; padding:.45rem 1.1rem; border-radius:8px; cursor:pointer;
+  }
+  .choice:hover{ border-color:var(--teal); }
+  .choice.selected{ background:var(--teal); border-color:var(--teal); color:#fff; }
+  .choice.selected.right{ background:var(--green); border-color:var(--green); }
+  .choice.selected.wrong{ background:var(--red); border-color:var(--red); }
+  .choice.selected.revealed{ background:var(--amber-dark); border-color:var(--amber-dark); }
+
+  .btn-row{ display:flex; gap:.6rem; margin-top:1.2rem; flex-wrap:wrap; align-items:center; }
+  .btn{ border:none; font-family:inherit; font-weight:700; font-size:.9rem; padding:.55rem 1.15rem; border-radius:999px; cursor:pointer; }
+  .btn.primary{ background:var(--teal); color:#fff; }
+  .btn.primary:hover{ background:var(--teal-dark); }
+  .btn.ghost{ background:#fff; border:1.5px solid var(--border); color:var(--muted); }
+  .btn.ghost:hover{ border-color:var(--teal); color:var(--teal-dark); }
+  .feedback{ font-size:.92rem; font-weight:600; }
+  .feedback.ok{ color:var(--green); }
+  .feedback.bad{ color:var(--red); }
+  .feedback.info{ color:var(--teal-dark); }
+
+  /* ---- laws ---- */
+  .law-statement{ font-family:Cambria,Georgia,serif; font-size:1.35rem; font-weight:700; color:var(--navy-dark); margin:0 0 1rem; }
+  .step-box{ border-top:1px solid var(--border); padding-top:1rem; margin-top:1rem; }
+  .table-scroll{ overflow-x:auto; padding-bottom:.3rem; }
+  table.tt{ border-collapse:collapse; margin:.3rem 0; }
+  table.tt th, table.tt td{ border:1px solid var(--border); text-align:center; padding:.5rem .8rem; font-size:1rem; min-width:2.7rem; }
+  table.tt thead th{ background:var(--navy); color:#fff; font-weight:700; font-size:.9rem; white-space:nowrap; }
+  table.tt thead th.given-head{ background:var(--amber-dark); }
+  table.tt tbody tr:nth-child(even) td{ background:#F5F8FC; }
+  table.tt td.given{ background:#FFF4E2 !important; color:var(--amber-dark); font-weight:700; }
+  td.cell-btn{ padding:0; }
+  .cellbtn{ width:100%; height:100%; min-height:2.5rem; border:none; background:transparent; font-family:inherit; font-size:1rem; font-weight:700; color:var(--teal-dark); cursor:pointer; }
+  .cellbtn:hover{ background:#EAF3FF; }
+  .cellbtn:focus-visible{ outline:2.5px solid var(--teal); outline-offset:-2px; }
+  .cellbtn.empty{ color:#B6C0D4; }
+  .cellbtn.correct{ background:var(--green-bg); color:var(--green); }
+  .cellbtn.incorrect{ background:var(--red-bg); color:var(--red); }
+  .cellbtn.revealed{ background:#FFF4E2; color:var(--amber-dark); font-style:italic; }
+  .cellbtn.grouped{ background:transparent !important; color:var(--navy) !important; font-style:normal; cursor:default; }
+
+  table.tt th.selectable{ cursor:pointer; }
+  table.tt th.selectable:hover{ background:#2b3f6b; }
+  table.tt th.sel{ background:#2b3f6b; box-shadow: inset 0 -5px 0 var(--amber); }
+  table.tt th.g0{ background:var(--teal) !important; box-shadow:none; }
+  table.tt td.g0{ background:#DFF0F6 !important; }
+  table.tt th.g1{ background:var(--amber-dark) !important; box-shadow:none; }
+  table.tt td.g1{ background:#FFF1DC !important; }
+  table.tt th.g2{ background:#6D4C9E !important; box-shadow:none; }
+  table.tt td.g2{ background:#EFE8F8 !important; }
+
+  .scroll-hint{ display:none; margin:.4rem 0 0; font-size:.78rem; color:var(--muted); }
+  @media (max-width:660px){ .scroll-hint{ display:block; } }
+
+  .found-list{ margin:.8rem 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:.35rem; }
+  .found-list li{ font-family:Cambria,Georgia,serif; font-weight:700; font-size:1.05rem; color:var(--navy-dark); }
+  .found-list li::before{ content:'\2713  '; color:var(--green); font-family:inherit; }
+
+  .proved{ margin-top:1.1rem; background:var(--navy-dark); color:#fff; border-radius:14px; padding:1.1rem 1.3rem; }
+  .proved h2{ font-family:Cambria,Georgia,serif; font-size:1.1rem; margin:0 0 .35rem; color:var(--amber); }
+  .proved p{ margin:0; color:#CBD8EE; font-size:.93rem; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Lesson 2 practice</h1>
+  <p class="lede">Two activities from today&rsquo;s lesson: use masks to check and clear bits in a register, then prove the Boolean laws by building the truth tables yourself.</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="mask">Masking &amp; clearing <span class="badge" id="badge-mask">0/8</span></button>
+    <button class="tab-btn" data-tab="laws">Prove the laws <span class="badge" id="badge-laws">0/7</span></button>
+  </div>
+
+  <div class="panel-view active" id="panel-mask">
+    <div class="sub-toggle" id="mask-mode">
+      <button class="active" data-mode="mask">Masking</button>
+      <button data-mode="clear">Clearing</button>
+    </div>
+    <div class="pills" id="mask-pills"></div>
+    <div id="mask-panels"></div>
+  </div>
+
+  <div class="panel-view" id="panel-laws">
+    <div class="pills" id="law-pills"></div>
+    <div id="law-panels"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  function bar(l){ return '<span class="ol">'+l+'</span>'; }
+  function h(tag, cls, html){ var e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; }
+
+  /* =====================================================
+     TAB 1 — MASKING & CLEARING
+     ===================================================== */
+  var TASKS = [
+    {id:'m1', mode:'mask',  prompt:'Check <strong>bit 0</strong> (the least significant bit, LSB).', register:'11001011', target:7},
+    {id:'m2', mode:'mask',  prompt:'Check <strong>bit 3</strong> (counting from the right, starting at 0).', register:'01101001', target:4},
+    {id:'m3', mode:'mask',  prompt:'Check <strong>bit 5</strong> (counting from the right, starting at 0).', register:'10010110', target:2},
+    {id:'m4', mode:'mask',  prompt:'Check the <strong>most significant bit</strong> (MSB, bit 7).', register:'01110010', target:0},
+    {id:'c1', mode:'clear', prompt:'Clear the <strong>leftmost 3 bits</strong>. Keep every other bit unchanged.', register:'10110011', mask:'00011111'},
+    {id:'c2', mode:'clear', prompt:'Clear <strong>bits 2 and 5</strong> only (counting from the right, starting at 0). Keep the rest unchanged.', register:'01101101', mask:'11011011'},
+    {id:'c3', mode:'clear', prompt:'Clear the <strong>rightmost 3 bits</strong>. Keep every other bit unchanged.', register:'11011101', mask:'11111000'},
+    {id:'c4', mode:'clear', prompt:'Clear the <strong>most and least significant bits</strong> only. Keep the rest unchanged.', register:'10110111', mask:'01111110'}
+  ];
+  var maskState = { mode:'mask', current:{mask:'m1', clear:'c1'} };
+  var taskObjs = {};
+
+  function bitRowBlock(label){
+    var wrap = h('div','bitrow');
+    wrap.appendChild(h('div','row-label',label));
+    var grid = h('div','bits-grid');
+    wrap.appendChild(grid);
+    return {wrap:wrap, grid:grid};
+  }
+
+  function editableBit(aria){
+    var b = h('button','bit empty','');
+    b.type = 'button';
+    b.dataset.state = '';
+    b.setAttribute('aria-label', aria);
+    b.addEventListener('click', function(){
+      var cur = b.dataset.state;
+      var next = cur === '' ? '0' : (cur === '0' ? '1' : '');
+      b.dataset.state = next;
+      b.textContent = next;
+      b.classList.remove('correct','incorrect','revealed');
+      b.classList.toggle('empty', next === '');
+    });
+    return b;
+  }
+
+  function choiceGroup(labels, values){
+    var row = h('div','choice-row');
+    var btns = [];
+    labels.forEach(function(lab, i){
+      var c = h('button','choice', lab);
+      c.type = 'button';
+      c.dataset.val = values[i];
+      btns.push(c);
+      row.appendChild(c);
+    });
+    return {row:row, btns:btns};
+  }
+
+  function makeTaskPanel(t){
+    var isMask = t.mode === 'mask';
+    var reg = t.register.split('');
+    var correctMask = isMask ? reg.map(function(_,i){ return i===t.target ? '1' : '0'; }) : t.mask.split('');
+    var correctResult = reg.map(function(b,i){ return (b==='1' && correctMask[i]==='1') ? '1' : '0'; });
+    var op = null, interp = null, solved = false;
+
+    var root = h('div','card');
+    root.appendChild(h('p','prompt', t.prompt));
+    root.appendChild(h('p','hint', isMask
+      ? 'Put a 1 in the mask where you want to look, and 0 everywhere else.'
+      : 'In the mask, 1 means <em>keep</em> and 0 means <em>clear</em>.'));
+
+    // positions + register
+    var posBlock = bitRowBlock('Bit position');
+    for(var p=7;p>=0;p--) posBlock.grid.appendChild(h('div','pos', String(p)));
+    root.appendChild(posBlock.wrap);
+
+    var regBlock = bitRowBlock('Register');
+    reg.forEach(function(b,i){
+      var d = h('div','bit fixed'+((isMask && i===t.target)?' hl':''), b);
+      regBlock.grid.appendChild(d);
+    });
+    root.appendChild(regBlock.wrap);
+
+    // step 1: mask
+    root.appendChild(h('div','step-label','Step 1 \u2014 State the mask'));
+    var maskBlock = bitRowBlock('Mask');
+    var maskBtns = [];
+    for(var i=0;i<8;i++){ var mb = editableBit('Mask bit '+(7-i)); maskBtns.push(mb); maskBlock.grid.appendChild(mb); }
+    root.appendChild(maskBlock.wrap);
+
+    // step 2: operation
+    root.appendChild(h('div','step-label','Step 2 \u2014 Name the operation'));
+    var opG = choiceGroup(['AND','OR','XOR'], ['AND','OR','XOR']);
+    opG.btns.forEach(function(c){
+      c.addEventListener('click', function(){
+        opG.btns.forEach(function(x){ x.classList.remove('selected','right','wrong','revealed'); });
+        c.classList.add('selected'); op = c.dataset.val;
+      });
+    });
+    root.appendChild(opG.row);
+
+    // step 3: result
+    root.appendChild(h('div','step-label','Step 3 \u2014 Work out the result'));
+    var resBlock = bitRowBlock('Result');
+    var resBtns = [];
+    for(var j=0;j<8;j++){ var rb = editableBit('Result bit '+(7-j)); resBtns.push(rb); resBlock.grid.appendChild(rb); }
+    root.appendChild(resBlock.wrap);
+
+    // step 4 (masking only)
+    var interpG = null;
+    if(isMask){
+      root.appendChild(h('div','step-label','Step 4 \u2014 What does the result tell you?'));
+      interpG = choiceGroup(['The bit is 1','The bit is 0'], ['1','0']);
+      interpG.btns.forEach(function(c){
+        c.addEventListener('click', function(){
+          interpG.btns.forEach(function(x){ x.classList.remove('selected','right','wrong','revealed'); });
+          c.classList.add('selected'); interp = c.dataset.val;
+        });
+      });
+      root.appendChild(interpG.row);
+    }
+
+    var btnRow = h('div','btn-row');
+    var checkBtn = h('button','btn primary','Check'); checkBtn.type='button';
+    var revealBtn = h('button','btn ghost','Reveal answer'); revealBtn.type='button';
+    var fb = h('span','feedback','');
+    btnRow.appendChild(checkBtn); btnRow.appendChild(revealBtn); btnRow.appendChild(fb);
+    root.appendChild(btnRow);
+
+    function setFb(msg, cls){ fb.textContent = msg; fb.className = 'feedback ' + cls; }
+    function mark(el, ok){ el.classList.remove('revealed'); el.classList.toggle('correct', ok); el.classList.toggle('incorrect', !ok); }
+
+    checkBtn.addEventListener('click', function(){
+      var m = maskBtns.map(function(b){ return b.dataset.state; });
+      var r = resBtns.map(function(b){ return b.dataset.state; });
+      if(m.indexOf('')>-1 || r.indexOf('')>-1 || !op || (isMask && !interp)){
+        setFb('Complete every step first.', 'bad'); return;
+      }
+      var maskOk = true, resOk = true;
+      m.forEach(function(v,i){ var ok = v===correctMask[i]; mark(maskBtns[i], ok); if(!ok) maskOk=false; });
+      r.forEach(function(v,i){ var ok = v===correctResult[i]; mark(resBtns[i], ok); if(!ok) resOk=false; });
+      var opOk = (op === 'AND');
+      opG.btns.forEach(function(c){ if(c.classList.contains('selected')){ c.classList.toggle('right', opOk); c.classList.toggle('wrong', !opOk); } });
+      var interpOk = true;
+      if(isMask){
+        interpOk = (interp === reg[t.target]);
+        interpG.btns.forEach(function(c){ if(c.classList.contains('selected')){ c.classList.toggle('right', interpOk); c.classList.toggle('wrong', !interpOk); } });
+      }
+      var marks = (maskOk?1:0) + (opOk?1:0) + (resOk?1:0);
+      var parts = ['Mask '+(maskOk?'\u2713':'\u2717'), 'Operation '+(opOk?'\u2713':'\u2717'), 'Result '+(resOk?'\u2713':'\u2717')];
+      if(isMask) parts.push('Conclusion '+(interpOk?'\u2713':'\u2717'));
+      var msg = 'Marks: '+marks+'/3 \u2014 '+parts.join(' \u00b7 ');
+      if(!resOk && !maskOk){
+        var own = reg.map(function(b,i){ return (b==='1' && m[i]==='1') ? '1' : '0'; });
+        if(own.join('') === r.join('')) msg += '. Your result does match your mask \u2014 but the mask itself isn\u2019t right.';
+      }
+      var allOk = (marks===3 && interpOk);
+      setFb(msg, allOk ? 'ok' : 'bad');
+      if(allOk && !solved){ solved = true; taskObjs[t.id].solved = true; refreshMask(); }
+    });
+
+    revealBtn.addEventListener('click', function(){
+      maskBtns.forEach(function(b,i){ b.dataset.state = correctMask[i]; b.textContent = correctMask[i]; b.classList.remove('empty','correct','incorrect'); b.classList.add('revealed'); });
+      resBtns.forEach(function(b,i){ b.dataset.state = correctResult[i]; b.textContent = correctResult[i]; b.classList.remove('empty','correct','incorrect'); b.classList.add('revealed'); });
+      op = 'AND';
+      opG.btns.forEach(function(c){ c.classList.remove('selected','right','wrong','revealed'); if(c.dataset.val==='AND'){ c.classList.add('selected','revealed'); } });
+      if(isMask){
+        interp = reg[t.target];
+        interpG.btns.forEach(function(c){ c.classList.remove('selected','right','wrong','revealed'); if(c.dataset.val===interp){ c.classList.add('selected','revealed'); } });
+      }
+      setFb('Answer revealed.', 'info');
+    });
+
+    return root;
+  }
+
+  function buildMaskPanels(){
+    var wrap = document.getElementById('mask-panels');
+    TASKS.forEach(function(t){
+      var el = makeTaskPanel(t);
+      el.classList.add('hide');
+      wrap.appendChild(el);
+      taskObjs[t.id] = { el: el, solved: false };
+    });
+  }
+
+  function refreshMask(){
+    var cur = maskState.current[maskState.mode];
+    // pills
+    var pills = document.getElementById('mask-pills');
+    pills.innerHTML = '';
+    TASKS.filter(function(t){ return t.mode === maskState.mode; }).forEach(function(t, idx){
+      var p = h('button','pill'+(t.id===cur?' active':'')+(taskObjs[t.id].solved?' solved':''), '<span class="tick">\u2713</span>Task '+(idx+1));
+      p.addEventListener('click', function(){ maskState.current[maskState.mode] = t.id; refreshMask(); });
+      pills.appendChild(p);
+    });
+    // panels
+    TASKS.forEach(function(t){ taskObjs[t.id].el.classList.toggle('hide', t.id !== cur); });
+    // badge
+    var n = TASKS.filter(function(t){ return taskObjs[t.id].solved; }).length;
+    var badge = document.getElementById('badge-mask');
+    badge.textContent = n + '/' + TASKS.length;
+    badge.classList.toggle('done', n === TASKS.length);
+  }
+
+  document.querySelectorAll('#mask-mode button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('#mask-mode button').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      maskState.mode = btn.dataset.mode;
+      refreshMask();
+    });
+  });
+
+  buildMaskPanels();
+  refreshMask();
+
+  /* =====================================================
+     TAB 2 — PROVE THE LAWS
+     ===================================================== */
+  function IN(v, label){ return {kind:'input', v:v, label:label}; }
+  function WK(label, f){ return {kind:'work', label:label, f:f}; }
+  function GV(label, f){ return {kind:'given', label:label, f:f}; }
+  function NOT(x){ return x ? 0 : 1; }
+
+  var LAWS = [
+    { id:'identity', name:'Identity', core:true, vars:['A'],
+      statement:'A . 1 = A &nbsp;and&nbsp; A + 0 = A',
+      cols:[ IN(0,'A'), WK('A.1', function(a){ return a & 1; }), WK('A+0', function(a){ return a | 0; }) ] },
+    { id:'annulment', name:'Annulment', core:true, vars:['A'],
+      statement:'A . 0 = 0 &nbsp;and&nbsp; A + 1 = 1',
+      cols:[ IN(0,'A'), WK('A.0', function(a){ return a & 0; }), GV('0', function(){ return 0; }), WK('A+1', function(a){ return a | 1; }), GV('1', function(){ return 1; }) ] },
+    { id:'idempotent', name:'Idempotent', core:true, vars:['A'],
+      statement:'A . A = A &nbsp;and&nbsp; A + A = A',
+      cols:[ IN(0,'A'), WK('A.A', function(a){ return a & a; }), WK('A+A', function(a){ return a | a; }) ] },
+    { id:'complement', name:'Complement', core:true, vars:['A'],
+      statement:'A . '+bar('A')+' = 0 &nbsp;and&nbsp; A + '+bar('A')+' = 1',
+      cols:[ IN(0,'A'), WK(bar('A'), function(a){ return NOT(a); }),
+             WK('A.'+bar('A'), function(a){ return a & NOT(a); }), GV('0', function(){ return 0; }),
+             WK('A+'+bar('A'), function(a){ return a | NOT(a); }), GV('1', function(){ return 1; }) ] },
+    { id:'commutative', name:'Commutative', core:true, vars:['A','B'],
+      statement:'A . B = B . A &nbsp;and&nbsp; A + B = B + A',
+      cols:[ IN(0,'A'), IN(1,'B'),
+             WK('A.B', function(a,b){ return a & b; }), WK('B.A', function(a,b){ return b & a; }),
+             WK('A+B', function(a,b){ return a | b; }), WK('B+A', function(a,b){ return b | a; }) ] },
+    { id:'associative', name:'Associative', core:true, vars:['A','B','C'],
+      statement:'(A . B) . C = A . (B . C)',
+      cols:[ IN(0,'A'), IN(1,'B'), IN(2,'C'),
+             WK('A.B', function(a,b,c){ return a & b; }), WK('(A.B).C', function(a,b,c){ return (a & b) & c; }),
+             WK('B.C', function(a,b,c){ return b & c; }), WK('A.(B.C)', function(a,b,c){ return a & (b & c); }) ] },
+    { id:'involution', name:'Involution', core:true, vars:['A'],
+      statement:'\u00ac(\u00acA) = A',
+      cols:[ IN(0,'A'), WK('\u00acA', function(a){ return NOT(a); }), WK('\u00ac(\u00acA)', function(a){ return NOT(NOT(a)); }) ] },
+    { id:'associative-or', name:'Associative (OR form) \u2605', core:false, vars:['A','B','C'],
+      statement:'(A + B) + C = A + (B + C)',
+      cols:[ IN(0,'A'), IN(1,'B'), IN(2,'C'),
+             WK('A+B', function(a,b,c){ return a | b; }), WK('(A+B)+C', function(a,b,c){ return (a | b) | c; }),
+             WK('B+C', function(a,b,c){ return b | c; }), WK('A+(B+C)', function(a,b,c){ return a | (b | c); }) ] }
+  ];
+
+  var lawState = { current:'identity' };
+  var lawObjs = {};
+
+  function makeLawPanel(law){
+    var n = law.vars.length, rows = 1 << n, cols = law.cols;
+    var solved = false, tableDone = false, matchingOn = false;
+    var foundCols = {}, foundGroups = [], selected = {};
+
+    function vals(r){ return law.vars.map(function(_,v){ return (r >> (n-1-v)) & 1; }); }
+    function cval(c, r){
+      var col = cols[c], vs = vals(r);
+      return col.kind === 'input' ? vs[col.v] : col.f.apply(null, vs);
+    }
+
+    var root = h('div','card');
+    root.appendChild(h('div','law-statement', law.statement));
+
+    /* Step 1 */
+    var step1 = h('div','');
+    step1.appendChild(h('div','step-label','Step 1 \u2014 How many rows?'));
+    step1.appendChild(h('p','hint','This law uses '+n+' variable'+(n>1?'s':'')+' ('+law.vars.join(', ')+'). How many rows does its truth table need?'));
+    var rowG = choiceGroup(['2','4','8','16'], ['2','4','8','16']);
+    var fb1 = h('span','feedback','');
+    step1.appendChild(rowG.row);
+    step1.appendChild(fb1);
+    root.appendChild(step1);
+
+    /* Step 2 */
+    var step2 = h('div','step-box hide');
+    step2.appendChild(h('div','step-label','Step 2 \u2014 Build the truth table'));
+    var hasGiven = cols.some(function(c){ return c.kind === 'given'; });
+    step2.appendChild(h('p','hint','Fill in every cell \u2014 the inputs too. Start at the top with every input 0 and count up in binary.'+(hasGiven ? ' The amber columns are given: they show the value the other side of the law should equal.' : '')));
+    var scroll = h('div','table-scroll');
+    var table = h('table','tt');
+    var thead = h('thead'); var htr = h('tr');
+    var ths = cols.map(function(c){
+      var th = h('th', c.kind==='given' ? 'given-head' : '', c.label);
+      htr.appendChild(th); return th;
+    });
+    thead.appendChild(htr); table.appendChild(thead);
+    var tbody = h('tbody');
+    var cellRefs = [];
+    var colCells = cols.map(function(){ return []; });
+    for(var r=0;r<rows;r++){
+      var tr = h('tr');
+      cols.forEach(function(c, ci){
+        var td;
+        if(c.kind === 'given'){
+          td = h('td','fixed given', String(cval(ci, r)));
+        } else {
+          td = h('td','cell-btn');
+          var b = h('button','cellbtn empty','');
+          b.type = 'button'; b.dataset.state = '';
+          b.setAttribute('aria-label', 'Row '+(r+1)+', column '+ci);
+          b.addEventListener('click', function(){
+            if(b.classList.contains('grouped')) return;
+            var cur = b.dataset.state;
+            var next = cur === '' ? '0' : (cur === '0' ? '1' : '');
+            b.dataset.state = next; b.textContent = next;
+            b.classList.remove('correct','incorrect','revealed');
+            b.classList.toggle('empty', next === '');
+          });
+          td.appendChild(b);
+          cellRefs.push({r:r, c:ci, el:b});
+        }
+        colCells[ci].push(td);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody); scroll.appendChild(table); step2.appendChild(scroll);
+    if(cols.length > 5) step2.appendChild(h('p','scroll-hint','Scroll the table sideways to see every column \u2192'));
+    var btnRow2 = h('div','btn-row');
+    var check2 = h('button','btn primary','Check table'); check2.type='button';
+    var reveal2 = h('button','btn ghost','Reveal answer'); reveal2.type='button';
+    var fb2 = h('span','feedback','');
+    btnRow2.appendChild(check2); btnRow2.appendChild(reveal2); btnRow2.appendChild(fb2);
+    step2.appendChild(btnRow2);
+    root.appendChild(step2);
+
+    /* Step 3 */
+    var vecs = cols.map(function(_, ci){ var s=''; for(var r=0;r<rows;r++) s += cval(ci, r); return s; });
+    var byVec = {};
+    vecs.forEach(function(v, ci){ (byVec[v] = byVec[v] || []).push(ci); });
+    var groups = Object.keys(byVec).map(function(k){ return byVec[k]; }).filter(function(g){ return g.length > 1; });
+
+    var step3 = h('div','step-box hide');
+    step3.appendChild(h('div','step-label','Step 3 \u2014 Which columns are the same?'));
+    step3.appendChild(h('p','hint','Click the headings of columns that are identical for every row, then press <strong>Check match</strong>. There '+(groups.length===1?'is 1 group':'are '+groups.length+' groups')+' of identical columns to find.'));
+    var btnRow3 = h('div','btn-row'); btnRow3.style.marginTop = '.2rem';
+    var check3 = h('button','btn primary','Check match'); check3.type='button';
+    var fb3 = h('span','feedback','');
+    btnRow3.appendChild(check3); btnRow3.appendChild(fb3);
+    step3.appendChild(btnRow3);
+    var foundList = h('ul','found-list');
+    step3.appendChild(foundList);
+    root.appendChild(step3);
+
+    var proved = h('div','proved hide');
+    proved.innerHTML = '<h2>'+law.name.replace(' \u2605','')+' law proved</h2><p>'+law.statement+' \u2014 the matching columns are identical for every possible input, so the two sides of the law are equivalent.</p>';
+    root.appendChild(proved);
+
+    /* --- step 1 logic --- */
+    rowG.btns.forEach(function(c){
+      c.addEventListener('click', function(){
+        rowG.btns.forEach(function(x){ x.classList.remove('selected','right','wrong'); });
+        c.classList.add('selected');
+        if(parseInt(c.dataset.val,10) === rows){
+          c.classList.add('right');
+          fb1.textContent = ' '+rows+' rows (2^'+n+') \u2014 correct.';
+          fb1.className = 'feedback ok';
+          step2.classList.remove('hide');
+        } else {
+          c.classList.add('wrong');
+          fb1.textContent = ' Not quite \u2014 use the 2^n rule, where n is the number of variables.';
+          fb1.className = 'feedback bad';
+        }
+      });
+    });
+
+    /* --- step 2 logic --- */
+    function enableMatching(){
+      if(matchingOn) return;
+      matchingOn = true; tableDone = true;
+      step3.classList.remove('hide');
+      ths.forEach(function(th, ci){
+        th.classList.add('selectable');
+        th.addEventListener('click', function(){
+          if(foundCols[ci]) return;
+          if(selected[ci]){ delete selected[ci]; th.classList.remove('sel'); }
+          else { selected[ci] = true; th.classList.add('sel'); }
+        });
+      });
+    }
+
+    function correctVal(ref){ return cval(ref.c, ref.r); }
+
+    check2.addEventListener('click', function(){
+      var allFilled = true, allOk = true;
+      cellRefs.forEach(function(ref){
+        var v = ref.el.dataset.state;
+        if(v === ''){ allFilled = false; return; }
+        var ok = parseInt(v,10) === correctVal(ref);
+        ref.el.classList.remove('revealed');
+        ref.el.classList.toggle('correct', ok);
+        ref.el.classList.toggle('incorrect', !ok);
+        if(!ok) allOk = false;
+      });
+      if(!allFilled){ fb2.textContent = 'Fill in every cell first.'; fb2.className = 'feedback bad'; return; }
+      if(allOk){ fb2.textContent = 'Table correct \u2014 now compare the columns.'; fb2.className = 'feedback ok'; enableMatching(); }
+      else { fb2.textContent = 'Some cells aren\u2019t right yet \u2014 check the red ones.'; fb2.className = 'feedback bad'; }
+    });
+
+    reveal2.addEventListener('click', function(){
+      cellRefs.forEach(function(ref){
+        var v = correctVal(ref);
+        ref.el.dataset.state = String(v); ref.el.textContent = String(v);
+        ref.el.classList.remove('empty','correct','incorrect'); ref.el.classList.add('revealed');
+      });
+      fb2.textContent = 'Answer revealed \u2014 now compare the columns.'; fb2.className = 'feedback info';
+      enableMatching();
+    });
+
+    /* --- step 3 logic --- */
+    check3.addEventListener('click', function(){
+      var sel = Object.keys(selected).map(Number);
+      if(sel.length < 2){ fb3.textContent = 'Select at least two columns that look identical.'; fb3.className = 'feedback bad'; return; }
+      var same = sel.every(function(ci){ return vecs[ci] === vecs[sel[0]]; });
+      if(!same){ fb3.textContent = 'Not all of those columns are identical \u2014 compare their values row by row.'; fb3.className = 'feedback bad'; return; }
+      var group = groups.filter(function(g){ return g.indexOf(sel[0]) > -1; })[0];
+      if(sel.length < group.length){ fb3.textContent = 'Those all match \u2014 but there is at least one more column with the same values.'; fb3.className = 'feedback info'; return; }
+      // found a full group
+      var gi = foundGroups.length % 3;
+      foundGroups.push(group);
+      group.forEach(function(ci){
+        foundCols[ci] = true;
+        ths[ci].classList.remove('sel','selectable'); ths[ci].classList.add('g'+gi);
+        colCells[ci].forEach(function(td){
+          td.classList.add('g'+gi);
+          var btn = td.querySelector('.cellbtn'); if(btn) btn.classList.add('grouped');
+        });
+      });
+      selected = {};
+      var li = h('li','', group.map(function(ci){ return cols[ci].label; }).join(' = '));
+      foundList.appendChild(li);
+      if(foundGroups.length === groups.length){
+        fb3.textContent = 'All groups found.'; fb3.className = 'feedback ok';
+        proved.classList.remove('hide');
+        if(!solved){ solved = true; lawObjs[law.id].solved = true; refreshLaws(); }
+      } else {
+        fb3.textContent = 'Group found \u2014 '+(groups.length - foundGroups.length)+' more to find.'; fb3.className = 'feedback ok';
+      }
+    });
+
+    return root;
+  }
+
+  function buildLawPanels(){
+    var wrap = document.getElementById('law-panels');
+    LAWS.forEach(function(law){
+      var el = makeLawPanel(law);
+      el.classList.add('hide');
+      wrap.appendChild(el);
+      lawObjs[law.id] = { el: el, solved: false, law: law };
+    });
+  }
+
+  function refreshLaws(){
+    var cur = lawState.current;
+    var pills = document.getElementById('law-pills');
+    pills.innerHTML = '';
+    LAWS.forEach(function(law){
+      var cls = 'pill'+(law.id===cur?' active':'')+(lawObjs[law.id].solved?' solved':'')+(law.core?'':' ext');
+      var p = h('button', cls, '<span class="tick">\u2713</span>'+law.name);
+      p.addEventListener('click', function(){ lawState.current = law.id; refreshLaws(); });
+      pills.appendChild(p);
+    });
+    LAWS.forEach(function(law){ lawObjs[law.id].el.classList.toggle('hide', law.id !== cur); });
+    var n = LAWS.filter(function(l){ return l.core && lawObjs[l.id].solved; }).length;
+    var total = LAWS.filter(function(l){ return l.core; }).length;
+    var badge = document.getElementById('badge-laws');
+    badge.textContent = n + '/' + total;
+    badge.classList.toggle('done', n === total);
+  }
+
+  buildLawPanels();
+  refreshLaws();
+
+  /* =====================================================
+     TOP-LEVEL TABS
+     ===================================================== */
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('.panel-view').forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>

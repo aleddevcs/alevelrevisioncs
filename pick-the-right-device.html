@@ -1,0 +1,752 @@
+<title>Pick the Right Network Device</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --ink: #16202B;
+    --slate: #2B3A4A;
+    --copper: #D9822B;
+    --copper-lt: #F6E3CF;
+    --copper-ink: #7A4512;
+    --paper: #FFFFFF;
+    --mist: #EEF2F5;
+    --mist-2: #E3E9EE;
+    --text: #1F2933;
+    --muted: #5C6B7A;
+    --line: #C9D3DC;
+    --green: #2F7A4E;
+    --green-lt: #DDEFE3;
+    --red: #B3412F;
+    --red-lt: #F4DCD7;
+    --blue: #2F6DB5;
+    --blue-lt: #DCE8F7;
+
+    --bg: var(--mist);
+    --surface: var(--paper);
+    --surface-2: var(--mist);
+    --ink-on-surface: var(--ink);
+    --text-on-surface: var(--text);
+    --muted-on-surface: var(--muted);
+    --line-on-surface: var(--line);
+
+    --dev-bg: var(--paper);
+    --dev-line: var(--line);
+    --dev-fg: var(--ink);
+    --dev-sub: var(--muted);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E151D;
+      --surface: #182330;
+      --surface-2: #1F2C3A;
+      --ink-on-surface: #F3F6F8;
+      --text-on-surface: #DDE4EA;
+      --muted-on-surface: #93A2B0;
+      --line-on-surface: #33455A;
+      --copper-lt: #4A3620;
+      --copper-ink: #F0B274;
+      --green-lt: #1E3A2A;
+      --red-lt: #402420;
+      --blue-lt: #1D3149;
+
+      --dev-bg: #1F2C3A;
+      --dev-line: #33455A;
+      --dev-fg: #F3F6F8;
+      --dev-sub: #93A2B0;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0E151D;
+    --surface: #182330;
+    --surface-2: #1F2C3A;
+    --ink-on-surface: #F3F6F8;
+    --text-on-surface: #DDE4EA;
+    --muted-on-surface: #93A2B0;
+    --line-on-surface: #33455A;
+    --copper-lt: #4A3620;
+    --copper-ink: #F0B274;
+    --green-lt: #1E3A2A;
+    --red-lt: #402420;
+    --blue-lt: #1D3149;
+
+    --dev-bg: #1F2C3A;
+    --dev-line: #33455A;
+    --dev-fg: #F3F6F8;
+    --dev-sub: #93A2B0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-on-surface);
+    font-family: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+    padding: clamp(16px, 3vw, 40px);
+    padding-block: clamp(20px, 4vw, 48px);
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; }
+
+  header.page {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", "Courier New", monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--copper-ink);
+    background: var(--copper-lt);
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-size: clamp(24px, 3.4vw, 32px);
+    margin: 0 0 6px;
+    text-wrap: balance;
+    color: var(--ink-on-surface);
+  }
+
+  .sub { color: var(--muted-on-surface); font-size: 14.5px; max-width: 58ch; line-height: 1.5; margin: 0; }
+
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding-top: 4px;
+  }
+
+  .dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--surface-2);
+    color: var(--muted-on-surface);
+    border: 1.5px solid var(--line-on-surface);
+    transition: background .25s, color .25s, border-color .25s;
+  }
+  .dot.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .dot.active { background: var(--copper); border-color: var(--copper); color: #fff; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line-on-surface);
+    border-radius: 14px;
+    padding: clamp(18px, 3vw, 28px);
+    margin-bottom: 18px;
+  }
+
+  .scenario-tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-on-surface);
+    margin-bottom: 6px;
+  }
+
+  .scenario-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink-on-surface);
+    margin: 0 0 10px;
+  }
+
+  .situation {
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text-on-surface);
+    font-style: italic;
+    border-left: 3px solid var(--copper);
+  }
+
+  .step-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-on-surface);
+    margin: 22px 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-label .step-no {
+    background: var(--ink-on-surface);
+    color: var(--surface);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .step-hint { font-size: 13px; color: var(--muted-on-surface); margin: 0 0 14px; }
+
+  .options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .opt {
+    text-align: left;
+    background: var(--dev-bg);
+    border: 1.5px solid var(--dev-line);
+    border-radius: 10px;
+    padding: 13px 14px;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--dev-fg);
+    cursor: pointer;
+    transition: border-color .15s, background .15s, transform .1s;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--copper); }
+  .opt:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+  .opt:active:not(:disabled) { transform: translateY(1px); }
+  .opt:disabled { cursor: default; }
+
+  .opt.picked { border-color: var(--copper); box-shadow: 0 0 0 1px var(--copper) inset; }
+  .opt.correct { border-color: var(--green); background: var(--green-lt); box-shadow: 0 0 0 1px var(--green) inset; }
+  .opt.wrong { border-color: var(--red); background: var(--red-lt); box-shadow: 0 0 0 1px var(--red) inset; }
+  .opt.dim { opacity: 0.55; }
+
+  .opt .opt-sub { display: block; font-weight: 400; font-size: 12.5px; color: var(--dev-sub); margin-top: 3px; }
+
+  .controls { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  button.primary {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background: var(--copper);
+    color: #2B1400;
+    cursor: pointer;
+  }
+  button.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.primary:hover:not(:disabled) { filter: brightness(1.06); }
+
+  button.ghost {
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1.5px solid var(--line-on-surface);
+    background: transparent;
+    color: var(--text-on-surface);
+    cursor: pointer;
+  }
+  button.ghost:hover { border-color: var(--copper); }
+
+  .feedback {
+    margin-top: 14px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .feedback.good { background: var(--green-lt); color: var(--text-on-surface); border-left: 3px solid var(--green); }
+  .feedback.bad { background: var(--red-lt); color: var(--text-on-surface); border-left: 3px solid var(--red); }
+  .feedback strong { color: var(--ink-on-surface); }
+
+  .part-b {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line-on-surface);
+  }
+
+  .status-line {
+    font-size: 12.5px;
+    color: var(--muted-on-surface);
+    margin-top: 14px;
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  /* Summary screen */
+  .summary-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 18px 0 22px;
+  }
+  .tile {
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .tile .num { font-family: "IBM Plex Mono", monospace; font-size: 28px; font-weight: 700; color: var(--copper-ink); }
+  .tile .lbl { font-size: 12.5px; color: var(--muted-on-surface); margin-top: 2px; }
+
+  .review-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--line-on-surface);
+    font-size: 14px;
+  }
+  .review-row:last-child { border-bottom: none; }
+  .review-badge {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    color: #fff;
+  }
+  .review-badge.first { background: var(--green); }
+  .review-badge.retry { background: var(--copper); }
+  .review-name { font-weight: 600; color: var(--ink-on-surface); }
+  .review-device { color: var(--muted-on-surface); font-size: 13px; }
+
+  footer.page {
+    margin-top: 26px;
+    font-size: 12.5px;
+    color: var(--muted-on-surface);
+    text-align: center;
+  }
+
+  @media (max-width: 520px) {
+    .options { grid-template-columns: 1fr; }
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap">
+
+<div class="wrap">
+  <header class="page">
+    <div>
+      <div class="eyebrow">AS Unit 1 · Topic 1 · 1.7.1</div>
+      <h1>Pick the Right Network Device</h1>
+      <p class="sub">Six networking situations. Choose the device that actually does the job, then pick the specific job it does that makes it the right answer.</p>
+    </div>
+    <div class="progress-wrap" id="progressWrap" aria-hidden="true"></div>
+  </header>
+
+  <main id="app"></main>
+
+  <footer class="page">AS Computer Science · Unit 1 · Topic 1 Hardware &amp; Communication · Lesson 04</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var JOB_OPTIONS = [
+    "Lets a device connect to a network in the first place",
+    "Sends data only to the specific device it's addressed to, not every device on the LAN",
+    "Connects two different networks together and directs traffic between them",
+    "Broadcasts every signal out to every connected device — no addressing involved",
+    "Turns wireless signals into a form a wired network understands",
+    "Converts between a network's signals and the signal used on an external line, e.g. from an ISP"
+  ];
+
+  var SCENARIOS = [
+    {
+      title: "New Starter, New Laptop",
+      situation: "IT are setting up a laptop for a new starter. Right now the laptop can't reach the network at all — nothing else will work until one specific piece of hardware inside it is fitted and enabled.",
+      deviceOptions: [
+        { label: "NIC", sub: "Lets a device connect to a network", correct: true,
+          explain: "Correct. A Network Interface Card is what actually lets a device connect to a network — wired or wireless. Without one, nothing else on this list matters." },
+        { label: "Switch", sub: "Connects devices within a LAN",
+          explain: "A switch connects devices that are already on the network together — but this laptop can't reach the network at all yet. That's a NIC's job." },
+        { label: "Router", sub: "Connects different networks together",
+          explain: "A router directs traffic between networks — it assumes the laptop can already get onto a network in the first place." },
+        { label: "Modem", sub: "Connects a network to an external line",
+          explain: "A modem deals with the connection to an external line like an ISP's — it has nothing to do with getting one laptop onto the network." }
+      ],
+      charCorrect: 0,
+      charCorrectExplain: "A NIC is the piece of hardware that lets a device join a network at all — every other device on this list assumes that's already happened.",
+      charWrongHint: "Think about what has to be true before a laptop can do anything else on a network."
+    },
+    {
+      title: "Busy Office Floor",
+      situation: "Forty desktop computers on one office floor need to be wired together into a single LAN. Data should go only to the machine it's addressed to — not be sent to all forty machines every time.",
+      deviceOptions: [
+        { label: "Switch", sub: "Connects devices within a LAN", correct: true,
+          explain: "Correct. A switch connects devices within a LAN and sends data only to the device it's addressed to — exactly the efficient, addressed behaviour this office needs." },
+        { label: "Hub", sub: "Broadcasts to every connected device",
+          explain: "A hub would connect the forty machines too, but it broadcasts every signal to every device — the opposite of sending data only where it's addressed." },
+        { label: "Router", sub: "Connects different networks together",
+          explain: "A router connects separate networks together — this office floor is one single LAN, not several networks that need connecting." },
+        { label: "Wireless access point", sub: "Lets wireless devices join a wired network",
+          explain: "An access point is about wireless devices joining a wired network — these are forty wired desktops, so that's not the problem here." }
+      ],
+      charCorrect: 1,
+      charCorrectExplain: "The deciding factor is addressed delivery — a switch sends data only to the device it's meant for, which is exactly what makes it efficient on a busy LAN.",
+      charWrongHint: "Focus on what's specifically wasteful about sending data to all forty machines every time."
+    },
+    {
+      title: "Connecting to the Internet",
+      situation: "The office LAN of forty computers needs a single point where traffic can pass out to the internet and back — and where something decides whether a packet should stay on the LAN or head out to the internet.",
+      deviceOptions: [
+        { label: "Router", sub: "Connects different networks together", correct: true,
+          explain: "Correct. A router connects two different networks together — here, the office LAN and the internet — and directs traffic between them based on where it needs to go." },
+        { label: "Modem", sub: "Connects a network to an external line",
+          explain: "A modem handles the raw signal conversion for the external line, but deciding where each packet should go — LAN or internet — is a router's job." },
+        { label: "Switch", sub: "Connects devices within a LAN",
+          explain: "A switch only connects devices within a single LAN — it doesn't connect the LAN to a different network like the internet." },
+        { label: "Hub", sub: "Broadcasts to every connected device",
+          explain: "A hub just repeats signals to every connected device on one LAN — it has no concept of a separate network like the internet." }
+      ],
+      charCorrect: 2,
+      charCorrectExplain: "The deciding factor is that two different networks — the office LAN and the internet — need connecting and directing between, which is specifically what a router does.",
+      charWrongHint: "Think about what's actually different here: two separate networks need linking, not just devices within one."
+    },
+    {
+      title: "Legacy Classroom Kit",
+      situation: "An old classroom network from years ago just connects five ageing computers together. There's no need for efficient addressed delivery — any signal received on one port is simply repeated out to every other port. Cheap and basic.",
+      deviceOptions: [
+        { label: "Hub", sub: "Broadcasts to every connected device", correct: true,
+          explain: "Correct. A hub is the older, simpler way to connect devices — it broadcasts every signal to every port with no addressing, which matches this basic legacy setup exactly." },
+        { label: "Switch", sub: "Connects devices within a LAN",
+          explain: "A switch would do this job better, sending data only to the addressed device — but that's smarter than what's being described here, which is dumb broadcast to every port." },
+        { label: "Router", sub: "Connects different networks together",
+          explain: "A router connects separate networks together — this is five computers on one simple local network, nothing to route between." },
+        { label: "Wireless access point", sub: "Lets wireless devices join a wired network",
+          explain: "There's no wireless element described here at all — just old computers wired together." }
+      ],
+      charCorrect: 3,
+      charCorrectExplain: "The giveaway is 'repeated out every other port' with no addressing — that dumb, broadcast-to-everyone behaviour is exactly what separates a hub from a switch.",
+      charWrongHint: "Focus on the specific behaviour described — signals going out to every port, not just the one they're meant for."
+    },
+    {
+      title: "Getting Laptops onto Wi-Fi",
+      situation: "A wired office network needs to let staff laptops and phones join wirelessly. Something has to take the Wi-Fi radio signals from those devices and convert them into a form the wired network can use.",
+      deviceOptions: [
+        { label: "Wireless access point", sub: "Lets wireless devices join a wired network", correct: true,
+          explain: "Correct. A wireless access point takes wireless signals and converts them into a form the wired network understands — exactly what's needed to bring Wi-Fi devices onto a wired LAN." },
+        { label: "Router", sub: "Connects different networks together",
+          explain: "Many home routers do include a built-in access point, but the specific job described here — converting wireless signals for a wired network — is the access point's function, not routing between networks." },
+        { label: "Modem", sub: "Connects a network to an external line",
+          explain: "A modem deals with an external line in, like from an ISP — it has nothing to do with getting laptops onto Wi-Fi." },
+        { label: "NIC", sub: "Lets a device connect to a network",
+          explain: "A NIC lets one device join a network — the laptops already have wireless NICs. The missing piece is what converts their signal for the wired network." }
+      ],
+      charCorrect: 4,
+      charCorrectExplain: "The deciding factor is the wireless-to-wired conversion itself — that translation job belongs specifically to a wireless access point.",
+      charWrongHint: "Focus on what has to happen to a Wi-Fi radio signal before it can travel on a wired network."
+    },
+    {
+      title: "Line from the ISP",
+      situation: "A building's network connects to a physical line coming in from an internet service provider. Something is needed to convert between the network's own signals and the signal used on that external line.",
+      deviceOptions: [
+        { label: "Modem", sub: "Connects a network to an external line", correct: true,
+          explain: "Correct. A modem converts between a network's own signals and the signal used on an external line, such as one coming in from an ISP — exactly the conversion job described." },
+        { label: "Router", sub: "Connects different networks together",
+          explain: "A router directs traffic once it's on the network — but converting the raw signal from the ISP's external line is specifically a modem's job." },
+        { label: "Wireless access point", sub: "Lets wireless devices join a wired network",
+          explain: "An access point deals with wireless devices joining a wired network — nothing to do with a physical incoming line from an ISP." },
+        { label: "Switch", sub: "Connects devices within a LAN",
+          explain: "A switch only connects devices within a LAN together — it has no role in converting a signal coming in from an external line." }
+      ],
+      charCorrect: 5,
+      charCorrectExplain: "The deciding factor is that this is about a physical external line and converting its signal — that's specifically what a modem is built to do.",
+      charWrongHint: "Focus on the physical line coming in from outside the building, and what has to happen to its signal."
+    }
+  ];
+
+  var state = {
+    idx: 0,
+    phase: "device", // device | char | scenarioDone
+    devicePicked: null,
+    deviceLocked: false,
+    deviceFirstTry: true,
+    deviceAttempted: false,
+    charPicked: null,
+    charLocked: false,
+    charFirstTry: true,
+    charAttempted: false,
+    results: [] // {deviceFirstTry, charFirstTry, deviceLabel}
+  };
+
+  var app = document.getElementById("app");
+  var progressWrap = document.getElementById("progressWrap");
+
+  function renderProgress() {
+    progressWrap.innerHTML = "";
+    SCENARIOS.forEach(function (s, i) {
+      var d = document.createElement("div");
+      d.className = "dot" + (i < state.results.length ? " done" : i === state.idx && state.idx < SCENARIOS.length ? " active" : "");
+      d.textContent = i + 1;
+      progressWrap.appendChild(d);
+    });
+  }
+
+  function shuffledIndices(n) {
+    var arr = [];
+    for (var i = 0; i < n; i++) arr.push(i);
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function resetScenarioState() {
+    var sc = SCENARIOS[state.idx];
+    state.phase = "device";
+    state.devicePicked = null;
+    state.deviceLocked = false;
+    state.deviceFirstTry = true;
+    state.deviceAttempted = false;
+    state.charPicked = null;
+    state.charLocked = false;
+    state.charFirstTry = true;
+    state.charAttempted = false;
+    // Reshuffle option order every time a scenario is (re)entered, so the correct
+    // answer doesn't always land in the same position — students were able to
+    // guess by position (always option 1, then 2, then 3...) rather than reasoning.
+    state.deviceOrder = shuffledIndices(sc.deviceOptions.length);
+    state.charOrder = shuffledIndices(JOB_OPTIONS.length);
+  }
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function renderScenario() {
+    var sc = SCENARIOS[state.idx];
+    app.innerHTML = "";
+
+    var card = el("div", "card");
+
+    card.appendChild(el("div", "scenario-tag", "Scenario " + (state.idx + 1) + " of " + SCENARIOS.length));
+    card.appendChild(el("h2", "scenario-title", sc.title));
+    card.appendChild(el("div", "situation", sc.situation));
+
+    // Part A: device
+    var stepA = el("div", "step-label");
+    stepA.innerHTML = '<span class="step-no">1</span> Choose the device';
+    card.appendChild(stepA);
+    card.appendChild(el("p", "step-hint", "Pick the device that actually solves this situation."));
+
+    var optsA = el("div", "options");
+    state.deviceOrder.forEach(function (i) {
+      var opt = sc.deviceOptions[i];
+      var b = el("button", "opt");
+      b.type = "button";
+      b.innerHTML = opt.label + '<span class="opt-sub">' + opt.sub + "</span>";
+      b.disabled = state.deviceLocked;
+      if (state.devicePicked === i && !state.deviceLocked) b.classList.add("picked");
+      if (state.deviceLocked) {
+        if (opt.correct) b.classList.add("correct");
+        else if (state.devicePicked === i) b.classList.add("wrong");
+        else b.classList.add("dim");
+      }
+      b.addEventListener("click", function () {
+        if (state.deviceLocked) return;
+        state.devicePicked = i;
+        renderScenario();
+      });
+      optsA.appendChild(b);
+    });
+    card.appendChild(optsA);
+
+    var controlsA = el("div", "controls");
+    if (!state.deviceLocked) {
+      var checkA = el("button", "primary", "Check answer");
+      checkA.disabled = state.devicePicked === null;
+      checkA.addEventListener("click", function () {
+        var opt = sc.deviceOptions[state.devicePicked];
+        state.deviceLocked = true;
+        if (!opt.correct) {
+          state.deviceFirstTry = false;
+        }
+        state.deviceAttempted = true;
+        renderScenario();
+      });
+      controlsA.appendChild(checkA);
+      card.appendChild(controlsA);
+    } else {
+      var opt = sc.deviceOptions[state.devicePicked];
+      var fb = el("div", "feedback " + (opt.correct ? "good" : "bad"), opt.explain);
+      card.appendChild(fb);
+
+      if (!opt.correct) {
+        var retryWrap = el("div", "controls");
+        var retryBtn = el("button", "ghost", "Try again");
+        retryBtn.addEventListener("click", function () {
+          state.deviceLocked = false;
+          state.devicePicked = null;
+          renderScenario();
+        });
+        retryWrap.appendChild(retryBtn);
+        card.appendChild(retryWrap);
+      } else {
+        // Part B: job — only once device is correct
+        var partB = el("div", "part-b");
+        var stepB = el("div", "step-label");
+        stepB.innerHTML = '<span class="step-no">2</span> Justify it';
+        partB.appendChild(stepB);
+        partB.appendChild(el("p", "step-hint", "Which job is the actual reason this device is the right answer?"));
+
+        var optsB = el("div", "options");
+        state.charOrder.forEach(function (i) {
+          var label = JOB_OPTIONS[i];
+          var b = el("button", "opt", label);
+          b.type = "button";
+          b.disabled = state.charLocked;
+          if (state.charPicked === i && !state.charLocked) b.classList.add("picked");
+          if (state.charLocked) {
+            if (i === sc.charCorrect) b.classList.add("correct");
+            else if (state.charPicked === i) b.classList.add("wrong");
+            else b.classList.add("dim");
+          }
+          b.addEventListener("click", function () {
+            if (state.charLocked) return;
+            state.charPicked = i;
+            renderScenario();
+          });
+          optsB.appendChild(b);
+        });
+        partB.appendChild(optsB);
+
+        var controlsB = el("div", "controls");
+        if (!state.charLocked) {
+          var checkB = el("button", "primary", "Check answer");
+          checkB.disabled = state.charPicked === null;
+          checkB.addEventListener("click", function () {
+            state.charLocked = true;
+            if (state.charPicked !== sc.charCorrect) state.charFirstTry = false;
+            state.charAttempted = true;
+            renderScenario();
+          });
+          controlsB.appendChild(checkB);
+          partB.appendChild(controlsB);
+        } else {
+          var correct = state.charPicked === sc.charCorrect;
+          var fbB = el("div", "feedback " + (correct ? "good" : "bad"),
+            correct ? sc.charCorrectExplain : sc.charWrongHint);
+          partB.appendChild(fbB);
+
+          if (!correct) {
+            var retryWrapB = el("div", "controls");
+            var retryBtnB = el("button", "ghost", "Try again");
+            retryBtnB.addEventListener("click", function () {
+              state.charLocked = false;
+              state.charPicked = null;
+              renderScenario();
+            });
+            retryWrapB.appendChild(retryBtnB);
+            partB.appendChild(retryWrapB);
+          } else {
+            var nextWrap = el("div", "controls");
+            var nextLabel = state.idx === SCENARIOS.length - 1 ? "See summary" : "Next scenario";
+            var nextBtn = el("button", "primary", nextLabel);
+            nextBtn.addEventListener("click", function () {
+              state.results.push({
+                deviceFirstTry: state.deviceFirstTry,
+                charFirstTry: state.charFirstTry,
+                deviceLabel: sc.deviceOptions[state.devicePicked].label,
+                title: sc.title
+              });
+              state.idx++;
+              if (state.idx >= SCENARIOS.length) {
+                renderSummary();
+              } else {
+                resetScenarioState();
+                renderScenario();
+              }
+            });
+            nextWrap.appendChild(nextBtn);
+            partB.appendChild(nextWrap);
+          }
+        }
+        card.appendChild(partB);
+      }
+    }
+
+    app.appendChild(card);
+    var status = el("div", "status-line",
+      "Scenario " + (state.idx + 1) + " of " + SCENARIOS.length + " · " +
+      (state.deviceLocked && sc.deviceOptions[state.devicePicked] && sc.deviceOptions[state.devicePicked].correct ? "Part 2 of 2 — justify it" : "Part 1 of 2 — choose the device"));
+    app.appendChild(status);
+
+    renderProgress();
+  }
+
+  function renderSummary() {
+    app.innerHTML = "";
+    progressWrap.innerHTML = "";
+    renderProgress();
+
+    var firstTryCount = state.results.filter(function (r) { return r.deviceFirstTry && r.charFirstTry; }).length;
+
+    var card = el("div", "card");
+    card.appendChild(el("div", "scenario-tag", "Complete"));
+    card.appendChild(el("h2", "scenario-title", "All six scenarios done"));
+
+    var tiles = el("div", "summary-tiles");
+    var t1 = el("div", "tile");
+    t1.innerHTML = '<div class="num">' + firstTryCount + ' / ' + SCENARIOS.length + '</div><div class="lbl">solved first try</div>';
+    var t2 = el("div", "tile");
+    t2.innerHTML = '<div class="num">' + SCENARIOS.length + ' / ' + SCENARIOS.length + '</div><div class="lbl">scenarios completed</div>';
+    tiles.appendChild(t1);
+    tiles.appendChild(t2);
+    card.appendChild(tiles);
+
+    card.appendChild(el("div", "step-label", "Your run, scenario by scenario"));
+    var list = el("div");
+    state.results.forEach(function (r, i) {
+      var row = el("div", "review-row");
+      var badgeClass = (r.deviceFirstTry && r.charFirstTry) ? "first" : "retry";
+      var badgeText = (r.deviceFirstTry && r.charFirstTry) ? "✓" : "↺";
+      row.innerHTML =
+        '<span class="review-badge ' + badgeClass + '">' + badgeText + '</span>' +
+        '<span><span class="review-name">' + (i + 1) + '. ' + r.title + '</span><br>' +
+        '<span class="review-device">' + r.deviceLabel + (r.deviceFirstTry && r.charFirstTry ? "" : " — needed a retry") + '</span></span>';
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+
+    var controls = el("div", "controls");
+    var restart = el("button", "primary", "Restart");
+    restart.addEventListener("click", function () {
+      state = {
+        idx: 0, phase: "device", devicePicked: null, deviceLocked: false, deviceFirstTry: true, deviceAttempted: false,
+        charPicked: null, charLocked: false, charFirstTry: true, charAttempted: false, results: [],
+        deviceOrder: [], charOrder: []
+      };
+      resetScenarioState();
+      renderScenario();
+    });
+    controls.appendChild(restart);
+    card.appendChild(controls);
+
+    app.appendChild(card);
+  }
+
+  resetScenarioState();
+  renderScenario();
+})();
+</script>

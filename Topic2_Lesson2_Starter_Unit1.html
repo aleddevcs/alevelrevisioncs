@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lesson 2 Starter: Recap</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --navy-dark:#121C33; --teal:#1C7293; --teal-dark:#155a72;
+    --amber:#F2A541; --amber-dark:#c97f1f; --bg:#F3F6FB; --card:#FFFFFF;
+    --text:#1B2A4A; --muted:#5B6B85; --border:#DCE3EE;
+    --green:#2E9E5B; --green-bg:#E7F7EE; --red:#D64545; --red-bg:#FDEAEA;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Calibri','Segoe UI',system-ui,-apple-system,sans-serif;
+    padding: env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px) 0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{ max-width:900px; margin:0 auto; padding:1.8rem 1.3rem 3rem; }
+  body.class-mode .page{ max-width:1180px; }
+  .ol{ text-decoration:overline; text-decoration-thickness:1.5px; }
+
+  .top{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.8rem; margin-bottom:1rem; }
+  h1{ font-family:Cambria,Georgia,'Times New Roman',serif; font-size:clamp(1.4rem,3.5vw,1.9rem); margin:0; font-weight:700; color:var(--navy-dark); }
+  .sub-toggle{ display:inline-flex; background:#E7ECF5; border-radius:999px; padding:4px; gap:2px; }
+  .sub-toggle button{ border:none; background:transparent; font-family:inherit; font-size:.86rem; font-weight:700; color:var(--muted); padding:.42rem 1rem; border-radius:999px; cursor:pointer; }
+  .sub-toggle button.active{ background:var(--navy); color:#fff; }
+
+  .dots{ display:flex; gap:.45rem; margin-bottom:1rem; flex-wrap:wrap; }
+  .dot{ width:2rem; height:.55rem; border-radius:999px; background:var(--border); border:none; padding:0; }
+  .dot.done{ background:var(--teal); }
+  .dot.bridge{ background:#F5DDB3; }
+  .dot.bridge.done{ background:var(--amber); }
+  .dot.current{ outline:3px solid var(--navy); outline-offset:2px; }
+  body.class-mode .dot{ cursor:pointer; }
+
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; padding:1.6rem 1.7rem; box-shadow:0 1px 2px rgba(18,28,51,.04), 0 10px 28px rgba(18,28,51,.06); }
+  body.class-mode .card{ padding:2.2rem 2.6rem; }
+
+  .chip{ display:inline-block; font-size:.74rem; font-weight:700; letter-spacing:.06em; padding:.25rem .7rem; border-radius:999px; margin-bottom:.9rem; }
+  .chip.recap{ background:#DFF0F6; color:var(--teal-dark); }
+  .chip.bridge{ background:#FFF1DC; color:var(--amber-dark); }
+  .chip .num{ opacity:.7; margin-left:.4rem; }
+
+  .q-text{ font-family:Cambria,Georgia,serif; font-size:1.35rem; line-height:1.35; font-weight:700; color:var(--navy-dark); margin:0 0 1rem; }
+  body.class-mode .q-text{ font-size:clamp(1.6rem,3vw,2.3rem); }
+
+  .visual{ margin:0 0 1.2rem; }
+  .qlayout{ display:grid; grid-template-columns:auto 1fr; gap:1.8rem; align-items:start; margin-bottom:.2rem; }
+  .qlayout .visual{ margin:0; }
+  @media (max-width:760px){ .qlayout{ grid-template-columns:1fr; } }
+  body.class-mode .qlayout table.tt th, body.class-mode .qlayout table.tt td{ padding:.4rem 1.2rem; font-size:1.3rem; }
+  table.tt{ border-collapse:collapse; }
+  table.tt th, table.tt td{ border:1px solid var(--border); text-align:center; padding:.4rem 1rem; min-width:3rem; font-size:1.05rem; }
+  table.tt thead th{ background:var(--navy); color:#fff; }
+  table.tt tbody tr:nth-child(even) td{ background:#F5F8FC; }
+  table.tt td.q{ color:var(--amber-dark); font-weight:700; }
+  body.class-mode table.tt th, body.class-mode table.tt td{ font-size:1.4rem; padding:.5rem 1.4rem; }
+
+  .options{ display:grid; grid-template-columns:1fr 1fr; gap:.8rem; }
+  @media (max-width:640px){ .options{ grid-template-columns:1fr; } }
+  .option{
+    display:flex; align-items:center; gap:.8rem; text-align:left;
+    border:2px solid var(--border); background:#fff; color:var(--navy); font-family:inherit;
+    font-size:1.05rem; font-weight:600; padding:.85rem 1rem; border-radius:12px; cursor:pointer;
+    transition:border-color .12s ease, background .12s ease, opacity .2s ease;
+  }
+  body.class-mode .option{ font-size:1.4rem; padding:1.05rem 1.3rem; cursor:default; }
+  .option .letter{ flex:none; width:2rem; height:2rem; border-radius:50%; background:#E7ECF5; color:var(--navy); display:flex; align-items:center; justify-content:center; font-size:.9rem; font-weight:700; }
+  body.class-mode .option .letter{ width:2.5rem; height:2.5rem; font-size:1.1rem; }
+  body:not(.class-mode) .option:not(:disabled):hover{ border-color:var(--teal); }
+  .option:disabled{ cursor:default; }
+  .option.correct{ border-color:var(--green); background:var(--green-bg); }
+  .option.correct .letter{ background:var(--green); color:#fff; }
+  .option.wrong{ border-color:var(--red); background:var(--red-bg); }
+  .option.wrong .letter{ background:var(--red); color:#fff; }
+  .option.dim{ opacity:.45; }
+
+  .why{ margin-top:1.1rem; padding:.95rem 1.15rem; background:#EAF3FF; border-left:5px solid var(--teal); border-radius:8px; font-size:1rem; line-height:1.5; color:var(--navy); }
+  .why.bridge{ background:#FFF4E2; border-left-color:var(--amber); }
+  body.class-mode .why{ font-size:1.25rem; }
+
+  .controls{ display:flex; gap:.6rem; margin-top:1.3rem; flex-wrap:wrap; align-items:center; }
+  .btn{ border:none; font-family:inherit; font-weight:700; font-size:.95rem; padding:.65rem 1.4rem; border-radius:999px; cursor:pointer; }
+  body.class-mode .btn{ font-size:1.1rem; padding:.8rem 1.7rem; }
+  .btn.primary{ background:var(--teal); color:#fff; }
+  .btn.primary:hover{ background:var(--teal-dark); }
+  .btn.amber{ background:var(--amber); color:var(--navy-dark); }
+  .btn.ghost{ background:#fff; border:1.5px solid var(--border); color:var(--muted); }
+  .btn.ghost:hover{ border-color:var(--teal); color:var(--teal-dark); }
+  .hint{ font-size:.82rem; color:var(--muted); margin-left:auto; }
+
+  .countdown{ display:none; font-family:Cambria,Georgia,serif; font-weight:700; color:var(--amber-dark); font-size:3.4rem; line-height:1; margin:.2rem 0 .8rem; }
+  .countdown.show{ display:block; animation:pop .5s ease; }
+  @keyframes pop{ from{ transform:scale(.6); opacity:0;} to{ transform:scale(1); opacity:1;} }
+
+  .end h2{ font-family:Cambria,Georgia,serif; font-size:1.6rem; margin:0 0 .5rem; color:var(--navy-dark); }
+  .end p{ color:var(--muted); font-size:1.05rem; line-height:1.55; margin:0 0 1rem; }
+  .score{ font-family:Cambria,Georgia,serif; font-size:3rem; font-weight:700; color:var(--teal-dark); margin:.2rem 0 .6rem; }
+  .missed{ margin:0 0 1rem; padding:0; list-style:none; display:flex; flex-direction:column; gap:.5rem; }
+  .missed li{ background:#F5F8FC; border:1px solid var(--border); border-radius:10px; padding:.7rem .9rem; font-size:.95rem; }
+  .missed li strong{ color:var(--green); }
+  body.class-mode .end h2{ font-size:2.2rem; }
+  body.class-mode .end p{ font-size:1.35rem; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <h1>Starter: Lesson 1 recap</h1>
+    <div class="sub-toggle" id="mode-toggle">
+      <button data-mode="class" class="active">Class (projector)</button>
+      <button data-mode="solo">On my own</button>
+    </div>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+(function(){
+  function bar(l){ return '<span class="ol">'+l+'</span>'; }
+  var X = '\u2295';
+
+  var QUESTIONS = [
+    { tag:'recap', q:'What order do you evaluate a Boolean expression in?',
+      opts:['Brackets \u2192 NOT \u2192 AND \u2192 OR','Brackets \u2192 AND \u2192 NOT \u2192 OR','NOT \u2192 Brackets \u2192 OR \u2192 AND','Brackets \u2192 OR \u2192 AND \u2192 NOT'], correct:0,
+      why:'Brackets first, then NOT, then AND, then OR \u2014 just like BIDMAS, with AND acting like \u00d7 and OR acting like +.' },
+    { tag:'recap', q:'How many rows does a truth table need for 3 inputs?',
+      opts:['3','6','8','9'], correct:2,
+      why:'The number of rows is 2<sup>n</sup>. With 3 inputs that\u2019s 2<sup>3</sup> = 8 rows, from 000 up to 111.' },
+    { tag:'recap', q:'A = 1 and B = 0. Which of these give 1?',
+      opts:['A . B only','A + B only','A + B and A '+X+' B','A . B and A '+X+' B'], correct:2,
+      why:'AND needs both inputs to be 1, so A . B = 0. OR is 1 when at least one input is 1, and XOR is 1 when the inputs are different \u2014 so both of those give 1.' },
+    { tag:'recap', q:'A = 1, B = 0 and C = 0. Which expression gives 1?',
+      opts:['(A + B) . C','A . B + C','A + B . C','A . (B + C)'], correct:2,
+      why:'AND is worked out before OR, so A + B . C = 1 + (0 . 0) = 1. The other three all work out to 0.' },
+    { tag:'recap', q:'Using \u201cfind the 1s\u201d: what is the term for the only row where the output is 1?',
+      visual:'table1',
+      opts:['A . B','A . '+bar('B'), bar('A')+' . B', bar('A')+' . '+bar('B')], correct:2,
+      why:'The 1-row is A = 0, B = 1. Use the letter if the input is 1 and NOT the letter if it is 0: '+bar('A')+' . B.' },
+    { tag:'recap', q:'Counting up in binary, what should the next row of this table be?',
+      visual:'table2',
+      opts:['1 0 1','1 0 0','1 1 0','1 1 1'], correct:1,
+      why:'Keep counting in binary: 011 is followed by 100. Listing rows systematically means you never miss or repeat one.' },
+    { tag:'bridge', q:'Bridge to today: what is A . 1 ?',
+      opts:['1','A','0','NOT A'], correct:1,
+      why:'ANDing with 1 leaves A unchanged. In a mask, a 1 means \u201ckeep this bit\u201d \u2014 and this is the Identity law: A . 1 = A.' },
+    { tag:'bridge', q:'Bridge to today: what is A . 0 ?',
+      opts:['A','1','0','NOT A'], correct:2,
+      why:'ANDing with 0 always gives 0, whatever A is. In a mask, a 0 means \u201cclear this bit\u201d \u2014 and this is the Annulment law: A . 0 = 0.' }
+  ];
+
+  var VISUALS = {
+    table1: '<table class="tt"><thead><tr><th>A</th><th>B</th><th>Output</th></tr></thead><tbody>' +
+            '<tr><td>0</td><td>0</td><td>0</td></tr><tr><td>0</td><td>1</td><td>1</td></tr>' +
+            '<tr><td>1</td><td>0</td><td>0</td></tr><tr><td>1</td><td>1</td><td>0</td></tr></tbody></table>',
+    table2: '<table class="tt"><thead><tr><th>A</th><th>B</th><th>C</th></tr></thead><tbody>' +
+            '<tr><td>0</td><td>0</td><td>0</td></tr><tr><td>0</td><td>0</td><td>1</td></tr>' +
+            '<tr><td>0</td><td>1</td><td>0</td></tr><tr><td>0</td><td>1</td><td>1</td></tr>' +
+            '<tr><td class="q">?</td><td class="q">?</td><td class="q">?</td></tr></tbody></table>'
+  };
+
+  var LETTERS = ['A','B','C','D'];
+  var state = { mode:'class', order:[], pos:0, revealed:false, chosen:null, answers:{}, ended:false, cdTimer:null };
+
+  var cardEl = document.getElementById('card');
+  var dotsEl = document.getElementById('dots');
+
+  function startRun(indices){
+    clearCountdown();
+    state.order = indices || QUESTIONS.map(function(_, i){ return i; });
+    state.pos = 0; state.revealed = false; state.chosen = null; state.ended = false;
+    if(!indices) state.answers = {};
+    render();
+  }
+
+  function clearCountdown(){ if(state.cdTimer){ clearTimeout(state.cdTimer); state.cdTimer = null; } }
+
+  function currentQ(){ return QUESTIONS[state.order[state.pos]]; }
+
+  function renderDots(){
+    dotsEl.innerHTML = '';
+    state.order.forEach(function(qi, p){
+      var d = document.createElement('button');
+      d.type = 'button';
+      d.className = 'dot' + (QUESTIONS[qi].tag === 'bridge' ? ' bridge' : '') + (p < state.pos || state.ended ? ' done' : '') + (p === state.pos && !state.ended ? ' current' : '');
+      d.setAttribute('aria-label', 'Question ' + (p+1));
+      if(state.mode === 'class'){ d.addEventListener('click', function(){ clearCountdown(); state.pos = p; state.revealed = false; state.ended = false; render(); }); }
+      else { d.style.cursor = 'default'; d.tabIndex = -1; }
+      dotsEl.appendChild(d);
+    });
+  }
+
+  function render(){
+    document.body.classList.toggle('class-mode', state.mode === 'class');
+    document.querySelectorAll('#mode-toggle button').forEach(function(b){ b.classList.toggle('active', b.dataset.mode === state.mode); });
+    renderDots();
+    if(state.ended){ renderEnd(); return; }
+
+    var q = currentQ();
+    var isBridge = q.tag === 'bridge';
+    var html = '<div class="chip ' + q.tag + '">' + (isBridge ? 'BRIDGE TO TODAY' : 'RECAP') +
+               '<span class="num">' + (state.pos+1) + ' of ' + state.order.length + '</span></div>' +
+               '';
+    var main = '<p class="q-text">' + q.q + '</p><div class="cd countdown" id="cd"></div><div class="options" id="options"></div>';
+    if(q.visual) html += '<div class="qlayout"><div class="visual">' + VISUALS[q.visual] + '</div><div class="qmain">' + main + '</div></div>';
+    else html += main;
+    html += '<div id="why"></div>';
+    html += '<div class="controls" id="controls"></div>';
+    cardEl.innerHTML = html;
+
+    var optsEl = document.getElementById('options');
+    q.opts.forEach(function(o, i){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'option';
+      b.innerHTML = '<span class="letter">' + LETTERS[i] + '</span><span>' + o + '</span>';
+      var answered = state.mode === 'solo' && state.chosen !== null;
+      if(state.mode === 'class' || answered) b.disabled = true;
+      if(state.revealed){
+        if(i === q.correct) b.classList.add('correct');
+        else if(state.mode === 'solo' && i === state.chosen) b.classList.add('wrong');
+        else b.classList.add('dim');
+      }
+      if(state.mode === 'solo'){
+        b.addEventListener('click', function(){ choose(i); });
+      }
+      optsEl.appendChild(b);
+    });
+
+    if(state.revealed){
+      document.getElementById('why').innerHTML = '<div class="why' + (isBridge ? ' bridge' : '') + '">' + q.why + '</div>';
+    }
+    renderControls(q);
+  }
+
+  function renderControls(q){
+    var c = document.getElementById('controls');
+    c.innerHTML = '';
+    var isLast = state.pos === state.order.length - 1;
+    function btn(label, cls, fn){ var b = document.createElement('button'); b.type='button'; b.className='btn '+cls; b.textContent=label; b.addEventListener('click', fn); c.appendChild(b); return b; }
+
+    if(state.mode === 'class'){
+      if(!state.revealed){
+        btn('3 \u00b7 2 \u00b7 1', 'amber', startCountdown);
+        btn('Reveal answer', 'primary', reveal);
+        var h = document.createElement('span'); h.className = 'hint'; h.textContent = 'Space = reveal, then next'; c.appendChild(h);
+      } else {
+        btn(isLast ? 'Finish' : 'Next question \u2192', 'primary', next);
+        var h2 = document.createElement('span'); h2.className = 'hint'; h2.textContent = 'Space = next'; c.appendChild(h2);
+      }
+    } else if(state.revealed){
+      btn(isLast ? 'See my score' : 'Next question \u2192', 'primary', next);
+    }
+  }
+
+  function startCountdown(){
+    clearCountdown();
+    var cd = document.getElementById('cd');
+    var steps = ['3','2','1','Boards up!'];
+    var i = 0;
+    function tick(){
+      var el = document.getElementById('cd'); if(!el) return;
+      el.classList.remove('show'); void el.offsetWidth;
+      el.textContent = steps[i]; el.classList.add('show');
+      i++;
+      if(i < steps.length) state.cdTimer = setTimeout(tick, 900);
+      else state.cdTimer = null;
+    }
+    tick();
+  }
+
+  function reveal(){ clearCountdown(); state.revealed = true; render(); }
+
+  function choose(i){
+    if(state.chosen !== null) return;
+    state.chosen = i; state.revealed = true;
+    state.answers[state.order[state.pos]] = (i === currentQ().correct);
+    render();
+  }
+
+  function next(){
+    clearCountdown();
+    if(state.pos >= state.order.length - 1){ state.ended = true; }
+    else { state.pos++; state.revealed = false; state.chosen = null; }
+    render();
+  }
+
+  function renderEnd(){
+    if(state.mode === 'class'){
+      cardEl.innerHTML = '<div class="end"><h2>That\u2019s the recap.</h2>' +
+        '<p>Notice what AND did with a 1 and with a 0 \u2014 that\u2019s exactly how masks work. Today: <strong>masking, clearing registers</strong> and the <strong>Boolean laws</strong>.</p>' +
+        '<div class="controls"><button class="btn ghost" id="restart">Restart</button></div></div>';
+      document.getElementById('restart').addEventListener('click', function(){ startRun(); });
+      return;
+    }
+    var total = state.order.length;
+    var right = state.order.filter(function(qi){ return state.answers[qi]; }).length;
+    var missed = state.order.filter(function(qi){ return !state.answers[qi]; });
+    var html = '<div class="end"><h2>Your score</h2><div class="score">' + right + ' / ' + total + '</div>';
+    if(missed.length === 0){
+      html += '<p>Full marks \u2014 you\u2019re ready for masking, clearing and the Boolean laws.</p>';
+    } else {
+      html += '<p>Have another look at these:</p><ul class="missed">';
+      missed.forEach(function(qi){
+        var q = QUESTIONS[qi];
+        html += '<li>' + q.q + '<br><strong>' + q.opts[q.correct] + '</strong></li>';
+      });
+      html += '</ul>';
+    }
+    html += '<div class="controls">';
+    if(missed.length) html += '<button class="btn primary" id="retry">Retry the ones I missed</button>';
+    html += '<button class="btn ghost" id="again">Start again</button></div></div>';
+    cardEl.innerHTML = html;
+    var retry = document.getElementById('retry');
+    if(retry) retry.addEventListener('click', function(){ startRun(missed); });
+    document.getElementById('again').addEventListener('click', function(){ startRun(); });
+  }
+
+  document.querySelectorAll('#mode-toggle button').forEach(function(b){
+    b.addEventListener('click', function(){ state.mode = b.dataset.mode; startRun(); });
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(state.mode !== 'class' || state.ended) return;
+    if(e.code === 'Space' || e.code === 'ArrowRight' || e.code === 'Enter'){
+      e.preventDefault();
+      if(!state.revealed) reveal(); else next();
+    }
+  });
+
+  startRun();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,663 @@
+<title>Handshake Sequence Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --ink: #16202B;
+    --slate: #2B3A4A;
+    --copper: #D9822B;
+    --copper-lt: #F6E3CF;
+    --copper-ink: #7A4512;
+    --paper: #FFFFFF;
+    --mist: #EEF2F5;
+    --mist-2: #E3E9EE;
+    --text: #1F2933;
+    --muted: #5C6B7A;
+    --line: #C9D3DC;
+    --green: #2F7A4E;
+    --green-lt: #DDEFE3;
+    --red: #B3412F;
+    --red-lt: #F4DCD7;
+    --blue: #2F6DB5;
+    --blue-lt: #DCE8F7;
+
+    --bg: var(--mist);
+    --surface: var(--paper);
+    --surface-2: var(--mist);
+    --ink-on-surface: var(--ink);
+    --text-on-surface: var(--text);
+    --muted-on-surface: var(--muted);
+    --line-on-surface: var(--line);
+
+    --step-bg: var(--paper);
+    --step-line: var(--line);
+    --step-fg: var(--ink);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E151D;
+      --surface: #182330;
+      --surface-2: #1F2C3A;
+      --ink-on-surface: #F3F6F8;
+      --text-on-surface: #DDE4EA;
+      --muted-on-surface: #93A2B0;
+      --line-on-surface: #33455A;
+      --copper-lt: #4A3620;
+      --copper-ink: #F0B274;
+      --green-lt: #1E3A2A;
+      --red-lt: #402420;
+      --blue-lt: #1D3149;
+
+      --step-bg: #1F2C3A;
+      --step-line: #33455A;
+      --step-fg: #F3F6F8;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0E151D;
+    --surface: #182330;
+    --surface-2: #1F2C3A;
+    --ink-on-surface: #F3F6F8;
+    --text-on-surface: #DDE4EA;
+    --muted-on-surface: #93A2B0;
+    --line-on-surface: #33455A;
+    --copper-lt: #4A3620;
+    --copper-ink: #F0B274;
+    --green-lt: #1E3A2A;
+    --red-lt: #402420;
+    --blue-lt: #1D3149;
+
+    --step-bg: #1F2C3A;
+    --step-line: #33455A;
+    --step-fg: #F3F6F8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-on-surface);
+    font-family: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+    padding: clamp(16px, 3vw, 40px);
+    padding-block: clamp(20px, 4vw, 48px);
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; }
+
+  header.page {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", "Courier New", monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--copper-ink);
+    background: var(--copper-lt);
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-size: clamp(24px, 3.4vw, 32px);
+    margin: 0 0 6px;
+    text-wrap: balance;
+    color: var(--ink-on-surface);
+  }
+
+  .sub { color: var(--muted-on-surface); font-size: 14.5px; max-width: 58ch; line-height: 1.5; margin: 0; }
+
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding-top: 4px;
+  }
+
+  .dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--surface-2);
+    color: var(--muted-on-surface);
+    border: 1.5px solid var(--line-on-surface);
+    transition: background .25s, color .25s, border-color .25s;
+  }
+  .dot.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .dot.active { background: var(--copper); border-color: var(--copper); color: #fff; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line-on-surface);
+    border-radius: 14px;
+    padding: clamp(18px, 3vw, 28px);
+    margin-bottom: 18px;
+  }
+
+  .round-tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-on-surface);
+    margin-bottom: 6px;
+  }
+
+  .round-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink-on-surface);
+    margin: 0 0 10px;
+  }
+
+  .situation {
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text-on-surface);
+    font-style: italic;
+    border-left: 3px solid var(--copper);
+    margin-bottom: 6px;
+  }
+
+  .instructions {
+    font-size: 13px;
+    color: var(--muted-on-surface);
+    margin: 14px 0 4px;
+  }
+
+  .step-list { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
+
+  .step-tile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--step-bg);
+    border: 1.5px solid var(--step-line);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--step-fg);
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color .15s, background .15s, transform .1s;
+  }
+  .step-tile:hover:not(:disabled) { border-color: var(--copper); }
+  .step-tile:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+  .step-tile:active:not(:disabled) { transform: translateY(1px); }
+  .step-tile:disabled { cursor: default; }
+
+  .step-tile.selected { border-color: var(--copper); box-shadow: 0 0 0 1px var(--copper) inset; background: var(--copper-lt); }
+  .step-tile.correct { border-color: var(--green); background: var(--green-lt); box-shadow: 0 0 0 1px var(--green) inset; }
+  .step-tile.wrong { border-color: var(--red); background: var(--red-lt); box-shadow: 0 0 0 1px var(--red) inset; }
+  .step-tile.neutral-locked { opacity: 0.7; }
+
+  .pos-badge {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--ink-on-surface);
+    color: var(--surface);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .step-tile.correct .pos-badge { background: var(--green); }
+  .step-tile.wrong .pos-badge { background: var(--red); }
+
+  .step-text { flex: 1; }
+
+  .swap-hint {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px;
+    color: var(--muted-on-surface);
+    letter-spacing: 0.03em;
+  }
+
+  .controls { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  button.primary {
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background: var(--copper);
+    color: #2B1400;
+    cursor: pointer;
+  }
+  button.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.primary:hover:not(:disabled) { filter: brightness(1.06); }
+
+  button.ghost {
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1.5px solid var(--line-on-surface);
+    background: transparent;
+    color: var(--text-on-surface);
+    cursor: pointer;
+  }
+  button.ghost:hover { border-color: var(--copper); }
+
+  .feedback {
+    margin-top: 14px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .feedback.good { background: var(--green-lt); color: var(--text-on-surface); border-left: 3px solid var(--green); }
+  .feedback.bad { background: var(--red-lt); color: var(--text-on-surface); border-left: 3px solid var(--red); }
+  .feedback strong { color: var(--ink-on-surface); }
+
+  .why-box {
+    margin-top: 14px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    background: var(--blue-lt);
+    border-left: 3px solid var(--blue);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .why-box strong { color: var(--ink-on-surface); }
+
+  .status-line {
+    font-size: 12.5px;
+    color: var(--muted-on-surface);
+    margin-top: 14px;
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  /* Summary screen */
+  .summary-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 18px 0 22px;
+  }
+  .tile {
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .tile .num { font-family: "IBM Plex Mono", monospace; font-size: 28px; font-weight: 700; color: var(--copper-ink); }
+  .tile .lbl { font-size: 12.5px; color: var(--muted-on-surface); margin-top: 2px; }
+
+  .review-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--line-on-surface);
+    font-size: 14px;
+  }
+  .review-row:last-child { border-bottom: none; }
+  .review-badge {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    color: #fff;
+  }
+  .review-badge.first { background: var(--green); }
+  .review-badge.retry { background: var(--copper); }
+  .review-name { font-weight: 600; color: var(--ink-on-surface); }
+  .review-device { color: var(--muted-on-surface); font-size: 13px; }
+
+  footer.page {
+    margin-top: 26px;
+    font-size: 12.5px;
+    color: var(--muted-on-surface);
+    text-align: center;
+  }
+
+  @media (max-width: 520px) {
+    .step-tile { font-size: 13.5px; padding: 11px 12px; gap: 10px; }
+    .swap-hint { display: none; }
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap">
+
+<div class="wrap">
+  <header class="page">
+    <div>
+      <div class="eyebrow">AS Unit 1 · Topic 1 · 1.7.4</div>
+      <h1>Handshake Sequence Builder</h1>
+      <p class="sub">Three shuffled handshakes. Tap two steps to swap them into the right order, then check — if it's wrong, you'll see exactly where the sequence breaks.</p>
+    </div>
+    <div class="progress-wrap" id="progressWrap" aria-hidden="true"></div>
+  </header>
+
+  <main id="app"></main>
+
+  <footer class="page">AS Computer Science · Unit 1 · Topic 1 Hardware &amp; Communication · Lesson 04</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var ROUNDS = [
+    {
+      title: "Two Computers on an Office Network",
+      situation: "A desktop computer needs to send a file to a printer's networked storage controller. Before any data moves, the two devices need to agree they're both ready.",
+      steps: [
+        { id: "a1", text: "Device A sends a signal asking to start communicating", why: "Nothing else can happen until one device actually asks to communicate — this is what starts the whole exchange." },
+        { id: "a2", text: "Device B receives the signal and checks it is able to communicate right now", why: "Device B has to know a request has arrived, and check it can actually accept it, before it can reply to anything." },
+        { id: "a3", text: "Device B sends a response back agreeing to communicate", why: "Device B can't agree to something until it has received and checked the request — the response depends on that check happening first." },
+        { id: "a4", text: "Device A receives the response and confirms the connection", why: "Device A can only confirm once it has actually heard back from Device B — confirming before a response arrives would mean confirming nothing." },
+        { id: "a5", text: "Both devices begin exchanging data", why: "Real data is only sent once both sides have confirmed they're ready — sending data any earlier risks it being lost or misread." }
+      ],
+      why: "If Device A started sending the file before Device B had agreed it was ready, the data could arrive at a controller that isn't listening yet — and it would simply be lost."
+    },
+    {
+      title: "A Laptop Joining a Wi-Fi Network",
+      situation: "A laptop is switched on in a new building and tries to join the office Wi-Fi network so it can reach the internet.",
+      steps: [
+        { id: "b1", text: "The laptop sends a request to join the network", why: "The laptop has to signal that it wants to connect before the router can do anything at all." },
+        { id: "b2", text: "The router receives the request and checks it can accept another device", why: "The router needs to know a request exists, and confirm it has room and the right settings, before it can respond." },
+        { id: "b3", text: "The router sends a response confirming it is ready to accept the laptop", why: "The router can't confirm it's ready until after it has actually checked — the response is the result of that check, not before it." },
+        { id: "b4", text: "The laptop receives the response and confirms the connection", why: "The laptop can only confirm the connection once it has heard back from the router — there's nothing to confirm before that." },
+        { id: "b5", text: "The laptop and router can now send data back and forth", why: "Browsing, streaming or any other data transfer only starts once both sides have confirmed the connection is genuinely ready." }
+      ],
+      why: "If the laptop tried to send data before the router had confirmed the connection, the router might not even be listening for it yet — the request would go nowhere."
+    },
+    {
+      title: "A Phone Pairing with a Bluetooth Speaker",
+      situation: "Someone wants to play music from their phone through a portable Bluetooth speaker they've just switched on.",
+      steps: [
+        { id: "c1", text: "The phone signals that it wants to pair with the speaker", why: "Pairing can't begin until the phone actually signals it wants to connect to this specific speaker." },
+        { id: "c2", text: "The speaker receives the signal and checks it is available to pair", why: "The speaker has to notice the pairing signal and check it isn't already busy with another device before it can respond." },
+        { id: "c3", text: "The speaker sends a response back saying it is ready to pair", why: "The speaker can only say it's ready after it has checked its own availability — the response comes from that check, not before it." },
+        { id: "c4", text: "The phone receives the response and confirms the pairing", why: "The phone can't confirm a pairing it hasn't heard back about — confirmation depends on the speaker's response arriving first." },
+        { id: "c5", text: "Audio can now stream from the phone to the speaker", why: "Streaming only starts once the pairing is fully confirmed on both sides — starting earlier risks the audio going to a speaker that isn't ready to receive it." }
+      ],
+      why: "If the phone started streaming audio before the speaker had confirmed the pairing, the speaker might not be listening yet and the connection would simply fail."
+    }
+  ];
+
+  var state = {
+    idx: 0,
+    order: [],
+    selected: null,
+    locked: false,
+    firstTry: true,
+    attempted: false,
+    results: [] // {firstTry, title}
+  };
+
+  var app = document.getElementById("app");
+  var progressWrap = document.getElementById("progressWrap");
+
+  function shuffledOrder(steps) {
+    var ids = steps.map(function (s) { return s.id; });
+    var correct = ids.slice();
+    var attempt = 0;
+    do {
+      for (var i = ids.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = ids[i]; ids[i] = ids[j]; ids[j] = tmp;
+      }
+      attempt++;
+    } while (arraysEqual(ids, correct) && attempt < 20);
+    return ids;
+  }
+
+  function arraysEqual(a, b) {
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+
+  function stepById(steps, id) {
+    for (var i = 0; i < steps.length; i++) if (steps[i].id === id) return steps[i];
+    return null;
+  }
+
+  function renderProgress() {
+    progressWrap.innerHTML = "";
+    ROUNDS.forEach(function (r, i) {
+      var d = document.createElement("div");
+      d.className = "dot" + (i < state.results.length ? " done" : i === state.idx && state.idx < ROUNDS.length ? " active" : "");
+      d.textContent = i + 1;
+      progressWrap.appendChild(d);
+    });
+  }
+
+  function resetRoundState() {
+    var round = ROUNDS[state.idx];
+    state.order = shuffledOrder(round.steps);
+    state.selected = null;
+    state.locked = false;
+    state.firstTry = true;
+    state.attempted = false;
+  }
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function correctIds(round) {
+    return round.steps.map(function (s) { return s.id; });
+  }
+
+  function firstBreakIndex(round) {
+    var correct = correctIds(round);
+    for (var i = 0; i < correct.length; i++) {
+      if (state.order[i] !== correct[i]) return i;
+    }
+    return -1;
+  }
+
+  function renderRound() {
+    var round = ROUNDS[state.idx];
+    app.innerHTML = "";
+
+    var card = el("div", "card");
+
+    card.appendChild(el("div", "round-tag", "Handshake " + (state.idx + 1) + " of " + ROUNDS.length));
+    card.appendChild(el("h2", "round-title", round.title));
+    card.appendChild(el("div", "situation", round.situation));
+
+    if (!state.locked) {
+      card.appendChild(el("p", "instructions", "Tap one step, then tap another to swap them, until the sequence is in the correct order."));
+    }
+
+    var breakIdx = state.locked ? firstBreakIndex(round) : -1;
+    var success = state.locked && breakIdx === -1;
+
+    var list = el("div", "step-list");
+    state.order.forEach(function (id, i) {
+      var s = stepById(round.steps, id);
+      var b = el("button", "step-tile");
+      b.type = "button";
+      b.disabled = state.locked;
+
+      var posBadge = '<span class="pos-badge">' + (i + 1) + '</span>';
+      var textSpan = '<span class="step-text">' + s.text + '</span>';
+      var hint = (!state.locked) ? '<span class="swap-hint">tap to select / swap</span>' : '';
+      b.innerHTML = posBadge + textSpan + hint;
+
+      if (!state.locked && state.selected === i) b.classList.add("selected");
+
+      if (state.locked) {
+        if (success) {
+          b.classList.add("correct");
+        } else if (i < breakIdx) {
+          b.classList.add("correct");
+        } else if (i === breakIdx) {
+          b.classList.add("wrong");
+        } else {
+          b.classList.add("neutral-locked");
+        }
+      }
+
+      b.addEventListener("click", function () {
+        if (state.locked) return;
+        if (state.selected === null) {
+          state.selected = i;
+        } else if (state.selected === i) {
+          state.selected = null;
+        } else {
+          var tmp = state.order[state.selected];
+          state.order[state.selected] = state.order[i];
+          state.order[i] = tmp;
+          state.selected = null;
+        }
+        renderRound();
+      });
+
+      list.appendChild(b);
+    });
+    card.appendChild(list);
+
+    if (!state.locked) {
+      var controls = el("div", "controls");
+      var checkBtn = el("button", "primary", "Check sequence");
+      checkBtn.addEventListener("click", function () {
+        state.locked = true;
+        state.attempted = true;
+        if (firstBreakIndex(round) !== -1) state.firstTry = false;
+        renderRound();
+      });
+      controls.appendChild(checkBtn);
+      card.appendChild(controls);
+    } else if (success) {
+      var fbGood = el("div", "feedback good",
+        "<strong>Correct order.</strong> Every step happens in the right place — a request, a check, a response, a confirmation, then data.");
+      card.appendChild(fbGood);
+      var whyBox = el("div", "why-box", "<strong>Why order matters:</strong> " + round.why);
+      card.appendChild(whyBox);
+
+      var nextWrap = el("div", "controls");
+      var nextLabel = state.idx === ROUNDS.length - 1 ? "See summary" : "Next handshake";
+      var nextBtn = el("button", "primary", nextLabel);
+      nextBtn.addEventListener("click", function () {
+        state.results.push({ firstTry: state.firstTry, title: round.title });
+        state.idx++;
+        if (state.idx >= ROUNDS.length) {
+          renderSummary();
+        } else {
+          resetRoundState();
+          renderRound();
+        }
+      });
+      nextWrap.appendChild(nextBtn);
+      card.appendChild(nextWrap);
+    } else {
+      var breakStep = stepById(round.steps, correctIds(round)[breakIdx]);
+      var fbBad = el("div", "feedback bad",
+        "<strong>Not quite — position " + (breakIdx + 1) + " is where it breaks.</strong> The step that belongs there is: “" + breakStep.text + "”. " + breakStep.why);
+      card.appendChild(fbBad);
+
+      var retryWrap = el("div", "controls");
+      var retryBtn = el("button", "ghost", "Keep adjusting");
+      retryBtn.addEventListener("click", function () {
+        state.locked = false;
+        state.selected = null;
+        renderRound();
+      });
+      retryWrap.appendChild(retryBtn);
+      card.appendChild(retryWrap);
+    }
+
+    app.appendChild(card);
+    var status = el("div", "status-line",
+      "Handshake " + (state.idx + 1) + " of " + ROUNDS.length + (state.locked ? (success ? " · sequence correct" : " · check the highlighted step") : " · arrange the steps, then check"));
+    app.appendChild(status);
+
+    renderProgress();
+  }
+
+  function renderSummary() {
+    app.innerHTML = "";
+    progressWrap.innerHTML = "";
+    renderProgress();
+
+    var firstTryCount = state.results.filter(function (r) { return r.firstTry; }).length;
+
+    var card = el("div", "card");
+    card.appendChild(el("div", "round-tag", "Complete"));
+    card.appendChild(el("h2", "round-title", "All three handshakes built"));
+
+    var tiles = el("div", "summary-tiles");
+    var t1 = el("div", "tile");
+    t1.innerHTML = '<div class="num">' + firstTryCount + ' / ' + ROUNDS.length + '</div><div class="lbl">correct first try</div>';
+    var t2 = el("div", "tile");
+    t2.innerHTML = '<div class="num">' + ROUNDS.length + ' / ' + ROUNDS.length + '</div><div class="lbl">handshakes completed</div>';
+    tiles.appendChild(t1);
+    tiles.appendChild(t2);
+    card.appendChild(tiles);
+
+    card.appendChild(el("div", "round-tag", "Your run, handshake by handshake"));
+    var list = el("div");
+    state.results.forEach(function (r, i) {
+      var row = el("div", "review-row");
+      var badgeClass = r.firstTry ? "first" : "retry";
+      var badgeText = r.firstTry ? "✓" : "↺";
+      row.innerHTML =
+        '<span class="review-badge ' + badgeClass + '">' + badgeText + '</span>' +
+        '<span><span class="review-name">' + (i + 1) + '. ' + r.title + '</span><br>' +
+        '<span class="review-device">' + (r.firstTry ? "Correct order first try" : "Needed adjusting before it was right") + '</span></span>';
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+
+    var whyBox = el("div", "why-box",
+      "<strong>The pattern across all three:</strong> request, check, response, confirm, then data. Skip a step or jump ahead and one device ends up sending information the other isn't ready to receive.");
+    card.appendChild(whyBox);
+
+    var controls = el("div", "controls");
+    var restart = el("button", "primary", "Restart");
+    restart.addEventListener("click", function () {
+      state = { idx: 0, order: [], selected: null, locked: false, firstTry: true, attempted: false, results: [] };
+      resetRoundState();
+      renderRound();
+    });
+    controls.appendChild(restart);
+    card.appendChild(controls);
+
+    app.appendChild(card);
+  }
+
+  resetRoundState();
+  renderRound();
+})();
+</script>

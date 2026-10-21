@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The journey of a packet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5F8; --panel:#FFFFFF; --ink:#14213D; --muted:#55627A; --line:#D5DDE6;
+  --navy:#1B2A4A; --teal:#0F8B8D; --orange:#E8791F; --bad:#C4342D; --good:#1E7F48; --green:#2E8B57;
+  --soft:#E9EEF3; --onaccent:#FFFFFF; --u1:#0F8B8D; --u2:#1B2A4A; --u3:#E8791F; --u4:#7B4FA0;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1726; --panel:#17223A; --ink:#E8EDF5; --muted:#9AA8BF; --line:#2B3A56;
+    --navy:#8FB0E8; --teal:#3CC4C2; --orange:#F5A04D; --bad:#F07167; --good:#5BD08D; --green:#5BD08D;
+    --soft:#1E2B46; --onaccent:#0F1726; --u1:#3CC4C2; --u2:#8FB0E8; --u3:#F5A04D; --u4:#C49BE8;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1726; --panel:#17223A; --ink:#E8EDF5; --muted:#9AA8BF; --line:#2B3A56;
+  --navy:#8FB0E8; --teal:#3CC4C2; --orange:#F5A04D; --bad:#F07167; --good:#5BD08D; --green:#5BD08D;
+  --soft:#1E2B46; --onaccent:#0F1726; --u1:#3CC4C2; --u2:#8FB0E8; --u3:#F5A04D; --u4:#C49BE8;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 18px 48px}
+h1{font-size:2rem;line-height:1.15;margin:0}
+.sub{color:var(--muted);margin:4px 0 16px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin-bottom:18px}
+.tab{
+  font:700 1rem "Atkinson Hyperlegible",system-ui,sans-serif;background:transparent;color:var(--muted);
+  border:2px solid transparent;border-bottom:none;border-radius:10px 10px 0 0;padding:10px 14px;cursor:pointer;margin-bottom:-2px;
+  display:flex;align-items:center;gap:8px
+}
+.tab .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--ink);font-size:.85rem}
+.tab[aria-selected="true"]{background:var(--panel);color:var(--ink);border-color:var(--line);border-bottom:2px solid var(--panel)}
+.tab[aria-selected="true"] .n{background:var(--teal);color:var(--onaccent)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+h2{font-size:1.35rem;margin:0 0 4px}
+h3{font-size:1.1rem;margin:0 0 8px}
+.lead{color:var(--muted);margin:0 0 12px;max-width:70ch}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button.b{font:700 .98rem "Atkinson Hyperlegible",system-ui,sans-serif;border-radius:8px;padding:9px 16px;cursor:pointer;border:2px solid transparent}
+.go{background:var(--orange);color:#1b1206}
+.ghost{background:transparent;color:var(--ink);border-color:var(--line)!important}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{font:700 .95rem "Atkinson Hyperlegible",system-ui,sans-serif;background:transparent;color:var(--ink);border:0;padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--teal);color:var(--onaccent)}
+button:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+svg{display:block;width:100%;height:auto}
+.svgbox{background:var(--bg);border:1px solid var(--line);border-radius:10px;margin:12px 0;overflow:hidden}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.note{margin-top:10px;padding:10px 14px;border-left:4px solid var(--teal);background:var(--bg);border-radius:0 8px 8px 0}
+.note.warn{border-left-color:var(--orange)} .note.bad{border-left-color:var(--bad)} .note.good{border-left-color:var(--good)}
+details{margin-top:8px} summary{cursor:pointer;color:var(--teal);font-weight:700}
+details p{margin:6px 0 0}
+ol.q{padding-left:1.3em;margin:6px 0 0} ol.q li{margin-bottom:10px}
+.hide{display:none!important}
+.grid2{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:860px){.grid2{grid-template-columns:1.5fr 1fr}}
+/* receivers */
+.recv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin-top:6px;font-size:.95rem}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+/* cost compare */
+.bars{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;align-items:center;margin-top:10px}
+.bar{height:22px;border-radius:5px;background:var(--navy);transition:width .3s}
+input[type=range]{accent-color:var(--teal);width:220px}
+/* packet builder */
+.chips{display:flex;flex-wrap:wrap;gap:8px;min-height:48px}
+.chip{font:700 .95rem "Atkinson Hyperlegible",system-ui,sans-serif;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:9px;padding:8px 12px;cursor:grab;text-align:left}
+.chip[aria-pressed="true"]{border-color:var(--orange);box-shadow:0 0 0 3px color-mix(in srgb,var(--orange) 30%,transparent)}
+.chip.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 10%,var(--panel));cursor:default}
+.chip.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 8%,var(--panel))}
+.chip .fb{display:block;font-weight:400;font-size:.82rem;color:var(--muted);margin-top:3px}
+.bins{display:grid;grid-template-columns:2fr 1fr 1.2fr;gap:12px;margin-top:12px}
+@media (max-width:760px){.bins{grid-template-columns:1fr}}
+.bin{border:2px dashed var(--line);border-radius:12px;min-height:170px;cursor:pointer;display:flex;flex-direction:column;background:var(--panel)}
+.bin.target{border-color:var(--orange);border-style:solid}
+.bin .bh{padding:9px 12px;border-radius:10px 10px 0 0;font-weight:700;color:var(--onaccent)}
+.bin .bb{padding:10px;display:flex;flex-direction:column;gap:6px;flex:1}
+.bh.h{background:var(--navy)} .bh.p{background:var(--teal)} .bh.x{background:var(--muted)}
+.match{display:grid;grid-template-columns:200px 1fr;gap:8px 12px;align-items:center}
+@media (max-width:640px){.match{grid-template-columns:1fr}}
+.match select{font:inherit;font-size:.95rem;padding:7px 8px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+.match select.right{border-color:var(--good)} .match select.wrong{border-color:var(--bad)}
+.picks{display:flex;flex-wrap:wrap;gap:8px}
+.picks label{display:flex;gap:6px;align-items:center;border:2px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.95rem}
+.picks label:has(input:checked){border-color:var(--teal)}
+.picks input{accent-color:var(--teal)}
+.ans{margin-top:10px}
+.ans .lbl{font-weight:700;margin:10px 0 4px}
+.ans textarea{width:100%;min-height:44px;font:inherit;font-size:.98rem;padding:8px 10px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical}
+.model{margin-top:6px;font-size:.92rem;color:var(--good)}
+.step{display:none}.step.on{display:block}
+.stepper{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.stepper span{padding:4px 12px;border-radius:999px;border:2px solid var(--line);font-size:.88rem;color:var(--muted)}
+.stepper span.on{border-color:var(--teal);color:var(--ink);font-weight:700}
+.stepper span.done{border-color:var(--good);color:var(--good)}
+/* routing */
+.checks{list-style:none;padding:0;margin:0}
+.checks li{display:flex;gap:8px;align-items:flex-start;padding:5px 0;color:var(--muted);font-size:.93rem}
+.checks li .tk{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:700}
+.checks li.ok{color:var(--ink)} .checks li.ok .tk{background:var(--good);border-color:var(--good);color:var(--onaccent)}
+.log{font:500 .82rem "IBM Plex Mono",ui-monospace,monospace;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-height:150px;overflow:auto;margin-top:8px}
+.log div{padding:1px 0}
+.pk{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:46px;height:46px;border:2px solid var(--line);border-radius:7px;margin:3px;font:600 .8rem "IBM Plex Mono",ui-monospace,monospace;background:var(--panel)}
+.pk b{font-size:.95rem}
+.pk.bad{border-color:var(--bad);color:var(--bad)} .pk.gap{border-style:dashed;color:var(--muted)} .pk.ok{border-color:var(--good)}
+.msgin{font:600 1rem "IBM Plex Mono",ui-monospace,monospace;padding:7px 10px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:220px;text-transform:uppercase}
+.hint{color:var(--muted);font-size:.88rem}
+/* collision */
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin-top:8px}
+.stat{font-size:.9rem;color:var(--muted)} .stat b{display:block;font:600 1.6rem "IBM Plex Mono",ui-monospace,monospace;color:var(--ink)}
+.pred{width:70px;font:inherit;padding:6px 8px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The journey of a packet</h1>
+  <p class="sub">Topic 3, Lesson 2. Work through each tab with your partner.</p>
+  <div class="tabs" role="tablist" aria-label="Activities">
+    <button class="tab" role="tab" id="t-share" aria-controls="p-share" aria-selected="true"><span class="n">1</span>Share the line</button>
+    <button class="tab" role="tab" id="t-build" aria-controls="p-build" aria-selected="false" tabindex="-1"><span class="n">2</span>Packet builder</button>
+    <button class="tab" role="tab" id="t-route" aria-controls="p-route" aria-selected="false" tabindex="-1"><span class="n">3</span>Route the packets</button>
+    <button class="tab" role="tab" id="t-coll" aria-controls="p-coll" aria-selected="false" tabindex="-1"><span class="n">4</span>Collision demo</button>
+  </div>
+
+  <!-- ================= TAB 1 ================= -->
+  <section id="p-share" role="tabpanel" aria-labelledby="t-share">
+    <div class="panel">
+      <h2>Part 1: four users, one cable</h2>
+      <p class="lead">Four users each need to send a message to someone at the other end, but there is only one cable. A multiplexer (MUX) combines their signals and a demultiplexer (DEMUX) separates them again.</p>
+      <div class="row">
+        <div class="seg" role="group" aria-label="Multiplexing method">
+          <button id="mxT" aria-pressed="true">Time division (TDM)</button>
+          <button id="mxF" aria-pressed="false">Frequency division (FDM)</button>
+        </div>
+        <button class="b go" id="mxSend">Send the messages</button>
+      </div>
+      <p class="hint" id="mxDesc" style="margin:8px 0 0">TDM: each user gets a time slot and takes turns using the whole line.</p>
+      <div class="svgbox"><svg id="mxSvg" viewBox="0 0 760 270" role="img" aria-label="Four users connected through a multiplexer, one shared line and a demultiplexer to four receivers"></svg></div>
+      <div class="recv" id="mxRecv"></div>
+    </div>
+    <div class="panel">
+      <h3>Why bother? One line vs separate cables</h3>
+      <div class="row"><label for="nUsers"><b>Number of users:</b></label><input type="range" id="nUsers" min="2" max="40" value="4"><span class="mono" id="nUsersOut">4</span></div>
+      <div class="bars">
+        <span>Separate cables</span><div><div class="bar" id="barSep"></div></div>
+        <span>Multiplexed</span><div><div class="bar" id="barMux" style="background:var(--teal)"></div></div>
+      </div>
+      <p class="hint" id="costTxt" style="margin-top:8px"></p>
+      <ol class="q">
+        <li>In your own words, what is multiplexing?
+          <details><summary>Check</summary><p>Several independent data sources are combined so they can be sent along a single route to their destination. A demultiplexer separates them at the other end.</p></details></li>
+        <li>Why is multiplexing needed?
+          <details><summary>Check</summary><p>Many users can share one line instead of each needing their own cable. That is cheaper to install and maintain, and makes full use of the line's bandwidth.</p></details></li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h2>Part 2: circuit switching vs packet switching</h2>
+      <p class="lead">A wants to send to B across a network of switches. Try each method, then break the link between S1 and S2.</p>
+      <div class="row">
+        <div class="seg" role="group" aria-label="Switching method">
+          <button id="swC" aria-pressed="true">Circuit switching</button>
+          <button id="swP" aria-pressed="false">Packet switching</button>
+        </div>
+        <button class="b go" id="swGo">Set up the call</button>
+        <button class="b ghost" id="swBreak">Break link S1–S2</button>
+        <button class="b ghost" id="swOther">C tries to send to D</button>
+        <button class="b ghost" id="swReset">Reset</button>
+      </div>
+      <div class="svgbox"><svg id="swSvg" viewBox="0 0 760 300" role="img" aria-label="Network of four switches between A and B, with users C and D"></svg></div>
+      <div class="note" id="swMsg">Choose a method and press the orange button.</div>
+      <ol class="q" style="margin-top:12px">
+        <li>What happened to the circuit-switched call when the link broke? Why?
+          <details><summary>Check</summary><p>The call dropped. Circuit switching uses one dedicated path, so if any part of it fails the connection breaks and has to be set up again.</p></details></li>
+        <li>Why couldn't C use the S1–S2 link during A's call, even when A wasn't sending anything?
+          <details><summary>Check</summary><p>The whole path is reserved for A's call for as long as it lasts, so other users can't share those links.</p></details></li>
+        <li>Give one advantage of packet switching that you saw.
+          <details><summary>Check</summary><p>If a link fails, packets can be sent along a different route. Links are also shared between users, so they are used more efficiently.</p></details></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ================= TAB 2 ================= -->
+  <section id="p-build" role="tabpanel" aria-labelledby="t-build" class="hide">
+    <div class="panel">
+      <div class="stepper" id="pbStepper"><span class="on">1 Build the packet</span><span>2 Match the purpose</span><span>3 Write the exam answer</span></div>
+
+      <div class="step on" id="pb1">
+        <h2>Step 1: build the packet</h2>
+        <p class="lead">Put each item where it belongs. Drag it, or tap an item then tap a box. Two of these are not part of a TCP/IP packet at all.</p>
+        <div class="chips" id="pbTray"></div>
+        <div class="bins">
+          <div class="bin" data-bin="h" role="button" tabindex="0" aria-label="Header"><div class="bh h">Header (control information)</div><div class="bb" id="bin-h"></div></div>
+          <div class="bin" data-bin="p" role="button" tabindex="0" aria-label="Payload"><div class="bh p">Payload</div><div class="bb" id="bin-p"></div></div>
+          <div class="bin" data-bin="x" role="button" tabindex="0" aria-label="Not in a TCP/IP packet"><div class="bh x">Not in a TCP/IP packet</div><div class="bb" id="bin-x"></div></div>
+        </div>
+        <div class="row" style="margin-top:12px"><button class="b go" id="pbCheck1" disabled>Check</button><span class="hint" id="pbLeft"></span></div>
+        <div id="pbMsg1"></div>
+      </div>
+
+      <div class="step" id="pb2">
+        <h2>Step 2: what does each field allow?</h2>
+        <p class="lead">This is the part that earns the marks. Choose the purpose of each field.</p>
+        <div class="match" id="pbMatch"></div>
+        <div class="row" style="margin-top:12px"><button class="b go" id="pbCheck2">Check</button></div>
+        <div id="pbMsg2"></div>
+      </div>
+
+      <div class="step" id="pb3">
+        <h2>Step 3: write the exam answer</h2>
+        <p class="lead"><b>2024 Q2(a):</b> Describe the typical contents of a TCP/IP packet. [5]<br>Choose five fields. For each one, write what it allows. A field on its own is a list, and a list doesn't earn marks.</p>
+        <div class="picks" id="pbPicks"></div>
+        <div class="ans" id="pbAns"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="b go" id="pbCompare" disabled>Compare with model answers</button>
+          <button class="b ghost" id="pbCopy" disabled>Copy my answer</button>
+          <span class="hint" id="pbCopied" aria-live="polite"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TAB 3 ================= -->
+  <section id="p-route" role="tabpanel" aria-labelledby="t-route" class="hide">
+    <div class="grid2">
+      <div class="panel">
+        <h2>Route the packets</h2>
+        <p class="lead" style="margin-bottom:8px">Send a message from PC 1 to PC 2. The numbers on each link are its current cost (distance plus traffic). Click router B, C or D to make it fail or bring it back.</p>
+        <div class="row">
+          <label for="rtMsg" class="hint">Message</label>
+          <input id="rtMsg" class="msgin" maxlength="16" value="HELLO CARDIFF">
+          <button class="b go" id="rtSend">Send</button>
+          <button class="b ghost" id="rtCorrupt">Corrupt the next packet</button>
+          <button class="b ghost" id="rtReset">Reset</button>
+        </div>
+        <div class="svgbox"><svg id="rtSvg" viewBox="0 0 760 360" role="img" aria-label="Network of five routers between PC 1 and PC 2"></svg></div>
+        <div class="log" id="rtLog" aria-live="polite"><div>Router decisions appear here.</div></div>
+      </div>
+      <div class="panel">
+        <h3>At PC 2</h3>
+        <p class="hint" style="margin:0">Packets in the order they arrived:</p>
+        <div id="rtArrived" style="min-height:56px"></div>
+        <div class="row" style="margin-top:6px">
+          <button class="b go" id="rtReasm" disabled>Reassemble in order</button>
+          <button class="b ghost" id="rtResend" disabled>Request resend</button>
+          <button class="b ghost" id="rtAck" disabled>Send confirmation</button>
+        </div>
+        <div id="rtAssembled" style="margin-top:8px"></div>
+        <div class="note hide" id="rtNote"></div>
+        <h3 style="margin-top:16px">How a packet is routed</h3>
+        <ul class="checks" id="rtChecks"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TAB 4 ================= -->
+  <section id="p-coll" role="tabpanel" aria-labelledby="t-coll" class="hide">
+    <div class="panel">
+      <h2>Collision demo: fixed wait vs random wait</h2>
+      <p class="lead">PC 1 and PC 4 both want to send at the same moment on a shared bus. After a collision each device waits, then tries again. Predict first, then run it.</p>
+      <div class="row">
+        <div class="seg" role="group" aria-label="Wait method">
+          <button id="clF" aria-pressed="true">Fixed wait (2 units)</button>
+          <button id="clR" aria-pressed="false">Random wait</button>
+        </div>
+        <label for="clPred" class="hint">Prediction: attempts until both get through</label>
+        <input id="clPred" class="pred" type="number" min="1" max="20" value="2">
+        <button class="b go" id="clRun">Run</button>
+        <button class="b ghost" id="clReset">Reset</button>
+      </div>
+      <div class="svgbox"><svg id="clSvg" viewBox="0 0 760 230" role="img" aria-label="Bus network with four PCs on one cable"></svg></div>
+      <div class="stats">
+        <div class="stat">Collisions<b id="clCol">0</b></div>
+        <div class="stat">Delivered<b id="clDel">0 / 2</b></div>
+        <div class="stat">Time units<b id="clTime">0</b></div>
+      </div>
+      <div class="log" id="clLog" style="max-height:190px"><div>Press Run.</div></div>
+      <div class="note hide" id="clNote"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,s,attrs={}){const t=el('text',Object.assign({x,y,'text-anchor':'middle','dominant-baseline':'central','font-family':'Atkinson Hyperlegible, sans-serif','font-size':14,'font-weight':700},attrs),parent);t.textContent=s;return t;}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function tween(dur,fn){return new Promise(res=>{const t0=performance.now();function f(now){const p=Math.min(1,(now-t0)/dur);fn(p);if(p<1)requestAnimationFrame(f);else res();}requestAnimationFrame(f);});}
+
+/* ---------------- tabs ---------------- */
+const tabs=[...document.querySelectorAll('.tab')];
+function selectTab(t){
+  tabs.forEach(x=>{const on=x===t;x.setAttribute('aria-selected',on);x.tabIndex=on?0:-1;$(x.getAttribute('aria-controls')).classList.toggle('hide',!on);});
+}
+tabs.forEach((t,i)=>{
+  t.onclick=()=>selectTab(t);
+  t.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const n=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];selectTab(n);n.focus();}};
+});
+
+/* ================= TAB 1: MULTIPLEXING ================= */
+const UC=['--u1','--u2','--u3','--u4'];
+const MSGS=['HELLO','WALES','CYMRU','BYTES'];
+const mx={mode:'T',busy:false};
+const mxSvg=$('mxSvg');
+const UY=[45,105,165,225], LINE_Y=135, MUX_X=215, DEMUX_X=545;
+function mxDraw(){
+  mxSvg.innerHTML='';
+  const g=el('g',{},mxSvg);
+  UY.forEach((y,i)=>{
+    const c=css(UC[i]);
+    el('line',{x1:95,y1:y,x2:MUX_X-30,y2:LINE_Y,stroke:c,'stroke-width':3},g);
+    el('line',{x1:DEMUX_X+30,y1:LINE_Y,x2:665,y2:y,stroke:c,'stroke-width':3},g);
+    el('rect',{x:15,y:y-16,width:80,height:32,rx:6,fill:c},g); txt(g,55,y,'User '+(i+1),{fill:css('--panel'),'font-size':13});
+    el('rect',{x:665,y:y-16,width:80,height:32,rx:6,fill:c},g); txt(g,705,y,'User '+(i+1),{fill:css('--panel'),'font-size':13});
+  });
+  el('rect',{x:MUX_X-30,y:LINE_Y-45,width:60,height:90,rx:8,fill:css('--navy')},g); txt(g,MUX_X,LINE_Y,'MUX',{fill:css('--panel')});
+  el('rect',{x:DEMUX_X-30,y:LINE_Y-45,width:60,height:90,rx:8,fill:css('--navy')},g); txt(g,DEMUX_X,LINE_Y,'DEMUX',{fill:css('--panel'),'font-size':12});
+  el('rect',{x:MUX_X+30,y:LINE_Y-20,width:DEMUX_X-MUX_X-60,height:40,rx:4,fill:css('--soft'),stroke:css('--line')},g);
+  txt(g,(MUX_X+DEMUX_X)/2,LINE_Y+34,'One shared line',{fill:css('--muted'),'font-size':12,'font-weight':400});
+  if(mx.mode==='F'){[-15,-5,5,15].forEach((d,i)=>el('line',{x1:MUX_X+30,y1:LINE_Y+d,x2:DEMUX_X-30,y2:LINE_Y+d,stroke:css(UC[i]),'stroke-width':1,'stroke-dasharray':'3 4',opacity:.6},g));}
+  mx.layer=el('g',{},mxSvg);
+}
+function mxRecvInit(){$('mxRecv').innerHTML=UY.map((_,i)=>`<span><span class="sw" style="background:var(${UC[i]})"></span>User ${i+1} receives</span><span class="mono" id="rx${i}"></span>`).join('');}
+function setMx(m){mx.mode=m;$('mxT').setAttribute('aria-pressed',m==='T');$('mxF').setAttribute('aria-pressed',m==='F');
+  $('mxDesc').textContent=m==='T'?'TDM: each user gets a time slot and takes turns using the whole line.':'FDM: each user gets their own frequency band and sends all the time, side by side.';
+  if(!mx.busy){mxDraw();mxRecvInit();}}
+$('mxT').onclick=()=>setMx('T'); $('mxF').onclick=()=>setMx('F');
+async function moveBlock(i,ch,yOff,h,w,travel){
+  const c=css(UC[i]); const g=el('g',{},mx.layer);
+  const r=el('rect',{x:0,y:LINE_Y+yOff-h/2,width:w,height:h,rx:3,fill:c},g);
+  const t=txt(g,0,LINE_Y+yOff,ch,{fill:css('--panel'),'font-size':h>12?13:0,'font-family':'IBM Plex Mono, monospace'});
+  const x0=MUX_X+30, x1=DEMUX_X-30-w;
+  await tween(reduced?10:travel,p=>{const x=x0+(x1-x0)*p;r.setAttribute('x',x);t.setAttribute('x',x+w/2);});
+  g.remove();
+  $('rx'+i).textContent+=ch;
+}
+$('mxSend').onclick=async()=>{
+  if(mx.busy)return; mx.busy=true; $('mxSend').disabled=true; $('mxT').disabled=$('mxF').disabled=true;
+  mxDraw(); mxRecvInit();
+  const jobs=[];
+  if(mx.mode==='T'){
+    for(let k=0;k<5;k++)for(let i=0;i<4;i++){jobs.push(moveBlock(i,MSGS[i][k],0,30,30,1600)); await sleep(reduced?5:330);}
+  } else {
+    for(let k=0;k<5;k++){for(let i=0;i<4;i++)jobs.push(moveBlock(i,MSGS[i][k],[-15,-5,5,15][i],8,30,1600)); await sleep(reduced?5:1320);}
+  }
+  await Promise.all(jobs);
+  mx.busy=false; $('mxSend').disabled=false; $('mxT').disabled=$('mxF').disabled=false;
+};
+function costUpd(){
+  const n=+$('nUsers').value; $('nUsersOut').textContent=n;
+  $('barSep').style.width=(n/40*100)+'%'; $('barMux').style.width=(1/40*100)+'%';
+  $('costTxt').textContent=`${n} users need ${n} separate cables, or 1 shared line with a MUX and DEMUX.`;
+}
+$('nUsers').oninput=costUpd;
+
+/* ================= TAB 1: SWITCHING ================= */
+const SWN={A:[50,150],S1:[200,150],S2:[380,70],S3:[380,230],S4:[560,150],B:[710,150],C:[200,265],D:[560,265]};
+const SWE=[['A','S1'],['S1','S2'],['S1','S3'],['S2','S4'],['S3','S4'],['S4','B'],['C','S1'],['D','S4']];
+const sw={mode:'C',state:'idle',broken:false,busy:false};
+const swSvg=$('swSvg');
+function ek(a,b){return [a,b].sort().join('-');}
+function swDraw(){
+  swSvg.innerHTML=''; const g=el('g',{},swSvg);
+  const reserved=sw.mode==='C'&&sw.state==='up'?new Set([ek('A','S1'),ek('S1','S2'),ek('S2','S4'),ek('S4','B')]):new Set();
+  SWE.forEach(([a,b])=>{
+    const k=ek(a,b), broken=sw.broken&&k===ek('S1','S2');
+    el('line',{x1:SWN[a][0],y1:SWN[a][1],x2:SWN[b][0],y2:SWN[b][1],stroke:broken?css('--bad'):reserved.has(k)?css('--orange'):css('--line'),'stroke-width':reserved.has(k)?7:4,'stroke-dasharray':broken?'8 6':'none'},g);
+    if(broken)txt(g,(SWN[a][0]+SWN[b][0])/2,(SWN[a][1]+SWN[b][1])/2-14,'✖',{fill:css('--bad'),'font-size':22});
+  });
+  Object.entries(SWN).forEach(([k,[x,y]])=>{
+    const isEnd=k.length===1;
+    if(isEnd){el('rect',{x:x-30,y:y-18,width:60,height:36,rx:6,fill:css(k==='A'||k==='B'?'--teal':'--muted')},g);txt(g,x,y,k,{fill:css('--panel')});}
+    else{el('circle',{cx:x,cy:y,r:22,fill:css('--navy')},g);txt(g,x,y,k,{fill:css('--panel'),'font-size':13});}
+  });
+  if(reserved.size)txt(g,380,22,'Path reserved for A → B',{fill:css('--orange'),'font-size':13});
+  sw.layer=el('g',{},swSvg);
+}
+function swMsg(t,cls=''){const m=$('swMsg');m.className='note '+cls;m.innerHTML=t;}
+function setSw(m){if(sw.busy)return;sw.mode=m;sw.state='idle';$('swC').setAttribute('aria-pressed',m==='C');$('swP').setAttribute('aria-pressed',m==='P');
+  $('swGo').textContent=m==='C'?'Set up the call':'Send packets';swDraw();swMsg('Choose a method and press the orange button.');}
+$('swC').onclick=()=>setSw('C'); $('swP').onclick=()=>setSw('P');
+async function dotAlong(path,color,label,dur=600,layer){
+  const g=el('g',{},layer||sw.layer); const c=el('circle',{r:11,fill:color,stroke:css('--panel'),'stroke-width':2},g);
+  const t=txt(g,0,0,label||'',{fill:css('--panel'),'font-size':10,'font-family':'IBM Plex Mono, monospace'});
+  for(let i=0;i<path.length-1;i++){
+    const [x0,y0]=path[i],[x1,y1]=path[i+1];
+    await tween(reduced?5:dur,p=>{const x=x0+(x1-x0)*p,y=y0+(y1-y0)*p;c.setAttribute('cx',x);c.setAttribute('cy',y);t.setAttribute('x',x);t.setAttribute('y',y);});
+  }
+  return g;
+}
+const P=names=>names.map(n=>SWN[n]);
+$('swGo').onclick=async()=>{
+  if(sw.busy)return; sw.busy=true;
+  if(sw.mode==='C'){
+    swMsg('Setting up a dedicated path A → S1 → S2 → S4 → B…');
+    swDraw(); await dotAlong(P(sw.broken?['A','S1']:['A','S1','S2','S4','B']),css('--muted'),'',350);
+    if(sw.broken){swMsg('The link S1–S2 is broken, so the circuit can\'t be set up on this path. A must wait for a repair or set up a whole new path first.','bad');sw.busy=false;return;}
+    sw.state='up'; swDraw();
+    swMsg('Circuit set up. The whole path is now reserved for A\'s call, whether or not anyone is talking. Data flows quickly and in order. Try letting C send now.','good');
+    sw.busy=false;
+    (async()=>{for(let k=0;k<4;k++){if(sw.state!=='up')break;const g=await dotAlong(P(['A','S1','S2','S4','B']),css('--teal'),'',300);g.remove();}})();
+    return;
+  } else {
+    swDraw(); swMsg('Packets are sent independently. Each switch picks the best available link.');
+    const jobs=[];
+    for(let k=1;k<=6;k++){
+      const route=sw.broken||k%3===0?['A','S1','S3','S4','B']:['A','S1','S2','S4','B'];
+      jobs.push(dotAlong(P(route),css('--teal'),String(k),420).then(g=>g.remove())); await sleep(reduced?5:280);
+    }
+    await Promise.all(jobs);
+    swMsg(sw.broken?'All six packets arrived. With S1–S2 broken, every packet went the other way, via S3.':'All six packets arrived. Some went via S2 and some via S3. Now break the link and send again.','good');
+  }
+  sw.busy=false;
+};
+$('swBreak').onclick=async()=>{
+  if(sw.busy)return; sw.broken=!sw.broken; $('swBreak').textContent=sw.broken?'Repair link S1–S2':'Break link S1–S2';
+  if(sw.mode==='C'&&sw.state==='up'&&sw.broken){sw.state='dropped';swDraw();swMsg('<b>Call dropped.</b> The dedicated path is broken, so the connection is lost. A new circuit would have to be set up from scratch.','bad');}
+  else{swDraw();swMsg(sw.broken?'Link S1–S2 is broken. Now try sending.':'Link repaired.');}
+};
+$('swOther').onclick=async()=>{
+  if(sw.busy)return; sw.busy=true;
+  if(sw.mode==='C'&&sw.state==='up'){
+    await dotAlong(P(['C','S1']),css('--muted'),'',400);
+    swMsg('<b>Blocked.</b> C\'s best route uses S1–S2, but that link is reserved for A\'s call, even while A is silent. C has to wait or use a longer path.','warn');
+  } else if(sw.mode==='P'){
+    swMsg('C\'s packets share the same links as everyone else\'s. Nothing is reserved, so the links are used efficiently.');
+    const jobs=[];for(let k=1;k<=4;k++){jobs.push(dotAlong(P(sw.broken?['C','S1','S3','S4','D']:['C','S1','S2','S4','D']),css('--u4'),String(k),420).then(g=>g.remove()));await sleep(reduced?5:280);}
+    await Promise.all(jobs);
+  } else {
+    await dotAlong(P(['C','S1','S2','S4','D']),css('--u4'),'',350).then(g=>g.remove());
+    swMsg('With no call set up, C\'s call goes straight through. Now set up A\'s call first and try again.');
+  }
+  sw.busy=false;
+};
+$('swReset').onclick=()=>{if(sw.busy)return;sw.broken=false;$('swBreak').textContent='Break link S1–S2';setSw(sw.mode);};
+
+/* ================= TAB 2: PACKET BUILDER ================= */
+const FIELDS=[
+  {id:'src',name:'Source address',bin:'h',purpose:'Identifies the sender, so the receiver can reply or ask for a resend'},
+  {id:'dst',name:'Destination address',bin:'h',purpose:'Allows the packet to be routed to the correct device'},
+  {id:'seq',name:'Sequence number',bin:'h',purpose:'Allows the packets to be reassembled in the correct order'},
+  {id:'chk',name:'Checksum',bin:'h',purpose:'Allows the receiver to check the packet for errors'},
+  {id:'pro',name:'Protocol',bin:'h',purpose:'Tells the receiver how to handle the data, e.g. TCP or UDP'},
+  {id:'ttl',name:'Time to live (TTL)',bin:'h',purpose:'Limits the number of hops, so a lost packet doesn\'t circulate forever'},
+  {id:'ack',name:'Acknowledgement number',bin:'h',purpose:'Confirms which packets have arrived, so missing ones can be resent'},
+  {id:'dat',name:'The data itself',bin:'p',purpose:'The meaningful content the packet exists to carry'},
+  {id:'fcs',name:'Frame check sequence (trailer)',bin:'x',why:'This is the trailer of an Ethernet frame, which wraps a packet for one hop. It is not part of the TCP/IP packet.'},
+  {id:'par',name:'Parity bit',bin:'x',why:'Parity bits are used to check single bytes or characters. They are not a TCP/IP packet field.'},
+];
+const pb={place:{},marks:{},sel:null,order:shuffle(FIELDS.map(f=>f.id)),checks:0};
+FIELDS.forEach(f=>pb.place[f.id]=null);
+const F=id=>FIELDS.find(f=>f.id===id);
+function pbChip(f){
+  const m=pb.marks[f.id], cls=m===true?'right':m===false?'wrong':'';
+  let fb='';
+  if(m===true&&f.bin==='x')fb=`<span class="fb">${esc(f.why)}</span>`;
+  if(m===false)fb=`<span class="fb">${f.bin==='x'?'Is this really in a TCP/IP packet?':f.bin==='p'?'Is this control information, or the content?':'Is this the content, or information that controls delivery?'}</span>`;
+  return `<button class="chip ${cls}" data-id="${f.id}" draggable="${m!==true}" aria-pressed="${pb.sel===f.id}">${esc(f.name)}${fb}</button>`;
+}
+function pbRender(){
+  $('pbTray').innerHTML=pb.order.filter(id=>pb.place[id]===null).map(id=>pbChip(F(id))).join('');
+  ['h','p','x'].forEach(b=>$('bin-'+b).innerHTML=pb.order.filter(id=>pb.place[id]===b).map(id=>pbChip(F(id))).join(''));
+  document.querySelectorAll('#pb1 .chip').forEach(c=>{
+    const id=c.dataset.id; if(pb.marks[id]===true)return;
+    c.onclick=e=>{e.stopPropagation();pb.sel=pb.sel===id?null:id;pbRender();};
+    c.ondragstart=e=>{e.dataTransfer.setData('text/plain',id);};
+  });
+  document.querySelectorAll('.bin').forEach(b=>b.classList.toggle('target',!!pb.sel));
+  const left=Object.values(pb.place).filter(v=>v===null).length;
+  $('pbCheck1').disabled=left>0; $('pbLeft').textContent=left?left+' still to place':'';
+}
+function pbMove(id,b){if(pb.marks[id]===true)return;pb.place[id]=b;delete pb.marks[id];pb.sel=null;pbRender();}
+document.querySelectorAll('.bin').forEach(b=>{
+  const k=b.dataset.bin;
+  b.onclick=e=>{if(e.target.closest('.chip'))return;if(pb.sel)pbMove(pb.sel,k);};
+  b.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&pb.sel){e.preventDefault();pbMove(pb.sel,k);}};
+  b.ondragover=e=>e.preventDefault();
+  b.ondrop=e=>{e.preventDefault();const id=e.dataTransfer.getData('text/plain');if(id)pbMove(id,k);};
+});
+$('pbTray').ondragover=e=>e.preventDefault();
+$('pbTray').ondrop=e=>{e.preventDefault();const id=e.dataTransfer.getData('text/plain');if(id)pbMove(id,null);};
+$('pbCheck1').onclick=()=>{
+  pb.checks++; let right=0;
+  FIELDS.forEach(f=>{pb.marks[f.id]=pb.place[f.id]===f.bin;if(pb.marks[f.id])right++;});
+  if(right<FIELDS.length&&pb.checks>=3){FIELDS.forEach(f=>{pb.place[f.id]=f.bin;pb.marks[f.id]=true;});right=FIELDS.length;}
+  pbRender();
+  $('pbMsg1').innerHTML=right===FIELDS.length
+    ?`<div class="note good"><b>Packet built.</b> The header holds the control information; the payload holds the data. <div class="row" style="margin-top:8px"><button class="b go" id="toPb2">Next: match the purpose</button></div></div>`
+    :`<div class="note warn"><b>${right} of ${FIELDS.length} correct.</b> Use the hints on the red items and check again.${pb.checks===2?' One more check and the answers will be shown.':''}</div>`;
+  if(right===FIELDS.length)$('toPb2').onclick=()=>pbStep(2);
+};
+function pbStep(n){
+  [1,2,3].forEach(i=>{$('pb'+i).classList.toggle('on',i===n);});
+  [...$('pbStepper').children].forEach((s,i)=>{s.className=i+1<n?'done':i+1===n?'on':'';});
+}
+const PF=FIELDS.filter(f=>f.bin!=='x');
+function pbMatchInit(){
+  const opts=shuffle(PF.map(f=>f.purpose));
+  $('pbMatch').innerHTML=PF.map(f=>`<label for="m-${f.id}"><b>${esc(f.name)}</b></label><select id="m-${f.id}"><option value="">Choose…</option>${opts.map(o=>`<option>${esc(o)}</option>`).join('')}</select>`).join('');
+}
+$('pbCheck2').onclick=()=>{
+  let right=0,blank=0;
+  PF.forEach(f=>{const s=$('m-'+f.id);s.classList.remove('right','wrong');if(!s.value){blank++;return;}const ok=s.value===f.purpose;s.classList.add(ok?'right':'wrong');if(ok)right++;});
+  $('pbMsg2').innerHTML=right===PF.length
+    ?`<div class="note good"><b>All matched.</b> Field + what it allows = a mark. <div class="row" style="margin-top:8px"><button class="b go" id="toPb3">Next: write the exam answer</button></div></div>`
+    :`<div class="note warn"><b>${right} of ${PF.length} correct${blank?`, ${blank} still blank`:''}.</b> Change the ones outlined in red and check again.</div>`;
+  if(right===PF.length)$('toPb3').onclick=()=>pbStep(3);
+};
+function pbPicksInit(){
+  $('pbPicks').innerHTML=PF.map(f=>`<label><input type="checkbox" value="${f.id}"> ${esc(f.name)}</label>`).join('');
+  $('pbPicks').onchange=pbAnsRender;
+}
+const pbText={};
+function pbAnsRender(){
+  const ch=[...$('pbPicks').querySelectorAll('input')];
+  const picked=ch.filter(c=>c.checked).map(c=>c.value);
+  ch.forEach(c=>{c.disabled=!c.checked&&picked.length>=5;});
+  document.querySelectorAll('#pbAns textarea').forEach(t=>pbText[t.dataset.id]=t.value);
+  $('pbAns').innerHTML=picked.map(id=>`<div class="lbl">${esc(F(id).name)}</div><textarea data-id="${id}" placeholder="The ${esc(F(id).name.toLowerCase())} allows…">${esc(pbText[id]||'')}</textarea><div class="model hide" id="mod-${id}">Model: ${esc(F(id).purpose)}.</div>`).join('');
+  const ok=()=>{const filled=[...document.querySelectorAll('#pbAns textarea')].filter(t=>t.value.trim().length>=8).length;$('pbCompare').disabled=$('pbCopy').disabled=!(picked.length===5&&filled===5);};
+  document.querySelectorAll('#pbAns textarea').forEach(t=>t.oninput=()=>{pbText[t.dataset.id]=t.value;ok();});
+  ok();
+}
+$('pbCompare').onclick=()=>document.querySelectorAll('#pbAns .model').forEach(m=>m.classList.remove('hide'));
+$('pbCopy').onclick=async()=>{
+  const t='2024 Q2(a) Describe the typical contents of a TCP/IP packet. [5]\n'+[...document.querySelectorAll('#pbAns textarea')].map(x=>'- '+F(x.dataset.id).name+': '+x.value.trim()).join('\n');
+  try{await navigator.clipboard.writeText(t);$('pbCopied').textContent='Copied. Paste it into your exam practice sheet.';}
+  catch(e){$('pbCopied').textContent='Copy is blocked here. Select the text and copy it instead.';}
+};
+
+/* ================= TAB 3: ROUTING ================= */
+const RN={PC1:[45,180],A:[165,180],B:[350,75],C:[350,285],D:[540,285],E:[620,180],PC2:[725,180]};
+const RE=[['PC1','A',1],['A','B',2],['A','C',3],['B','E',3],['C','D',2],['D','E',2],['B','D',3],['E','PC2',1]];
+const STEPS=['Data is split into packets, each with a destination address and a packet number','Each router looks up the destination in its routing table','Packets are sent along the most appropriate path (lowest cost)','Packets can take different routes','Packets are reassembled in order at the destination','A confirmation is sent, or a resend is requested for a missing or corrupted packet'];
+const rt={failed:new Set(),traffic:{},pkts:[],arrived:[],done:new Set(),corruptNext:false,running:false,msg:'',n:0,routes:new Set(),assembled:false};
+function rtKey(a,b){return [a,b].sort().join('-');}
+function rtCost(a,b){const e=RE.find(x=>rtKey(x[0],x[1])===rtKey(a,b));return e[2]+(rt.traffic[rtKey(a,b)]||0);}
+function nbrs(n){return RE.filter(e=>e[0]===n||e[1]===n).map(e=>e[0]===n?e[1]:e[0]).filter(m=>!rt.failed.has(m));}
+function shortest(from,to){
+  const dist={},prev={},Q=new Set(Object.keys(RN).filter(n=>!rt.failed.has(n)||n===from));
+  Q.forEach(n=>dist[n]=Infinity); dist[from]=0;
+  while(Q.size){let u=null;Q.forEach(n=>{if(u===null||dist[n]<dist[u])u=n;});if(dist[u]===Infinity)break;Q.delete(u);if(u===to)break;
+    nbrs(u).forEach(v=>{if(!Q.has(v))return;const d=dist[u]+rtCost(u,v);if(d<dist[v]){dist[v]=d;prev[v]=u;}});}
+  if(dist[to]===Infinity)return null;
+  const path=[to];while(path[0]!==from)path.unshift(prev[path[0]]);return {path,cost:dist[to]};
+}
+function jiggle(){RE.forEach(e=>{if(e[0].startsWith('PC')||e[1].startsWith('PC'))return;rt.traffic[rtKey(e[0],e[1])]=Math.floor(Math.random()*3);});}
+const rtSvg=$('rtSvg');
+function rtDraw(){
+  rtSvg.innerHTML=''; const g=el('g',{},rtSvg);
+  RE.forEach(([a,b])=>{
+    const dead=rt.failed.has(a)||rt.failed.has(b);
+    el('line',{x1:RN[a][0],y1:RN[a][1],x2:RN[b][0],y2:RN[b][1],stroke:dead?css('--bad'):css('--line'),'stroke-width':5,'stroke-dasharray':dead?'8 6':'none',opacity:dead?.6:1},g);
+    if(!a.startsWith('PC')&&!b.startsWith('PC')){
+      const mx=(RN[a][0]+RN[b][0])/2,my=(RN[a][1]+RN[b][1])/2;
+      el('circle',{cx:mx,cy:my,r:14,fill:css('--panel'),stroke:css('--line')},g);
+      txt(g,mx,my,dead?'–':String(rtCost(a,b)),{fill:css('--ink'),'font-size':13,'font-family':'IBM Plex Mono, monospace'});
+    }
+  });
+  Object.entries(RN).forEach(([k,[x,y]])=>{
+    if(k.startsWith('PC')){el('rect',{x:x-34,y:y-20,width:68,height:40,rx:7,fill:css('--teal')},g);txt(g,x,y,k.replace('PC','PC '),{fill:css('--panel'),'font-size':13});return;}
+    const f=rt.failed.has(k), click=['B','C','D'].includes(k);
+    const n=el('g',{tabindex:click?0:-1,role:click?'button':'img','aria-label':`Router ${k}${f?' (failed)':''}${click?'. Activate to toggle failure':''}`,style:click?'cursor:pointer':''},g);
+    el('circle',{cx:x,cy:y,r:26,fill:f?css('--bad'):css('--navy')},n); txt(n,x,y,f?'✖':k,{fill:css('--panel'),'font-size':f?18:15});
+    if(click){n.onclick=()=>toggleRouter(k);n.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleRouter(k);}};}
+  });
+  rt.layer=el('g',{},rtSvg);
+}
+function toggleRouter(k){
+  if(rt.failed.has(k)){rt.failed.delete(k);rtLog(`Router ${k} is back online. Routing tables update.`);}
+  else{rt.failed.add(k);rtLog(`⚠ Router ${k} has failed. Routing tables update.`);}
+  const keepPk=[...rt.layer.childNodes]; rtDraw(); keepPk.forEach(n=>rt.layer.appendChild(n));
+}
+function rtLog(t){const L=$('rtLog');if(L.dataset.init!=='1'){L.innerHTML='';L.dataset.init='1';}const d=document.createElement('div');d.textContent=t;L.appendChild(d);L.scrollTop=L.scrollHeight;}
+function tick(i){if(rt.done.has(i))return;rt.done.add(i);renderChecks();}
+function renderChecks(){$('rtChecks').innerHTML=STEPS.map((s,i)=>`<li class="${rt.done.has(i)?'ok':''}"><span class="tk">${rt.done.has(i)?'✓':i+1}</span><span>${s}</span></li>`).join('');}
+async function sendPacket(pk){
+  const g=el('g',{},rt.layer);
+  const c=el('rect',{x:-20,y:-13,width:40,height:26,rx:5,fill:pk.corrupt?css('--orange'):css('--u4'),stroke:css('--panel'),'stroke-width':2},g);
+  const t=txt(g,0,0,'#'+pk.seq,{fill:'#fff','font-size':12,'font-family':'IBM Plex Mono, monospace'});
+  const place=(x,y)=>{c.setAttribute('x',x-20);c.setAttribute('y',y-13);t.setAttribute('x',x);t.setAttribute('y',y);};
+  let at='PC1'; const hops=['PC1'];
+  place(...RN.PC1);
+  while(at!=='PC2'){
+    let next;
+    if(at==='PC1')next='A';
+    else{
+      jiggle(); const keep=[...rt.layer.childNodes]; rtDraw(); keep.forEach(n=>rt.layer.appendChild(n));
+      const r=shortest(at,'PC2');
+      if(!r){rtLog(`Router ${at}: no route to PC 2. Packet #${pk.seq} is dropped.`);g.remove();return;}
+      next=r.path[1]; tick(1); tick(2);
+      const alts=nbrs(at).filter(n=>n!==next&&!hops.includes(n)).map(n=>{const s=shortest(n,'PC2');return s&&!s.path.includes(at)?`${n} ${rtCost(at,n)+s.cost}`:null;}).filter(Boolean);
+      rtLog(`Router ${at}: #${pk.seq} → ${next.replace('PC2','PC 2')} (total cost ${r.cost}${alts.length?'; via '+alts.join(', via '):''})`);
+    }
+    const [x0,y0]=RN[at],[x1,y1]=RN[next];
+    await tween(reduced?5:750,p=>place(x0+(x1-x0)*p,y0+(y1-y0)*p));
+    if(rt.failed.has(next)){rtLog(`✖ Packet #${pk.seq} reached failed router ${next} and was lost.`);g.remove();return;}
+    at=next; hops.push(at);
+  }
+  g.remove();
+  const route=hops.filter(h=>!h.startsWith('PC')).join('→'); rt.routes.add(route); if(rt.routes.size>1)tick(3);
+  rt.arrived.push(pk); rtRenderArrived();
+}
+function rtRenderArrived(){
+  $('rtArrived').innerHTML=rt.arrived.map(p=>`<span class="pk ${p.corrupt?'bad':''}"><b>#${p.seq}</b>${esc(p.data.replace(/ /g,'·'))}</span>`).join('');
+  $('rtReasm').disabled=!rt.arrived.length||rt.running;
+}
+function split(msg){const out=[];for(let i=0;i<msg.length;i+=2)out.push(msg.slice(i,i+2));return out;}
+async function sendBatch(list){
+  rt.running=true; $('rtSend').disabled=true; $('rtReasm').disabled=$('rtResend').disabled=$('rtAck').disabled=true;
+  const jobs=[];
+  for(const pk of list){jobs.push(sendPacket(pk));await sleep(reduced?5:550);}
+  await Promise.all(jobs);
+  rt.running=false; $('rtSend').disabled=false; rtRenderArrived();
+}
+$('rtSend').onclick=()=>{
+  const msg=($('rtMsg').value.toUpperCase().replace(/[^A-Z0-9 !?.,]/g,'')||'HELLO').slice(0,16);
+  $('rtMsg').value=msg; rt.msg=msg; rt.arrived=[]; rt.assembled=false; rt.routes=new Set(); $('rtAssembled').innerHTML=''; $('rtNote').classList.add('hide');
+  const parts=split(msg); rt.n=parts.length;
+  const pkts=parts.map((d,i)=>({seq:i+1,data:d,corrupt:false}));
+  if(rt.corruptNext){pkts[Math.floor(Math.random()*pkts.length)].corrupt=true;rt.corruptNext=false;$('rtCorrupt').textContent='Corrupt the next packet';}
+  rtLog(`PC 1 splits "${msg}" into ${pkts.length} packets, numbered 1–${pkts.length}, each addressed to PC 2.`); tick(0);
+  rtRenderArrived(); sendBatch(pkts);
+};
+$('rtCorrupt').onclick=()=>{rt.corruptNext=!rt.corruptNext;$('rtCorrupt').textContent=rt.corruptNext?'Next send: one packet corrupted ✓':'Corrupt the next packet';};
+function problems(){
+  const missing=[],bad=[];
+  for(let s=1;s<=rt.n;s++){const got=rt.arrived.filter(p=>p.seq===s);if(!got.length)missing.push(s);else if(got.every(p=>p.corrupt))bad.push(s);}
+  return {missing,bad};
+}
+$('rtReasm').onclick=()=>{
+  tick(4); rt.assembled=true;
+  const parts=split(rt.msg); const {missing,bad}=problems();
+  $('rtAssembled').innerHTML='<div class="hint">In sequence order:</div>'+parts.map((d,i)=>{const s=i+1;const ok=rt.arrived.find(p=>p.seq===s&&!p.corrupt);
+    return ok?`<span class="pk ok"><b>#${s}</b>${esc(d.replace(/ /g,'·'))}</span>`:missing.includes(s)?`<span class="pk gap"><b>#${s}</b>?</span>`:`<span class="pk bad"><b>#${s}</b>✖</span>`;}).join('');
+  const n=$('rtNote'); n.classList.remove('hide');
+  if(missing.length||bad.length){
+    n.className='note warn';
+    n.innerHTML=`${missing.length?`Packet${missing.length>1?'s':''} ${missing.map(x=>'#'+x).join(', ')} never arrived. `:''}${bad.length?`Packet${bad.length>1?'s':''} ${bad.map(x=>'#'+x).join(', ')} failed the checksum. `:''}PC 2 can't complete the message. What should it do?`;
+    $('rtResend').disabled=false; $('rtAck').disabled=true;
+  } else {
+    n.className='note good'; n.innerHTML=`Message complete: <b class="mono">${esc(rt.msg)}</b>. Every packet has arrived and passed its checksum.`;
+    $('rtAck').disabled=false; $('rtResend').disabled=true;
+  }
+};
+$('rtResend').onclick=async()=>{
+  const {missing,bad}=problems(); const need=[...missing,...bad];
+  tick(5); rtLog(`PC 2 asks PC 1 to resend packet${need.length>1?'s':''} ${need.map(x=>'#'+x).join(', ')}.`);
+  $('rtNote').className='note'; $('rtNote').textContent='Resend requested. Watch the replacement packets, then reassemble again.';
+  rt.arrived=rt.arrived.filter(p=>!(bad.includes(p.seq)));
+  const parts=split(rt.msg);
+  await sendBatch(need.map(s=>({seq:s,data:parts[s-1],corrupt:false})));
+};
+$('rtAck').onclick=async()=>{
+  $('rtAck').disabled=true; tick(5);
+  rtLog('PC 2 sends a confirmation back to PC 1: all packets received.');
+  const r=shortest('PC2','PC1'); const g=el('g',{},rt.layer);
+  const c=el('rect',{x:-24,y:-13,width:48,height:26,rx:5,fill:css('--good'),stroke:css('--panel'),'stroke-width':2},g);
+  const t=txt(g,0,0,'ACK',{fill:'#fff','font-size':12,'font-family':'IBM Plex Mono, monospace'});
+  const path=r?r.path:['PC2','PC1'];
+  for(let i=0;i<path.length-1;i++){const [x0,y0]=RN[path[i]],[x1,y1]=RN[path[i+1]];await tween(reduced?5:550,p=>{const x=x0+(x1-x0)*p,y=y0+(y1-y0)*p;c.setAttribute('x',x-24);c.setAttribute('y',y-13);t.setAttribute('x',x);t.setAttribute('y',y);});}
+  g.remove();
+  $('rtNote').className='note good'; $('rtNote').innerHTML='Confirmation received by PC 1. Now write your answer to <b>2025 Q3(c)</b> on the exam practice sheet, using the six steps.';
+};
+$('rtReset').onclick=()=>{
+  if(rt.running)return; rt.failed.clear(); rt.traffic={}; rt.arrived=[]; rt.done=new Set(); rt.routes=new Set(); rt.n=0;
+  $('rtAssembled').innerHTML=''; $('rtNote').classList.add('hide'); $('rtLog').innerHTML='<div>Router decisions appear here.</div>'; $('rtLog').dataset.init='';
+  $('rtReasm').disabled=$('rtResend').disabled=$('rtAck').disabled=true; rtDraw(); rtRenderArrived(); renderChecks();
+};
+
+/* ================= TAB 4: COLLISIONS ================= */
+const clSvg=$('clSvg'); const BUS_Y=150, BX0=40, BX1=720;
+const PCX={1:110,2:290,3:470,4:650};
+const cl={mode:'F',running:false};
+function clDraw(){
+  clSvg.innerHTML=''; const g=el('g',{},clSvg);
+  el('line',{x1:BX0,y1:BUS_Y,x2:BX1,y2:BUS_Y,stroke:css('--navy'),'stroke-width':8,'stroke-linecap':'round'},g);
+  txt(g,BX0+80,BUS_Y+24,'Shared cable (bus)',{fill:css('--muted'),'font-size':12,'font-weight':400});
+  Object.entries(PCX).forEach(([k,x])=>{
+    el('line',{x1:x,y1:72,x2:x,y2:BUS_Y,stroke:css('--navy'),'stroke-width':3},g);
+    const act=k==='1'||k==='4';
+    el('rect',{x:x-40,y:28,width:80,height:44,rx:7,fill:act?css('--teal'):css('--muted'),id:'clpc'+k},g);
+    txt(g,x,50,'PC '+k,{fill:css('--panel'),'font-size':14});
+  });
+  cl.status=el('g',{},clSvg); cl.layer=el('g',{},clSvg);
+}
+function clStatus(who,s,color){
+  const x=PCX[who]; const old=clSvg.querySelector('#st'+who); if(old)old.remove();
+  if(!s)return; const t=txt(cl.status,x,198,s,{fill:color||css('--ink'),'font-size':13,id:'st'+who});
+}
+function clLog(s){const L=$('clLog');if(L.dataset.init!=='1'){L.innerHTML='';L.dataset.init='1';}const d=document.createElement('div');d.textContent=s;L.appendChild(d);L.scrollTop=L.scrollHeight;}
+async function signal(senders,collide){
+  const bars=senders.map(w=>{const c=css(w===1?'--teal':'--u4');return {w,l:el('line',{x1:PCX[w],y1:BUS_Y,x2:PCX[w],y2:BUS_Y,stroke:c,'stroke-width':14,'stroke-linecap':'round',opacity:.85},cl.layer)};});
+  const meet=(PCX[1]+PCX[4])/2;
+  await tween(reduced?5:1100,p=>{
+    bars.forEach(b=>{
+      const x=PCX[b.w];
+      if(collide){const tgt=b.w===1?meet:meet;b.l.setAttribute('x1',x);b.l.setAttribute('x2',x+(tgt-x)*p);}
+      else{b.l.setAttribute('x1',x-(x-BX0)*p);b.l.setAttribute('x2',x+(BX1-x)*p);}
+    });
+  });
+  if(collide){
+    const burst=el('g',{},cl.layer);
+    el('circle',{cx:meet,cy:BUS_Y,r:30,fill:css('--bad'),opacity:.9},burst); txt(burst,meet,BUS_Y,'⚡',{'font-size':26,fill:'#fff'});
+    await sleep(reduced?5:700);
+  } else await sleep(reduced?5:500);
+  cl.layer.innerHTML='';
+}
+function setCl(m){if(cl.running)return;cl.mode=m;$('clF').setAttribute('aria-pressed',m==='F');$('clR').setAttribute('aria-pressed',m==='R');}
+$('clF').onclick=()=>setCl('F'); $('clR').onclick=()=>setCl('R');
+function clReset(){cl.running=false;clDraw();$('clCol').textContent='0';$('clDel').textContent='0 / 2';$('clTime').textContent='0';$('clLog').innerHTML='<div>Press Run.</div>';$('clLog').dataset.init='';$('clNote').classList.add('hide');}
+$('clReset').onclick=()=>{if(!cl.running)clReset();};
+$('clRun').onclick=async()=>{
+  if(cl.running)return; clReset(); cl.running=true; $('clRun').disabled=true;
+  const pred=+$('clPred').value||0;
+  let time=0, cols=0, delivered=0, attempts=0;
+  const next={1:0,4:0}, done={1:false,4:false};
+  const MAXCOL=5, DUR=3;
+  clLog(`Both PC 1 and PC 4 check the line. It is quiet, so both start sending at time 0.`);
+  while((!done[1]||!done[4])&&cols<MAXCOL){
+    const pending=[1,4].filter(w=>!done[w]);
+    const t=Math.min(...pending.map(w=>next[w]));
+    const starters=pending.filter(w=>next[w]===t);
+    time=t; $('clTime').textContent=time; attempts++;
+    pending.forEach(w=>clStatus(w,starters.includes(w)?'sending':'waiting',starters.includes(w)?css('--ink'):css('--muted')));
+    if(starters.length===2){
+      await signal([1,4],true); cols++; $('clCol').textContent=cols;
+      clLog(`t=${time}: COLLISION. Both devices detect the corrupted signal on the line.`);
+      let w1,w4;
+      if(cl.mode==='F'){w1=w4=2;}
+      else{const k=Math.min(cols,3), max=Math.pow(2,k)-1; w1=Math.floor(Math.random()*(max+1)); w4=Math.floor(Math.random()*(max+1));}
+      next[1]=time+1+w1; next[4]=time+1+w4;
+      clStatus(1,`wait ${w1}`,css('--orange')); clStatus(4,`wait ${w4}`,css('--orange'));
+      clLog(`   PC 1 waits ${w1}, PC 4 waits ${w4}${cl.mode==='F'?' (fixed)':' (random)'}.`);
+      await sleep(reduced?5:900);
+    } else {
+      const w=starters[0], other=pending.find(x=>x!==w);
+      await signal([w],false); done[w]=true; delivered++; $('clDel').textContent=delivered+' / 2';
+      clStatus(w,'delivered ✓',css('--good'));
+      clLog(`t=${time}: PC ${w} sends with no collision. Delivered.`);
+      if(other){
+        if(next[other]<time+DUR){clLog(`   PC ${other} senses the line is busy and waits until it is quiet.`);next[other]=time+DUR;}
+      }
+      await sleep(reduced?5:700);
+      time+=DUR; $('clTime').textContent=time;
+    }
+  }
+  const n=$('clNote'); n.classList.remove('hide');
+  if(delivered<2){
+    n.className='note bad';
+    n.innerHTML=`<b>Stuck after ${cols} collisions.</b> With a fixed wait, both devices always come back at exactly the same moment, so they collide every time. ${pred?`You predicted ${pred} attempt${pred>1?'s':''}.`:''} Now try a random wait.`;
+    clLog('Both devices give up after 5 collisions.');
+  } else {
+    n.className='note good';
+    n.innerHTML=`<b>Both messages delivered</b> after ${cols} collision${cols===1?'':'s'} and ${attempts} attempt${attempts===1?'':'s'}. ${pred?`You predicted ${pred}. `:''}A random wait means one device almost always goes first, and the other senses the line is busy and waits. Run it again: the result changes each time.`;
+  }
+  cl.running=false; $('clRun').disabled=false;
+};
+
+/* ---------------- init ---------------- */
+function initAll(){mxDraw();mxRecvInit();costUpd();swDraw();pbRender();pbMatchInit();pbPicksInit();pbAnsRender();rtDraw();renderChecks();clDraw();}
+initAll();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(!mx.busy)mxDraw();if(!sw.busy)swDraw();if(!rt.running)rtDraw();if(!cl.running)clDraw();});
+})();
+</script>
+</body>
+</html>

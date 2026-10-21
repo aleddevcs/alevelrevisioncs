@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bit race: serial vs parallel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5F8; --panel:#FFFFFF; --ink:#14213D; --muted:#55627A; --line:#D5DDE6;
+  --navy:#1B2A4A; --teal:#0F8B8D; --orange:#E8791F; --bad:#C4342D; --good:#1E7F48;
+  --track:#E6ECF2;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1726; --panel:#17223A; --ink:#E8EDF5; --muted:#9AA8BF; --line:#2B3A56;
+    --navy:#8FB0E8; --teal:#3CC4C2; --orange:#F5A04D; --bad:#F07167; --good:#5BD08D;
+    --track:#223152;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1726; --panel:#17223A; --ink:#E8EDF5; --muted:#9AA8BF; --line:#2B3A56;
+  --navy:#8FB0E8; --teal:#3CC4C2; --orange:#F5A04D; --bad:#F07167; --good:#5BD08D;
+  --track:#223152;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  font-size:17px; line-height:1.5;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 18px 48px}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 6px;color:var(--ink)}
+h1 .s{color:var(--teal)} h1 .p{color:var(--navy)}
+.lead{color:var(--muted);margin:0 0 22px;max-width:62ch}
+h2{font-size:1.25rem;margin:0 0 10px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px 22px;margin-bottom:16px}
+label.f{display:block;font-weight:700;font-size:.95rem;margin-bottom:6px}
+input[type=text]{
+  width:100%;font:600 1.1rem "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.08em;
+  padding:8px 10px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)
+}
+.seg{display:flex;flex-direction:column;gap:6px}
+.seg label{
+  display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border:2px solid var(--line);
+  border-radius:8px;cursor:pointer;font-size:.95rem
+}
+.seg label small{display:block;color:var(--muted);font-size:.82rem}
+.seg input{margin-top:4px;accent-color:var(--teal)}
+.seg label:has(input:checked){border-color:var(--teal);background:color-mix(in srgb,var(--teal) 10%,transparent)}
+.clock{margin-bottom:12px}
+.clock .row{display:flex;align-items:center;gap:10px}
+.clock input[type=range]{flex:1}
+.clock output{font:600 1rem "IBM Plex Mono",ui-monospace,monospace;min-width:2.6em;text-align:right}
+#clkS{accent-color:var(--teal)} #clkP{accent-color:var(--navy)}
+.toggle{display:flex;gap:8px;align-items:center;font-size:.95rem;cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--orange)}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+button{
+  font:700 1rem "Atkinson Hyperlegible",system-ui,sans-serif;border-radius:8px;padding:10px 18px;
+  cursor:pointer;border:2px solid transparent
+}
+.go{background:var(--orange);color:#1b1206}
+.go:hover{filter:brightness(1.05)}
+.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.stage{padding:10px 10px 4px}
+.canvasbox{width:100%;overflow:hidden}
+canvas{display:block;width:100%}
+.recv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;margin:10px 6px 4px}
+.recv .k{font-weight:700;font-size:.95rem}
+.recv .k.s{color:var(--teal)} .recv .k.p{color:var(--navy)}
+.chars{display:flex;gap:6px;flex-wrap:wrap;min-height:40px}
+.ch{
+  font:600 1.2rem "IBM Plex Mono",ui-monospace,monospace;width:34px;height:40px;display:grid;place-items:center;
+  border-radius:6px;border:2px solid var(--line);background:var(--bg)
+}
+.ch.ok{border-color:var(--good)} .ch.badc{border-color:var(--bad);color:var(--bad)}
+.result{margin:12px 6px 6px;padding:12px 14px;border-left:4px solid var(--teal);background:var(--bg);border-radius:0 8px 8px 0;display:none}
+.result.show{display:block}
+.result p{margin:4px 0}
+.result .insight{font-weight:700;margin-top:8px}
+.grid2{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
+@media (min-width:820px){.grid2{grid-template-columns:1.25fr 1fr}}
+ol.missions{padding-left:1.3em;margin:0}
+ol.missions li{margin-bottom:14px}
+details{margin-top:6px}
+summary{cursor:pointer;color:var(--teal);font-weight:700;font-size:.95rem}
+details p,details ul{margin:6px 0 0;color:var(--ink)}
+.exam .q{font-weight:700}
+.exam ul{padding-left:1.2em}
+.exam li{margin-bottom:4px}
+.term{font-weight:700;color:var(--orange)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin:2px 8px 6px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend .l1::before{background:var(--teal)} .legend .l0::before{border:2px solid var(--teal)}
+.legend .lx::before{background:var(--orange)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Bit race: <span class="s">serial</span> vs <span class="p">parallel</span></h1>
+  <p class="lead">Send the same message down a serial cable and a parallel cable at the same time. Change the distance and the clock speeds, then compare what arrives at the other end.</p>
+
+  <div class="panel">
+    <div class="controls">
+      <div>
+        <label class="f" for="msg">Message (up to 5 characters)</label>
+        <input id="msg" type="text" maxlength="5" value="DATA" autocomplete="off" spellcheck="false">
+        <p style="margin:8px 0 0;color:var(--muted);font-size:.85rem">Each character is sent as 8 bits of ASCII.</p>
+      </div>
+      <div>
+        <span class="f" style="display:block;font-weight:700;font-size:.95rem;margin-bottom:6px">Cable distance</span>
+        <div class="seg" role="radiogroup" aria-label="Cable distance">
+          <label><input type="radio" name="dist" value="inside" checked><span>Inside the computer<small>CPU to RAM, a few centimetres</small></span></label>
+          <label><input type="radio" name="dist" value="printer"><span>Printer cable<small>About 3 metres</small></span></label>
+          <label><input type="radio" name="dist" value="network"><span>Network cable<small>About 100 metres</small></span></label>
+        </div>
+      </div>
+      <div>
+        <div class="clock">
+          <label class="f" for="clkS">Serial clock speed</label>
+          <div class="row"><input id="clkS" type="range" min="1" max="16" value="1"><output id="oS">×1</output></div>
+        </div>
+        <div class="clock">
+          <label class="f" for="clkP">Parallel clock speed</label>
+          <div class="row"><input id="clkP" type="range" min="1" max="16" value="1"><output id="oP">×1</output></div>
+        </div>
+        <label class="toggle"><input id="xt" type="checkbox"> Crosstalk between wires</label>
+        <div class="btns">
+          <button class="go" id="send">Send message</button>
+          <button class="ghost" id="reset">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel stage" style="margin-top:16px">
+    <div class="legend"><span class="l1">bit 1</span><span class="l0">bit 0</span><span class="lx">bit read on the wrong clock tick or flipped</span></div>
+    <div class="canvasbox" id="cbox"><canvas id="cv" aria-label="Animation of bits travelling along a serial cable and a parallel cable"></canvas></div>
+    <div class="recv">
+      <span class="k s">Serial received</span><div class="chars" id="rS"></div>
+      <span class="k p">Parallel received</span><div class="chars" id="rP"></div>
+    </div>
+    <div class="result" id="res" aria-live="polite"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Your three missions</h2>
+      <ol class="missions">
+        <li>Keep the distance on <b>Inside the computer</b> and both clocks at ×1. Which cable delivers the message first, and roughly how many times faster is it?
+          <details><summary>Check your answer</summary>
+            <p>Parallel wins by about 8 times. It sends all 8 bits of a character together on every clock tick, while serial sends 1 bit per tick. Over short distances this makes parallel faster.</p>
+          </details>
+        </li>
+        <li>Switch to <b>Network cable</b> and send again. What happened to the parallel message, and why?
+          <details><summary>Check your answer</summary>
+            <p>The parallel message arrives corrupted. Signals on different wires don't travel at exactly the same speed, so the bits of one character drift apart. This is called <span class="term">skew</span>. The longer the cable, the bigger the drift, until bits are read on the wrong clock tick. That is why parallel only works over short distances.</p>
+          </details>
+        </li>
+        <li>Stay on <b>Network cable</b> and turn crosstalk on. First, try to find a parallel clock speed that delivers the message correctly. Then push the serial clock up. Can serial beat parallel's time with no errors?
+          <details><summary>Check your answer</summary>
+            <p>Parallel can't deliver the message correctly at any clock speed over this distance. Serial can, and if you push its clock high enough it also arrives first. Serial has only one data wire, so there is no skew to go wrong and no neighbouring wires to cause <span class="term">crosstalk</span>. It can therefore be clocked much faster. This is why most modern connections, such as USB, SATA, Ethernet and PCIe, are serial.</p>
+          </details>
+        </li>
+      </ol>
+    </div>
+    <div class="panel exam">
+      <h2>Exam link</h2>
+      <p class="q">2025 Q3(a): Describe two advantages and two disadvantages of parallel transmission over serial transmission. [4]</p>
+      <p>Write your answer with your partner before you open the mark scheme.</p>
+      <details><summary>Show mark scheme points</summary>
+        <p><b>Advantages</b> (max 2)</p>
+        <ul>
+          <li>Data is transmitted at a higher speed</li>
+          <li>Works well for short-distance communication</li>
+          <li>A set of bits is transferred at the same time</li>
+        </ul>
+        <p><b>Disadvantages</b> (max 2)</p>
+        <ul>
+          <li>More expensive because extra wires are needed</li>
+          <li>Over long distances the wire must be thicker to reduce signal degradation</li>
+          <li>Multiple communication channels are required</li>
+          <li>Crosstalk can occur when many data lines are used at once</li>
+        </ul>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SKEW=[0,0.12,-0.09,0.2,-0.16,0.05,0.18,-0.11]; // per-wire timing drift (ticks per unit distance)
+  const DIST={inside:0.3, printer:1, network:4};
+  const TRAVEL=3;   // ticks for a bit to cross the cable
+  const TPS=4;      // animation: ticks per second
+
+  const $=id=>document.getElementById(id);
+  const cv=$('cv'), ctx=cv.getContext('2d'), cbox=$('cbox');
+  let W=800, H=330, sim=null, raf=null, startT=0, lastT=-1;
+
+  function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+  function resize(){
+    W=cbox.clientWidth; H=Math.max(300, Math.min(360, W*0.42));
+    const dpr=window.devicePixelRatio||1;
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    draw(lastT<0?0:lastT);
+  }
+  new ResizeObserver(resize).observe(cbox);
+
+  ['clkS','clkP'].forEach((id,i)=>{
+    const o=$(i?'oP':'oS');
+    $(id).addEventListener('input',e=>{o.textContent='×'+e.target.value;});
+  });
+
+  function bitsOf(ch){const c=ch.charCodeAt(0)&255; return Array.from({length:8},(_,i)=>(c>>(7-i))&1);}
+  function charOf(bits){const c=bits.reduce((a,b)=>a*2+b,0); return (c>=32&&c<127)?String.fromCharCode(c):'?';}
+
+  function build(){
+    let msg=$('msg').value.replace(/[^\x20-\x7e]/g,'');
+    if(!msg){msg='DATA'; $('msg').value=msg;}
+    const D=DIST[document.querySelector('input[name=dist]:checked').value];
+    const cs=+$('clkS').value, cp=+$('clkP').value, xt=$('xt').checked;
+    const bytes=[...msg].map(bitsOf);
+
+    const serial=[]; let i=0;
+    bytes.forEach((b,j)=>b.forEach((bit,k)=>{serial.push({bit,dep:i/cs,arr:i/cs+TRAVEL,j}); i++;}));
+    const n=serial.length;
+
+    let shifted=0, flipped=0;
+    const recvP=bytes.map((b,j)=>b.map((_,k)=>{
+      const r=Math.round(SKEW[k]*D*cp);
+      const src=bytes[j-r]; let v=src?src[k]:0; let s=r!==0, f=false;
+      if(xt && Math.random()<Math.min(0.35,0.03*D*cp)){v^=1; f=true;}
+      if(v===b[k]){s=false; f=false;}  // only count as wrong if the bit actually changed
+      if(s) shifted++; else if(f) flipped++;
+      return {v,bad:s||f};
+    }));
+
+    const par=[];
+    bytes.forEach((b,j)=>b.forEach((bit,k)=>{
+      const lag=SKEW[k]*D;
+      par.push({bit,dep:j/cp,arr:j/cp+TRAVEL+lag,k,j,bad:recvP[j][k].bad});
+    }));
+
+    const sEnd=(n-1)/cs+TRAVEL;
+    const pRead=(bytes.length-1)/cp+TRAVEL;
+    const pAnim=Math.max(pRead,...par.map(p=>p.arr));
+    return {msg,bytes,serial,par,recvP,cs,cp,xt,D,sEnd,pRead,end:Math.max(sEnd,pAnim)+0.4,shifted,flipped,
+            sShown:0,pShown:0};
+  }
+
+  function geom(){
+    const x0=Math.max(56,W*0.07), x1=W-Math.max(28,W*0.04);
+    const r=Math.max(6,Math.min(10,W/75));
+    const sy=44;
+    const pTop=112, gap=(H-pTop-16)/7;
+    return {x0,x1,r,sy,pTop,gap};
+  }
+
+  function token(x,y,r,bit,col,warn){
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+    const c=warn?css('--orange'):col;
+    if(bit){ctx.fillStyle=c; ctx.fill();}
+    else{ctx.fillStyle=css('--panel'); ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=c; ctx.stroke();}
+    if(r>=8){
+      ctx.fillStyle=bit?css('--panel'):c;
+      ctx.font=`600 ${Math.round(r*1.15)}px "IBM Plex Mono",monospace`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(bit,x,y+0.5);
+    }
+  }
+
+  function draw(t){
+    const g=geom();
+    ctx.clearRect(0,0,W,H);
+    const ink=css('--ink'), muted=css('--muted'), track=css('--track'), teal=css('--teal'), navy=css('--navy');
+
+    ctx.font='700 14px "Atkinson Hyperlegible",sans-serif'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    const tS='Serial: 1 data wire', tP='Parallel: 8 data wires';
+    ctx.fillStyle=teal; ctx.fillText(tS,g.x0,g.sy-g.r-10);
+    const wS=ctx.measureText(tS).width;
+    ctx.fillStyle=navy; ctx.fillText(tP,g.x0,g.pTop-g.r-12);
+    const wP=ctx.measureText(tP).width;
+    ctx.fillStyle=muted; ctx.font='600 12px "Atkinson Hyperlegible",sans-serif'; ctx.textAlign='right';
+    if(W>=560) ctx.fillText('Receiver',g.x1,g.sy-g.r-10);
+
+    // tracks
+    ctx.lineCap='round';
+    ctx.strokeStyle=track; ctx.lineWidth=g.r*2+6;
+    ctx.beginPath(); ctx.moveTo(g.x0,g.sy); ctx.lineTo(g.x1,g.sy); ctx.stroke();
+    ctx.lineWidth=Math.min(g.r*2+4,g.gap-3);
+    for(let k=0;k<8;k++){const y=g.pTop+k*g.gap; ctx.beginPath(); ctx.moveTo(g.x0,y); ctx.lineTo(g.x1,y); ctx.stroke();}
+
+    // crosstalk squiggles
+    if($('xt').checked){
+      ctx.strokeStyle=css('--orange'); ctx.globalAlpha=0.35; ctx.lineWidth=1.2;
+      const ph=t*6;
+      for(let k=0;k<7;k++){
+        const ym=g.pTop+k*g.gap+g.gap/2;
+        ctx.beginPath();
+        for(let x=g.x0;x<=g.x1;x+=4){const y=ym+Math.sin(x/9+ph+k)*Math.min(3,g.gap/6); x===g.x0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+        ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+    }
+
+    // receiver line
+    ctx.strokeStyle=muted; ctx.setLineDash([4,4]); ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(g.x1,g.sy-g.r-6); ctx.lineTo(g.x1,g.sy+g.r+6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(g.x1,g.pTop-g.r-6); ctx.lineTo(g.x1,g.pTop+7*g.gap+g.r+6); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // wire labels in the left gutter
+    ctx.fillStyle=muted; ctx.font='600 11px "IBM Plex Mono",monospace'; ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(let k=0;k<8;k++){ctx.fillText('D'+(7-k),g.x0-8,g.pTop+k*g.gap);}
+    ctx.textBaseline='alphabetic';
+
+    if(!sim) return;
+    // waiting counts, next to each title
+    const waitS=sim.serial.filter(b=>b.dep>t).length;
+    const waitP=Math.ceil(sim.par.filter(b=>b.dep>t).length/8);
+    ctx.fillStyle=muted; ctx.font='400 12px "Atkinson Hyperlegible",sans-serif'; ctx.textAlign='left';
+    if(waitS) ctx.fillText(waitS+(W<560?' left':' bits still to send'),g.x0+wS+12,g.sy-g.r-10);
+    if(waitP) ctx.fillText(waitP+(W<560?' left':' characters still to send'),g.x0+wP+12,g.pTop-g.r-12);
+
+    const span=g.x1-g.x0;
+    sim.serial.forEach(b=>{ if(t>=b.dep && t<b.arr){ token(g.x0+span*(t-b.dep)/(b.arr-b.dep),g.sy,g.r,b.bit,teal,false);} });
+    sim.par.forEach(b=>{ if(t>=b.dep && t<b.arr){
+      const f=(t-b.dep)/(b.arr-b.dep);
+      token(g.x0+span*f,g.pTop+b.k*g.gap,g.r,b.bit,navy,b.bad&&f>0.65);
+    }});
+  }
+
+  function renderChars(el,arr){el.innerHTML=arr.map(c=>`<span class="ch ${c.ok?'ok':'badc'}">${c.c===' '?'&nbsp;':c.c.replace(/[&<>]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}</span>`).join('');}
+
+  function updateReceived(t){
+    const sDone=sim.bytes.filter((_,j)=>{const last=sim.serial[j*8+7]; return t>=last.arr;}).length;
+    const pDone=sim.bytes.filter((_,j)=>t>=j/sim.cp+TRAVEL).length;
+    if(sDone!==sim.sShown){sim.sShown=sDone; renderChars($('rS'),sim.msg.slice(0,sDone).split('').map(c=>({c,ok:true})));}
+    if(pDone!==sim.pShown){
+      sim.pShown=pDone;
+      renderChars($('rP'),sim.recvP.slice(0,pDone).map((bits,j)=>{const c=charOf(bits.map(b=>b.v)); return {c,ok:c===sim.msg[j]};}));
+    }
+  }
+
+  function finish(){
+    const s=sim, bad=s.shifted+s.flipped;
+    const fmt=x=>x.toFixed(1);
+    const pText=s.recvP.map(b=>charOf(b.map(x=>x.v))).join('');
+    let insight;
+    if(bad>0){
+      insight='The parallel message was corrupted. ';
+      if(s.shifted) insight+='Bits on different wires arrived at slightly different times (skew), so some were read on the wrong clock tick. ';
+      if(s.flipped) insight+='Crosstalk between neighbouring wires flipped some bits. ';
+      if(s.sEnd<s.pRead) insight+='Serial also got there first.';
+    } else if(s.pRead<s.sEnd){
+      insight='Parallel was faster: it moves 8 bits on every clock tick, while serial moves 1.';
+    } else {
+      insight='Serial was as fast or faster, with no errors. With only one wire there is no skew, so it can be clocked much faster.';
+    }
+    const r=$('res');
+    r.innerHTML=`<p><b style="color:var(--teal)">Serial</b> delivered “${esc(s.msg)}” in ${fmt(s.sEnd)} time units with no errors.</p>
+      <p><b style="color:var(--navy)">Parallel</b> delivered “${esc(pText)}” in ${fmt(s.pRead)} time units${bad?` with <b style="color:var(--bad)">${bad} bit${bad>1?'s':''} wrong</b>`:' with no errors'}.</p>
+      <p class="insight">${insight}</p>`;
+    r.classList.add('show');
+    r.style.borderLeftColor=bad?css('--bad'):css('--teal');
+    $('send').disabled=false;
+  }
+  function esc(x){return x.replace(/[&<>]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]));}
+
+  function loop(now){
+    const t=(now-startT)/1000*TPS; lastT=t;
+    draw(t); updateReceived(t);
+    if(t<sim.end) raf=requestAnimationFrame(loop); else {raf=null; finish();}
+  }
+
+  $('send').addEventListener('click',()=>{
+    if(raf) cancelAnimationFrame(raf);
+    sim=build(); $('rS').innerHTML=''; $('rP').innerHTML='';
+    $('res').classList.remove('show'); $('send').disabled=true;
+    startT=performance.now(); raf=requestAnimationFrame(loop);
+  });
+  $('reset').addEventListener('click',()=>{
+    if(raf) cancelAnimationFrame(raf); raf=null; sim=null; lastT=-1;
+    $('rS').innerHTML=''; $('rP').innerHTML=''; $('res').classList.remove('show');
+    $('send').disabled=false; draw(0);
+  });
+  $('xt').addEventListener('change',()=>{ if(!raf) draw(lastT<0?0:lastT); });
+
+  resize();
+})();
+</script>
+</body>
+</html>

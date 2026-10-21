@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Starter: Lesson 1 recall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5F8; --panel:#FFFFFF; --ink:#14213D; --muted:#55627A; --line:#D5DDE6;
+  --navy:#1B2A4A; --teal:#0F8B8D; --orange:#E8791F; --bad:#C4342D; --good:#1E7F48;
+  --soft:#E9EEF3; --onaccent:#FFFFFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1726; --panel:#17223A; --ink:#E8EDF5; --muted:#9AA8BF; --line:#2B3A56;
+    --navy:#8FB0E8; --teal:#3CC4C2; --orange:#F5A04D; --bad:#F07167; --good:#5BD08D;
+    --soft:#1E2B46; --onaccent:#0F1726;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1726; --panel:#17223A; --ink:#E8EDF5; --muted:#9AA8BF; --line:#2B3A56;
+  --navy:#8FB0E8; --teal:#3CC4C2; --orange:#F5A04D; --bad:#F07167; --good:#5BD08D;
+  --soft:#1E2B46; --onaccent:#0F1726;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:17px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:26px 18px 48px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+h1{font-size:2rem;line-height:1.15;margin:0}
+.sub{color:var(--muted);margin:4px 0 16px}
+.score{font:600 1rem "IBM Plex Mono",ui-monospace,monospace;color:var(--muted)}
+.score b{color:var(--teal);font-size:1.2rem}
+.dots{display:flex;gap:6px;margin-bottom:16px}
+.dot{flex:1;height:6px;border-radius:3px;background:var(--soft)}
+.dot.ok{background:var(--good)} .dot.no{background:var(--bad)} .dot.now{background:var(--orange)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+.tag{display:inline-block;font-size:.8rem;font-weight:700;padding:2px 10px;border-radius:999px;background:var(--soft);color:var(--muted);margin-bottom:8px}
+.qtype{font:600 .8rem "IBM Plex Mono",ui-monospace,monospace;color:var(--orange);margin-left:6px}
+h2{font-size:1.3rem;line-height:1.3;margin:0 0 14px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;font:400 1rem "Atkinson Hyperlegible",system-ui,sans-serif;background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:9px;padding:11px 14px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--teal)}
+.tf{flex-direction:row}
+.tf .opt{flex:1;text-align:center;font-weight:700;font-size:1.1rem}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--panel))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--panel))}
+.opt:disabled{cursor:default}
+.sort{display:grid;grid-template-columns:1fr;gap:10px}
+.srow{border:2px solid var(--line);border-radius:10px;padding:10px 12px}
+.srow.right{border-color:var(--good)} .srow.wrong{border-color:var(--bad)}
+.srow .s{font-weight:700;margin-bottom:6px}
+.srow .bs{display:flex;gap:6px;flex-wrap:wrap}
+.srow .bs button{font:700 .9rem "Atkinson Hyperlegible",system-ui,sans-serif;background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+.srow .bs button[aria-pressed="true"]{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 12%,var(--panel))}
+.srow .bs button.ans{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--panel))}
+.srow .bs button.no{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--panel))}
+.srow .bs button:disabled{opacity:.55;cursor:default}
+.srow .bs button.ans:disabled,.srow .bs button.no:disabled{opacity:1}
+.srow .fb{font-size:.88rem;color:var(--muted);margin-top:6px}
+.fbk{margin-top:14px;padding:12px 14px;border-left:4px solid var(--good);background:var(--bg);border-radius:0 8px 8px 0}
+.fbk.no{border-left-color:var(--bad)}
+.fbk p{margin:2px 0}
+button.b{font:700 1rem "Atkinson Hyperlegible",system-ui,sans-serif;border-radius:8px;padding:10px 18px;cursor:pointer;border:2px solid transparent}
+.go{background:var(--orange);color:#1b1206}
+.ghost{background:transparent;color:var(--ink);border-color:var(--line)!important}
+button:disabled{opacity:.5;cursor:not-allowed}
+.opt:disabled{opacity:1}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.big{font:600 3rem "IBM Plex Mono",ui-monospace,monospace;color:var(--teal);line-height:1}
+textarea{width:100%;min-height:70px;font:inherit;font-size:1rem;padding:10px 12px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical}
+ul.rev{padding-left:1.2em;margin:8px 0 0} ul.rev li{margin-bottom:6px}
+.hint{color:var(--muted);font-size:.88rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>Lesson 1 recall</h1><p class="sub">Serial and parallel, simplex and duplex. Answer each question, read the feedback, then move on.</p></div>
+    <div class="score">Score <b id="sc">0</b> / <span id="mx"></span></div>
+  </header>
+  <div class="dots" id="dots"></div>
+  <main id="app"></main>
+</div>
+<script>
+(function(){
+const Q=[
+ {tag:'Serial and parallel',type:'mcq',q:'Which of these describes serial transmission?',
+  a:'Data is sent one bit at a time along a single channel',
+  w:['Several bits are sent at the same time, each on its own wire','Data travels in one direction only','Data is split into packets that take different routes'],
+  fb:'Serial sends one bit after another down one channel. Several bits at once on separate wires is parallel.'},
+ {tag:'Serial and parallel',type:'tf',q:'True or false: parallel transmission is always faster than serial transmission.',a:false,
+  fb:'False. Parallel moves more bits per clock tick, but skew and crosstalk stop it being clocked fast. Modern serial links such as USB and SATA are faster overall.'},
+ {tag:'Skew and crosstalk',type:'mcq',q:'Bits sent at the same time on different wires arrive at slightly different times. What is this called?',
+  a:'Skew',w:['Crosstalk','A collision','Multiplexing'],
+  fb:'This is skew. It gets worse as the cable gets longer, which is why parallel is limited to short distances.'},
+ {tag:'Skew and crosstalk',type:'mcq',q:'What is crosstalk?',
+  a:'Interference between wires running side by side',
+  w:['Bits on different wires arriving at different times','Two devices sending at the same time on a shared cable','Data travelling both ways at the same time'],
+  fb:'Crosstalk is electrical interference between neighbouring wires. Parallel cables have many wires side by side, so they suffer from it more.'},
+ {tag:'Serial and parallel',type:'mcq',q:'2025 Q3(a) asked for disadvantages of parallel over serial. Which of these would earn a mark?',
+  a:'It is more expensive because extra wires are needed',
+  w:['It can only send one bit at a time','It cannot be used inside a computer','The data always arrives in the wrong order'],
+  fb:'Extra wires make parallel more expensive. The mark scheme also credits needing thicker wire over long distances, needing multiple channels, and crosstalk.'},
+ {tag:'Simplex and duplex',type:'sort',q:'Which method does each one use?',
+  items:[['A walkie-talkie conversation','half','You hold the button to talk, then let go so the other person can reply.'],['A TV transmitter sending to homes','simplex','The aerials only receive. Nothing is sent back.'],['A video call','full','Both people send and receive at the same moment.']],
+  fb:'Taking turns is half duplex, one way only is simplex, and both ways at once is full duplex.'},
+ {tag:'Simplex and duplex',type:'tf',q:'True or false: simplex means data is sent one bit at a time.',a:false,
+  fb:'False. That is serial transmission. Simplex is about direction: data travels one way only.'},
+ {tag:'Earning the mark',type:'mcq',q:'Which answer would earn the mark for describing half duplex?',
+  a:'Data can travel in both directions, but only in one direction at a time',
+  w:['Data can travel in both directions','It is slower than full duplex','Data is sent one bit at a time'],
+  fb:'"Both directions" alone also describes full duplex, so it doesn\u2019t earn the mark. You must say only one direction at a time.'},
+];
+const MN={simplex:'Simplex',half:'Half duplex',full:'Full duplex'};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let i=0,score=0,res=[],note='';
+$('mx').textContent=Q.length;
+function dots(){$('dots').innerHTML=Q.map((_,k)=>`<span class="dot ${res[k]===true?'ok':res[k]===false?'no':k===i?'now':''}"></span>`).join('');$('sc').textContent=score;}
+function feedback(ok,text){
+  return `<div class="fbk ${ok?'':'no'}"><p><b>${ok?'Correct.':'Not quite.'}</b></p><p>${esc(text)}</p></div>
+  <div class="row"><button class="b go" id="nx">${i+1<Q.length?'Next question':'See my results'}</button></div>`;
+}
+function done(ok){res[i]=ok;if(ok)score++;dots();}
+function wireNext(){const n=$('nx');n.focus();n.onclick=()=>{i++;i<Q.length?show():results();};}
+function show(){
+  dots(); const q=Q[i];
+  const head=`<span class="tag">${esc(q.tag)}</span><span class="qtype">${q.type==='tf'?'TRUE OR FALSE':q.type==='sort'?'SORT':'CHOOSE ONE'}</span><h2>${i+1}. ${esc(q.q)}</h2>`;
+  if(q.type==='mcq'){
+    const opts=shuffle([q.a,...q.w]);
+    $('app').innerHTML=`<div class="panel">${head}<div class="opts">${opts.map((o,k)=>`<button class="opt" data-k="${k}">${esc(o)}</button>`).join('')}</div><div id="fb"></div></div>`;
+    document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const ok=opts[+b.dataset.k]===q.a;
+      document.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(opts[+x.dataset.k]===q.a)x.classList.add('right');});
+      if(!ok)b.classList.add('wrong');
+      done(ok);$('fb').innerHTML=feedback(ok,q.fb);wireNext();
+    });
+  } else if(q.type==='tf'){
+    $('app').innerHTML=`<div class="panel">${head}<div class="opts tf"><button class="opt" data-v="1">True</button><button class="opt" data-v="0">False</button></div><div id="fb"></div></div>`;
+    document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const v=b.dataset.v==='1', ok=v===q.a;
+      document.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if((x.dataset.v==='1')===q.a)x.classList.add('right');});
+      if(!ok)b.classList.add('wrong');
+      done(ok);$('fb').innerHTML=feedback(ok,q.fb);wireNext();
+    });
+  } else {
+    const pick={};
+    $('app').innerHTML=`<div class="panel">${head}<div class="sort">${q.items.map((it,k)=>`<div class="srow" id="sr${k}"><div class="s">${esc(it[0])}</div><div class="bs">${Object.keys(MN).map(m=>`<button data-k="${k}" data-m="${m}" aria-pressed="false">${MN[m]}</button>`).join('')}</div></div>`).join('')}</div>
+      <div class="row"><button class="b go" id="chk" disabled>Check</button></div><div id="fb"></div></div>`;
+    document.querySelectorAll('.srow button').forEach(b=>b.onclick=()=>{
+      const k=b.dataset.k; pick[k]=b.dataset.m;
+      document.querySelectorAll(`.srow button[data-k="${k}"]`).forEach(x=>x.setAttribute('aria-pressed',x===b));
+      $('chk').disabled=Object.keys(pick).length<q.items.length;
+    });
+    $('chk').onclick=()=>{
+      let all=true;
+      q.items.forEach((it,k)=>{
+        const ok=pick[k]===it[1]; if(!ok)all=false;
+        const r=$('sr'+k); r.classList.add(ok?'right':'wrong');
+        r.querySelectorAll('button').forEach(x=>{x.disabled=true;if(x.dataset.m===it[1])x.classList.add('ans');else if(x.dataset.m===pick[k])x.classList.add('no');});
+        r.insertAdjacentHTML('beforeend',`<div class="fb">${ok?'':'It\u2019s '+MN[it[1]].toLowerCase()+'. '}${esc(it[2])}</div>`);
+      });
+      $('chk').parentElement.remove();
+      done(all);$('fb').innerHTML=feedback(all,q.fb);wireNext();
+    };
+  }
+}
+function results(){
+  dots();
+  const wrong=Q.map((q,k)=>res[k]?null:q.tag).filter(Boolean);
+  const tags=[...new Set(wrong)];
+  $('app').innerHTML=`<div class="panel">
+    <h2 style="margin-bottom:6px">Your score</h2>
+    <div class="big">${score} / ${Q.length}</div>
+    ${tags.length?`<p style="margin:14px 0 0">Look back over:</p><ul class="rev">${tags.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:'<p style="margin:14px 0 0">Every question correct. Lesson 1 has stuck.</p>'}
+    <h3 style="margin:20px 0 6px;font-size:1.05rem">One thing from Lesson 1 I\u2019m still unsure about</h3>
+    <textarea id="unsure" placeholder="Write it here. Your teacher will pick these up in Lesson 3.">${esc(note)}</textarea>
+    <div class="row">
+      <button class="b go" id="copy">Copy my result</button>
+      <button class="b ghost" id="again">Try again</button>
+      <span class="hint" id="copied" aria-live="polite"></span>
+    </div></div>`;
+  $('unsure').oninput=e=>note=e.target.value;
+  $('again').onclick=()=>{i=0;score=0;res=[];show();};
+  $('copy').onclick=async()=>{
+    const t=`Lesson 1 recall: ${score}/${Q.length}${tags.length?'\nLook back over: '+tags.join(', '):''}${note.trim()?'\nStill unsure about: '+note.trim():''}`;
+    try{await navigator.clipboard.writeText(t);$('copied').textContent='Copied.';}
+    catch(e){$('copied').textContent='Copy is blocked here. Select the text and copy it instead.';}
+  };
+}
+show();
+})();
+</script>
+</body>
+</html>

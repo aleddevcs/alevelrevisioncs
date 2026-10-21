@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bits, bases and negative numbers: Topic 4, Lesson 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#14213D; --navy-2:#22335A; --teal:#0F8B8D; --teal-soft:#D6EFEF;
+  --orange:#F28C28; --orange-soft:#FDE9D4; --paper:#F3F6FA; --card:#FFFFFF;
+  --ink:#1B2433; --muted:#5A667A; --line:#D5DCE6; --good:#1E8A4C; --bad:#C0392B;
+  --sans:"Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+  --mono:"JetBrains Mono", Consolas, "Courier New", monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.5}
+button,input{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+
+header{background:var(--navy);color:#fff;padding:18px 24px 0}
+.head-inner{max-width:1100px;margin:0 auto}
+.kicker{color:#9FD9DA;font-size:15px;margin:0}
+h1{margin:2px 0 14px;font-size:30px;line-height:1.15}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:transparent;border:0;color:#C9D3E6;padding:10px 18px;border-radius:10px 10px 0 0;font-weight:700}
+nav button[aria-selected="true"]{background:var(--paper);color:var(--navy)}
+nav button:hover:not([aria-selected="true"]){color:#fff;background:var(--navy-2)}
+
+main{max-width:1100px;margin:0 auto;padding:24px}
+.panel{display:none}
+.panel.active{display:block}
+h2{font-size:24px;margin:0 0 4px;color:var(--navy)}
+.lede{color:var(--muted);margin:0 0 20px;max-width:70ch}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:10px;padding:8px 16px;font-weight:700}
+.btn:hover{background:var(--teal-soft)}
+.btn.primary{background:var(--navy);color:#fff}
+.btn.primary:hover{background:var(--navy-2)}
+.btn.accent{background:var(--orange);border-color:var(--orange);color:var(--navy)}
+.seg{display:inline-flex;border:2px solid var(--navy);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:#fff;color:var(--navy);padding:8px 14px;font-weight:700}
+.seg button+button{border-left:2px solid var(--navy)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.label{font-weight:700;color:var(--navy);margin-right:4px}
+
+/* ---------- Bit board ---------- */
+.register-wrap{overflow-x:auto;padding:8px 0 4px}
+.regbox{display:flex;flex-direction:column;width:max-content;margin:0 auto}
+.register{display:flex;gap:18px;padding:0 4px}
+.byte{display:flex;flex-direction:column;align-items:center;gap:6px}
+.byte-bits{display:flex;gap:10px}
+.nibble{display:flex;flex-direction:column;align-items:center;gap:6px}
+.nibble-bits{display:flex;gap:4px}
+.bitcol{display:flex;flex-direction:column;align-items:center;gap:4px}
+.pv{font-family:var(--mono);font-size:14px;color:var(--muted);height:16px;white-space:nowrap}
+.bit{width:58px;height:76px;border-radius:12px;border:2px solid var(--navy);background:#fff;font-family:var(--mono);font-size:34px;font-weight:700;color:var(--navy);transition:background .12s}
+.bit.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.compact .bit{width:30px;height:46px;font-size:20px;border-radius:7px}
+.compact .pv{font-size:10px}
+.tiny .register{gap:12px}.tiny .byte-bits{gap:8px}.tiny .nibble-bits{gap:3px}
+.tiny .bit{width:24px;height:40px;font-size:16px;border-radius:6px}
+.tiny .pv{font-size:9px}.tiny .hexdigit{min-width:34px;font-size:17px}
+.hexdigit{font-family:var(--mono);font-weight:700;font-size:20px;color:var(--orange);background:var(--navy);border-radius:8px;min-width:46px;text-align:center;padding:2px 8px}
+.bytelabel{font-size:13px;color:var(--muted);border-top:2px solid var(--line);width:100%;text-align:center;padding-top:2px}
+.ends{display:flex;justify-content:space-between;gap:24px;font-size:14px;color:var(--muted);margin:8px 4px 0}
+.readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.readout{background:var(--paper);border-radius:12px;padding:12px 16px}
+.readout .name{font-size:14px;color:var(--muted)}
+.readout .val{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--navy);word-break:break-all}
+.working{margin-top:12px;font-family:var(--mono);font-size:15px;color:var(--ink);background:var(--teal-soft);border-radius:10px;padding:10px 14px;word-break:break-word}
+.setbox input{width:150px;padding:8px 10px;border:2px solid var(--line);border-radius:10px}
+.negsteps{display:none;margin-top:10px;font-family:var(--mono);font-size:15px;background:var(--orange-soft);border-radius:10px;padding:10px 14px}
+.negsteps.show{display:block}
+.negsteps div{margin:2px 0}
+.pv.neg{color:var(--orange);font-weight:700}
+.target{display:none;margin-top:16px;border:3px dashed var(--orange);border-radius:14px;padding:14px 18px;background:var(--orange-soft)}
+.target.show{display:block}
+.target .t{font-size:22px;font-weight:700;color:var(--navy)}
+.target .t span{font-family:var(--mono)}
+.msg-good{color:var(--good);font-weight:700}
+
+/* ---------- Sort ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.card.right{border-left-color:var(--good)}
+.card.wrong{border-left-color:var(--bad)}
+.card p{margin:0}
+.choices{display:flex;gap:6px}
+.choices button{flex:1;border:2px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;padding:6px 0;font-weight:700}
+.choices button.picked-right{background:var(--good);border-color:var(--good);color:#fff}
+.choices button.picked-wrong{background:var(--bad);border-color:var(--bad);color:#fff}
+.why{font-size:15px;color:var(--muted)}
+.tally{font-weight:700;color:var(--navy)}
+details.exam{margin-top:18px;background:var(--card);border:2px solid var(--navy);border-radius:14px;padding:6px 18px}
+details.exam summary{font-weight:700;color:var(--navy);padding:8px 0;cursor:pointer}
+.q{border-top:1px solid var(--line);padding:12px 0}
+.q .src{font-size:14px;color:var(--muted)}
+.ms{display:none;background:var(--teal-soft);border-radius:10px;padding:10px 14px;margin-top:8px}
+.ms.show{display:block}
+
+/* ---------- Conversion practice ---------- */
+.practice{display:grid;grid-template-columns:280px 1fr;gap:18px}
+.settings h3{font-size:16px;margin:14px 0 6px;color:var(--navy)}
+.settings h3:first-child{margin-top:0}
+.chips{display:flex;flex-direction:column;gap:6px}
+.chip{display:flex;align-items:center;gap:8px;font-size:16px}
+.chip input{width:18px;height:18px;accent-color:var(--teal)}
+.levels{display:flex;flex-direction:column;gap:6px}
+.levels button{text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 12px}
+.levels button[aria-pressed="true"]{border-color:var(--teal);background:var(--teal-soft)}
+.levels small{display:block;color:var(--muted)}
+.pairs{margin-top:14px;font-size:15px;color:var(--muted);background:var(--paper);border-radius:10px;padding:10px 12px}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
+.progress{display:flex;justify-content:space-between;color:var(--muted);font-size:15px;margin-bottom:8px}
+.dots{display:flex;gap:5px}
+.dots i{width:12px;height:12px;border-radius:50%;background:var(--line);display:inline-block}
+.dots i.ok{background:var(--good)} .dots i.no{background:var(--orange)} .dots i.cur{outline:2px solid var(--navy)}
+.qtype{font-size:15px;color:var(--teal);font-weight:700}
+.qtext{font-size:22px;margin:4px 0 16px}
+.qtext .num{font-family:var(--mono);font-weight:700;color:var(--navy);background:var(--orange-soft);padding:2px 8px;border-radius:6px}
+.answer{display:flex;gap:10px;flex-wrap:wrap}
+.answer input{flex:1;min-width:200px;font-family:var(--mono);font-size:22px;padding:8px 12px;border:2px solid var(--navy);border-radius:10px}
+.feedback{min-height:28px;margin:12px 0 4px;font-weight:700}
+.feedback.good{color:var(--good)} .feedback.bad{color:var(--bad)} .feedback.note{color:var(--orange)}
+.steps{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.steps ol{margin:6px 0 0;padding-left:22px}
+.steps li{margin:4px 0}
+.mono{font-family:var(--mono)}
+table.pvt{border-collapse:collapse;font-family:var(--mono);margin:6px 0;font-size:15px}
+table.pvt td{border:1px solid var(--line);padding:4px 8px;text-align:center}
+table.pvt tr:first-child td{background:var(--paper);color:var(--muted)}
+table.pvt td.hit{background:var(--teal-soft);font-weight:700}
+.tablewrap{overflow-x:auto}
+.summary{text-align:center;padding:20px}
+.summary .big{font-size:48px;font-weight:700;color:var(--navy)}
+
+@media (max-width:820px){
+  .practice{grid-template-columns:1fr}
+  .readouts{grid-template-columns:1fr}
+  h1{font-size:24px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-inner">
+    <p class="kicker">Unit 1, Topic 4: Data representation and data types (4.1.1, 4.1.2, 4.4.2)</p>
+    <h1>Bits, bases and negative numbers</h1>
+    <nav role="tablist" aria-label="Activities">
+      <button role="tab" aria-selected="true" aria-controls="p-board" id="t-board">Bit board</button>
+      <button role="tab" aria-selected="false" aria-controls="p-sort" id="t-sort">Bit, byte or word?</button>
+      <button role="tab" aria-selected="false" aria-controls="p-conv" id="t-conv">Conversion practice</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- ===================== BIT BOARD ===================== -->
+<section class="panel active" id="p-board" role="tabpanel" aria-labelledby="t-board">
+  <h2>Bit board</h2>
+  <p class="lede">Each switch is one bit. Click a bit to flip it between 0 and 1 and watch the values change. Every group of four bits is one hex digit. Switch the number type to see how the same bits can mean a negative number.</p>
+  <div class="box">
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <div class="row">
+        <span class="label">Word size</span>
+        <div class="seg" id="wordSeg">
+          <button aria-pressed="true" data-w="8">8-bit</button>
+          <button aria-pressed="false" data-w="16">16-bit</button>
+          <button aria-pressed="false" data-w="32">32-bit</button>
+        </div>
+      </div>
+      <div class="row">
+        <span class="label">Number type</span>
+        <div class="seg" id="modeSeg">
+          <button aria-pressed="true" data-m="u">Unsigned</button>
+          <button aria-pressed="false" data-m="s">Sign and magnitude</button>
+          <button aria-pressed="false" data-m="t">Two's complement</button>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-bottom:12px">
+      <div class="row">
+        <button class="btn" id="bNeg" style="display:none">Make it negative</button>
+        <button class="btn" id="bClear">All 0</button>
+        <button class="btn" id="bFill">All 1</button>
+        <button class="btn" id="bRand">Random</button>
+      </div>
+    </div>
+    <div class="register-wrap"><div class="regbox"><div class="register" id="register"></div>
+    <div class="ends"><span>MSB (most significant bit)</span><span>LSB (least significant bit)</span></div></div></div>
+
+    <div class="readouts">
+      <div class="readout"><div class="name">Denary (base 10)</div><div class="val" id="rDen">0</div></div>
+      <div class="readout"><div class="name" id="hexName">Hexadecimal (base 16)</div><div class="val" id="rHex">0</div></div>
+      <div class="readout"><div class="name">Range for this word size</div><div class="val" id="rRange" style="font-size:20px;font-family:var(--sans);word-break:normal">0 to 255</div></div>
+    </div>
+    <div class="working" id="rWork">No bits are on, so the value is 0.</div>
+    <div class="negsteps" id="negSteps"></div>
+
+    <div class="row setbox" style="margin-top:16px">
+      <span class="label">Set a value</span>
+      <input id="setIn" placeholder="e.g. 165, −39 or B4h" aria-label="Value to set: denary, or hex ending in h">
+      <button class="btn" id="setBtn">Show it</button>
+      <span id="setMsg" class="why"></span>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn accent" id="tgtBtn">Give us a target</button>
+      <span class="why">Match the target by flipping bits. Works in any word size.</span>
+    </div>
+    <div class="target" id="target">
+      <div class="t" id="tgtText"></div>
+      <div id="tgtMsg" class="why">Flip the bits until the board matches.</div>
+    </div>
+  </div>
+
+  <details class="exam">
+    <summary>Past paper check: negative numbers</summary>
+    <div class="q">
+      <div class="src">2016, Q6(c)</div>
+      <p>Using an example, describe two's complementation in an 8 bit register. [2]</p>
+      <button class="btn" data-ms="ms4">Show mark scheme</button>
+      <div class="ms" id="ms4">One mark for the method: flip the bits and add one (or, from the right, copy up to and including the first 1, then flip every other bit). One mark for a correct example, such as 00011011 becoming 11100101.</div>
+    </div>
+    <div class="q">
+      <div class="src">2022, Q4(c)</div>
+      <p>Show how −39<sub>10</sub> would be represented using sign/magnitude and how it would be represented using two's complement representation in an 8 bit register. [2]</p>
+      <button class="btn" data-ms="ms5">Show mark scheme</button>
+      <div class="ms" id="ms5">Sign/magnitude: 10100111. Two's complement: 11011001. Try both on the board: set −39 in each number type.</div>
+    </div>
+    <div class="q">
+      <div class="src">2023, Q14 (part)</div>
+      <p>Calculate the denary range (highest and lowest) of numbers that can be stored as an integer in an 8 bit register using two's complementation.</p>
+      <button class="btn" data-ms="ms6">Show answer</button>
+      <div class="ms" id="ms6">Lowest 10000000 = −128. Highest 01111111 = +127. Switch the board to two's complement and look at the range box.</div>
+    </div>
+  </details>
+</section>
+
+<!-- ===================== SORT ===================== -->
+<section class="panel" id="p-sort" role="tabpanel" aria-labelledby="t-sort">
+  <h2>Bit, byte or word?</h2>
+  <p class="lede">Read each statement with your partner and decide which term it describes. You get one go per card, so agree before you click.</p>
+  <p class="tally" id="sortTally">0 of 12 answered</p>
+  <div class="cards" id="cards"></div>
+  <div class="row" style="margin-top:14px"><button class="btn" id="sortReset">Shuffle and start again</button></div>
+
+  <details class="exam">
+    <summary>Past paper check: how the examiners word it</summary>
+    <div class="q">
+      <div class="src">2016, Q6(a)</div>
+      <p>State the meaning of the following terms: (i) Byte. [1] (ii) Word. [1]</p>
+      <button class="btn" data-ms="ms1">Show mark scheme</button>
+      <div class="ms" id="ms1">(i) A byte is a collection of 8 bits (e.g. 00101010). (ii) A word is the total number of bits that can be manipulated as a single unit by the CPU.</div>
+    </div>
+    <div class="q">
+      <div class="src">2022, Q4(a)</div>
+      <p>State the meaning of the term "word". [1]</p>
+      <button class="btn" data-ms="ms2">Show mark scheme</button>
+      <div class="ms" id="ms2">The total number of bits that can be manipulated as a single unit by the CPU. Notice that "a group of bits" on its own is not enough: the mark is for linking it to the CPU handling it as one unit.</div>
+    </div>
+    <div class="q">
+      <div class="src">2024, Q4(a)</div>
+      <p>Describe the term "word length" in relation to a CPU. [1]</p>
+      <button class="btn" data-ms="ms3">Show mark scheme</button>
+      <div class="ms" id="ms3">The number of bits the CPU can process (manipulate) as a single unit, for example 32 or 64 bits.</div>
+    </div>
+  </details>
+</section>
+
+<!-- ===================== CONVERSION PRACTICE ===================== -->
+<section class="panel" id="p-conv" role="tabpanel" aria-labelledby="t-conv">
+  <h2>Conversion practice</h2>
+  <p class="lede">Ten questions per round. Choose which conversions to practise and how big the numbers are. Use the working steps when you are stuck, then try the next one without them.</p>
+  <div class="practice">
+    <div class="box settings">
+      <h3>Conversions</h3>
+      <div class="chips" id="typeChips">
+        <label class="chip"><input type="checkbox" value="b2d" checked> Binary to denary</label>
+        <label class="chip"><input type="checkbox" value="d2b" checked> Denary to binary</label>
+        <label class="chip"><input type="checkbox" value="b2h"> Binary to hex</label>
+        <label class="chip"><input type="checkbox" value="h2b"> Hex to binary</label>
+        <label class="chip"><input type="checkbox" value="d2h"> Denary to hex</label>
+        <label class="chip"><input type="checkbox" value="h2d"> Hex to denary</label>
+      </div>
+      <h3>Negative numbers</h3>
+      <div class="chips" id="typeChips2">
+        <label class="chip"><input type="checkbox" value="d2t" checked> Denary to two's complement</label>
+        <label class="chip"><input type="checkbox" value="t2d" checked> Two's complement to denary</label>
+        <label class="chip"><input type="checkbox" value="d2s"> Denary to sign and magnitude</label>
+        <label class="chip"><input type="checkbox" value="s2d"> Sign and magnitude to denary</label>
+      </div>
+      <h3>Number size</h3>
+      <div class="levels" id="levels">
+        <button aria-pressed="false" data-l="1">Warm-up<small>4 bits</small></button>
+        <button aria-pressed="true" data-l="2">Exam level<small>8 bits, like the exam</small></button>
+        <button aria-pressed="false" data-l="3">Stretch<small>Up to 16 bits</small></button>
+      </div>
+      <button class="btn primary" id="newRound" style="margin-top:14px;width:100%">Start a new round</button>
+      <div class="pairs">Working in pairs: one of you types, the other explains the method out loud. Swap after every question.</div>
+    </div>
+    <div class="qcard" id="qcard"></div>
+  </div>
+</section>
+</main>
+
+<script>
+/* ================= Tabs ================= */
+const tabs=[...document.querySelectorAll('[role=tab]')];
+tabs.forEach(t=>t.addEventListener('click',()=>{
+  tabs.forEach(x=>{x.setAttribute('aria-selected',x===t);document.getElementById(x.getAttribute('aria-controls')).classList.toggle('active',x===t)});
+}));
+
+const HEX='0123456789ABCDEF';
+const pow2=n=>Math.pow(2,n);
+const fmt=n=>n.toLocaleString('en-GB');
+
+/* ================= Bit board ================= */
+let W=8, bits=[], mode='u';     // bits[0] is the MSB; mode u = unsigned, s = sign and magnitude, t = two's complement
+const reg=document.getElementById('register');
+let target=null, targetStart=0;
+const MINUS='−';
+const sgn=n=>n<0?MINUS+fmt(-n):fmt(n);
+
+function rawOf(arr){let v=0;for(let i=0;i<arr.length;i++){if(arr[i])v+=pow2(arr.length-1-i)}return v}
+function magOf(arr){let v=0;for(let i=1;i<arr.length;i++){if(arr[i])v+=pow2(arr.length-1-i)}return v}
+function valueOf(arr){
+  const raw=rawOf(arr);
+  if(mode==='u')return raw;
+  if(mode==='s')return arr[0]?-magOf(arr):magOf(arr);
+  return arr[0]?raw-pow2(arr.length):raw;
+}
+function toHex(v,digits){let s='';for(let i=0;i<digits;i++){s=HEX[v%16]+s;v=Math.floor(v/16)}return s}
+function grp(arr){return arr.join('').replace(/(.{4})(?=.)/g,'$1 ')}
+
+function pvLabel(p,el){
+  el.classList.remove('neg');
+  if(p===W-1&&mode==='s'){el.textContent='sign';el.classList.add('neg');return}
+  if(p===W-1&&mode==='t'){el.classList.add('neg');if(W===8)el.textContent=MINUS+pow2(p);else el.innerHTML=MINUS+'2<sup>'+p+'</sup>';return}
+  if(W===8)el.textContent=String(pow2(p)); else el.innerHTML='2<sup>'+p+'</sup>';
+}
+function buildBoard(){
+  reg.innerHTML='';
+  reg.parentElement.classList.toggle('compact',W>8);reg.parentElement.classList.toggle('tiny',W>16);
+  const bytes=W/8;
+  for(let b=0;b<bytes;b++){
+    const byteEl=document.createElement('div');byteEl.className='byte';
+    const bb=document.createElement('div');bb.className='byte-bits';
+    for(let n=0;n<2;n++){
+      const nib=document.createElement('div');nib.className='nibble';
+      const nb=document.createElement('div');nb.className='nibble-bits';
+      for(let k=0;k<4;k++){
+        const i=b*8+n*4+k, p=W-1-i;
+        const col=document.createElement('div');col.className='bitcol';
+        const pv=document.createElement('div');pv.className='pv';pv.dataset.p=p;
+        const btn=document.createElement('button');btn.className='bit';btn.dataset.i=i;
+        btn.setAttribute('aria-label','Bit '+(i===0?'(most significant)':'with place value '+fmt(pow2(p))));
+        btn.addEventListener('click',()=>{bits[i]=bits[i]?0:1;hideNeg();render()});
+        col.append(pv,btn);nb.append(col);
+      }
+      const hd=document.createElement('div');hd.className='hexdigit';hd.id='hx'+(b*2+n);
+      nib.append(nb,hd);bb.append(nib);
+    }
+    const bl=document.createElement('div');bl.className='bytelabel';bl.textContent='Byte '+(b+1);
+    byteEl.append(bb);if(bytes>1)byteEl.append(bl);
+    reg.append(byteEl);
+  }
+  render();
+}
+function rangeText(){
+  if(mode==='u')return '0 to '+fmt(pow2(W)-1)+' ('+fmt(pow2(W))+' values)';
+  if(mode==='s')return MINUS+fmt(pow2(W-1)-1)+' to +'+fmt(pow2(W-1)-1)+' (zero appears twice)';
+  return MINUS+fmt(pow2(W-1))+' to +'+fmt(pow2(W-1)-1)+' (one zero)';
+}
+function workingText(){
+  const v=valueOf(bits);
+  if(mode==='s'){
+    const parts=[];for(let i=1;i<W;i++)if(bits[i])parts.push(fmt(pow2(W-1-i)));
+    const mag=magOf(bits), sign=bits[0]?'Sign bit is 1, so the number is negative.':'Sign bit is 0, so the number is positive.';
+    const m=parts.length?'Magnitude: '+(parts.length>1?parts.join(' + ')+' = ':'')+fmt(mag)+'.':'Magnitude is 0.';
+    const z=mag===0&&bits[0]?' This is "negative zero": sign and magnitude has two ways to write 0.':'';
+    return sign+' '+m+' Value: '+(bits[0]?MINUS:'')+fmt(mag)+'.'+z;
+  }
+  const parts=[];bits.forEach((b,i)=>{if(b){const pv=pow2(W-1-i);parts.push(mode==='t'&&i===0?MINUS+fmt(pv):fmt(pv))}});
+  if(!parts.length)return 'No bits are on, so the value is 0.';
+  if(parts.length===1)return 'Only one bit is on, so the value is its place value: '+parts[0]+'.';
+  let txt='Add the place values of the 1s: '+parts.join(' + ').replace('+ '+MINUS,'− ')+' = '+sgn(v);
+  if(mode==='t'&&bits[0])txt+='. The MSB is worth '+MINUS+fmt(pow2(W-1))+', so the answer is negative.';
+  return txt;
+}
+function render(){
+  const v=valueOf(bits);
+  document.querySelectorAll('.bit').forEach(el=>{const on=bits[+el.dataset.i];el.textContent=on;el.classList.toggle('on',!!on);el.setAttribute('aria-pressed',!!on)});
+  document.querySelectorAll('.pv').forEach(el=>pvLabel(+el.dataset.p,el));
+  const hex=toHex(rawOf(bits),W/4);
+  for(let d=0;d<W/4;d++)document.getElementById('hx'+d).textContent=hex[d];
+  document.getElementById('rDen').textContent=(mode==='s'&&bits[0]&&magOf(bits)===0)?MINUS+'0':sgn(v);
+  document.getElementById('rHex').textContent=hex;
+  document.getElementById('hexName').textContent=mode==='u'?'Hexadecimal (base 16)':'Bit pattern in hex';
+  document.getElementById('rRange').textContent=rangeText();
+  document.getElementById('rWork').textContent=workingText();
+  const nb=document.getElementById('bNeg');
+  nb.style.display=mode==='u'?'none':'';
+  nb.textContent=mode==='t'?'Flip and add 1':'Flip the sign bit';
+  checkTarget(v);
+}
+function fill(v){
+  if(mode==='s'){const neg=v<0;v=Math.abs(v);for(let i=W-1;i>=1;i--){bits[i]=v%2;v=Math.floor(v/2)}bits[0]=neg?1:0;return}
+  if(mode==='t'&&v<0)v+=pow2(W);
+  for(let i=W-1;i>=0;i--){bits[i]=v%2;v=Math.floor(v/2)}
+}
+function fits(v){
+  if(mode==='u')return v>=0&&v<pow2(W);
+  if(mode==='s')return Math.abs(v)<pow2(W-1);
+  return v>=-pow2(W-1)&&v<pow2(W-1);
+}
+function setWord(w){
+  const old=valueOf(bits);W=w;bits=new Array(W).fill(0);
+  if(fits(old))fill(old);
+  document.querySelectorAll('#wordSeg button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.w===W));
+  clearTarget();hideNeg();buildBoard();
+}
+function setMode(m){
+  mode=m;document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));
+  clearTarget();hideNeg();render();
+}
+document.querySelectorAll('#wordSeg button').forEach(b=>b.addEventListener('click',()=>setWord(+b.dataset.w)));
+document.querySelectorAll('#modeSeg button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.m)));
+document.getElementById('bClear').onclick=()=>{bits.fill(0);hideNeg();render()};
+document.getElementById('bFill').onclick=()=>{bits.fill(1);hideNeg();render()};
+document.getElementById('bRand').onclick=()=>{bits=bits.map(()=>Math.random()<.5?1:0);hideNeg();render()};
+
+function hideNeg(){document.getElementById('negSteps').classList.remove('show')}
+document.getElementById('bNeg').onclick=()=>{
+  const box=document.getElementById('negSteps'), before=valueOf(bits), start=grp(bits);
+  if(mode==='s'){
+    bits[0]=bits[0]?0:1;
+    box.innerHTML='<div>Start:              '+start+'  ('+sgn(before)+')</div><div>Flip the sign bit:  '+grp(bits)+'  ('+(bits[0]&&magOf(bits)===0?MINUS+'0':sgn(valueOf(bits)))+')</div><div style="font-family:var(--sans)">Only the MSB changes. The magnitude bits stay the same.</div>';
+  }else{
+    const flipped=bits.map(b=>b?0:1);
+    let n=(rawOf(flipped)+1)%pow2(W);const out=[];for(let i=W-1;i>=0;i--){out[i]=n%2;n=Math.floor(n/2)}
+    bits=out;const after=valueOf(bits);
+    let note=after===before&&before!==0?'<div style="font-family:var(--sans)">'+sgn(before)+' has no positive partner in '+W+' bits, so you get the same pattern back. That is why the range is one bigger on the negative side.</div>':'';
+    if(before===0)note='<div style="font-family:var(--sans)">The carry out of the MSB is thrown away, so 0 stays 0. Two\'s complement has only one zero.</div>';
+    box.innerHTML='<div>Start:       '+start+'  ('+sgn(before)+')</div><div>Flip bits:   '+grp(flipped)+'</div><div>Add 1:       '+grp(bits)+'  ('+sgn(after)+')</div>'+note;
+  }
+  box.style.whiteSpace='pre-wrap';box.classList.add('show');render();
+};
+
+function parseValue(s){
+  s=s.trim().replace(/\s+/g,'').replace(/^−/,'-');
+  let m;
+  if((m=s.match(/^(?:0x|#)?([0-9a-f]+)(?:h|₁₆|_?16)$/i))||(m=s.match(/^(?:0x|#)([0-9a-f]+)$/i)))return {v:parseInt(m[1],16),raw:true};
+  if((m=s.match(/^([01]+)(?:b|₂|_?2)$/i)))return {v:parseInt(m[1],2),raw:true};
+  if(/^-?\d+$/.test(s))return {v:parseInt(s,10),raw:false};
+  return null;
+}
+document.getElementById('setBtn').onclick=()=>{
+  const r=parseValue(document.getElementById('setIn').value), msg=document.getElementById('setMsg');
+  if(!r){msg.textContent='Type a denary number (negatives allowed), or hex ending in h, such as B4h.';return}
+  hideNeg();
+  if(r.raw){ if(r.v>=pow2(W)){msg.textContent='That pattern needs more than '+W+' bits.';return}
+    msg.textContent='';for(let i=W-1,n=r.v;i>=0;i--){bits[i]=n%2;n=Math.floor(n/2)}render();return}
+  if(r.v<0&&mode==='u'){msg.textContent='Unsigned binary cannot store negatives. Switch to sign and magnitude or two\'s complement.';return}
+  if(!fits(r.v)){msg.textContent=sgn(r.v)+' is outside the range '+rangeText().replace(/ \(.*/,'')+'.';return}
+  msg.textContent='';fill(r.v);render();
+};
+document.getElementById('setIn').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('setBtn').click()});
+
+function clearTarget(){target=null;document.getElementById('target').classList.remove('show')}
+document.getElementById('tgtBtn').onclick=()=>{
+  const w=Math.min(W,16);let lo,hi;
+  if(mode==='u'){lo=3;hi=pow2(w)-1}else if(mode==='s'){lo=-(pow2(w-1)-1);hi=-lo}else{lo=-pow2(w-1);hi=pow2(w-1)-1}
+  do{
+    target=lo+Math.floor(Math.random()*(hi-lo+1));
+    if(mode!=='u'&&Math.random()<.7)target=-Math.abs(target);
+  }while(target===valueOf(bits)||Math.abs(target)<3||!fits(target));
+  const asHex=mode==='u'&&Math.random()<.5;
+  document.getElementById('tgtText').innerHTML='Target: <span>'+(asHex?toHex(target,target>255?4:2)+'<sub>16</sub>':sgn(target)+'<sub>10</sub>')+'</span>'+(mode==='u'?'':' in '+(mode==='s'?'sign and magnitude':'two\'s complement'));
+  const m=document.getElementById('tgtMsg');m.className='why';m.textContent='Flip the bits until the board matches.';
+  document.getElementById('target').classList.add('show');targetStart=Date.now();
+};
+function checkTarget(v){
+  if(target===null||v!==target)return;
+  const s=((Date.now()-targetStart)/1000).toFixed(1);
+  const m=document.getElementById('tgtMsg');m.className='msg-good';m.textContent='Matched in '+s+' seconds. Ask for another target.';
+  target=null;
+}
+setWord(8);
+
+/* ================= Bit, byte or word? ================= */
+const SORT=[
+  ["The smallest unit of data a computer can store.","Bit","A bit is a single binary digit: one 0 or one 1."],
+  ["A collection of 8 bits.","Byte","This is the mark scheme definition of a byte."],
+  ["The total number of bits that can be manipulated as a single unit by the CPU.","Word","This is exactly how the mark scheme defines a word."],
+  ["It can only ever hold the value 0 or 1.","Bit","One binary digit has two possible states."],
+  ["It can represent 256 different values, from 0 to 255.","Byte","8 bits give 2⁸ = 256 combinations."],
+  ["Its size depends on the architecture of the processor.","Word","Word length is set by the CPU design: 16, 32 or 64 bits are common."],
+  ["One ASCII character is usually stored in one of these.","Byte","An ASCII character fits in 8 bits."],
+  ["In a 64-bit system, this is 64 bits long.","Word","A 64-bit CPU processes 64 bits as one unit."],
+  ["A single light switch, on or off, could represent one of these.","Bit","Two states, on or off, is one binary digit."],
+  ["Exactly two hexadecimal digits describe one of these.","Byte","Each hex digit is 4 bits, so two hex digits are 8 bits."],
+  ["In a 32-bit computer, this is 4 bytes.","Word","32 bits ÷ 8 = 4 bytes."],
+  ["Short for 'binary digit'.","Bit","Binary digit becomes bit."]
+];
+let sortRight=0, sortDone=0;
+function buildSort(){
+  const cards=document.getElementById('cards');cards.innerHTML='';sortRight=0;sortDone=0;updateTally();
+  const order=SORT.map((_,i)=>i).sort(()=>Math.random()-.5);
+  order.forEach(idx=>{
+    const [txt,ans,why]=SORT[idx];
+    const c=document.createElement('div');c.className='card';
+    const p=document.createElement('p');p.textContent=txt;
+    const ch=document.createElement('div');ch.className='choices';
+    const w=document.createElement('p');w.className='why';
+    ['Bit','Byte','Word'].forEach(opt=>{
+      const b=document.createElement('button');b.textContent=opt;
+      b.onclick=()=>{
+        if(c.dataset.done)return;c.dataset.done=1;sortDone++;
+        if(opt===ans){b.classList.add('picked-right');c.classList.add('right');sortRight++;w.textContent='Correct. '+why}
+        else{b.classList.add('picked-wrong');c.classList.add('wrong');
+          [...ch.children].find(x=>x.textContent===ans).classList.add('picked-right');
+          w.textContent='It is a '+ans.toLowerCase()+'. '+why}
+        updateTally();
+      };
+      ch.append(b);
+    });
+    c.append(p,ch,w);cards.append(c);
+  });
+}
+function updateTally(){
+  document.getElementById('sortTally').textContent= sortDone<SORT.length ? sortDone+' of '+SORT.length+' answered, '+sortRight+' correct'
+    : 'All done: '+sortRight+' out of '+SORT.length+' correct.';
+}
+document.getElementById('sortReset').onclick=buildSort;
+document.querySelectorAll('[data-ms]').forEach(b=>b.addEventListener('click',()=>{
+  const m=document.getElementById(b.dataset.ms);m.classList.toggle('show');
+  b.textContent=m.classList.contains('show')?'Hide mark scheme':'Show mark scheme';
+}));
+buildSort();
+
+/* ================= Conversion practice ================= */
+const NAMES={b2d:'Binary to denary',d2b:'Denary to binary',b2h:'Binary to hexadecimal',h2b:'Hexadecimal to binary',d2h:'Denary to hexadecimal',h2d:'Hexadecimal to denary'};
+let level=2, round=[], qi=0, results=[], firstTry=true, stepsShown=0;
+
+document.querySelectorAll('#levels button').forEach(b=>b.addEventListener('click',()=>{
+  level=+b.dataset.l;document.querySelectorAll('#levels button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+}));
+document.getElementById('newRound').onclick=startRound;
+
+Object.assign(NAMES,{d2t:"Denary to two's complement",t2d:"Two's complement to denary",d2s:'Denary to sign and magnitude',s2d:'Sign and magnitude to denary'});
+const SIGNED=['d2t','t2d','d2s','s2d'];
+function bitsFor(){return level===1?4:level===2?8:(Math.random()<.5?12:16)}
+function rint(lo,hi){return lo+Math.floor(Math.random()*(hi-lo+1))}
+function bin(v,width){let s=v.toString(2);while(s.length<width)s='0'+s;return s}
+function twos(v,w){return bin(v<0?v+pow2(w):v,w)}
+function sm(v,w){return (v<0?'1':'0')+bin(Math.abs(v),w-1)}
+function makeQ(type){
+  if(SIGNED.includes(type)){
+    const width=level===1?4:level===2?8:16;
+    const isT=type==='d2t'||type==='t2d';
+    const maxMag=pow2(width-1)-1;
+    let v;
+    if(Math.random()<.8){ // mostly negatives
+      v=-rint(width===4?1:3, isT&&Math.random()<.08?maxMag+1:maxMag);
+    }else v=rint(width===4?1:3,maxMag);
+    return {type,v,width,pat:isT?twos(v,width):sm(v,width)};
+  }
+  const width=bitsFor();
+  const max=pow2(width)-1;
+  const lo= width===4?1 : width===8?16 : pow2(width-4);
+  return {type,v:rint(lo,max),width};
+}
+
+function startRound(){
+  const types=[...document.querySelectorAll('#typeChips input:checked, #typeChips2 input:checked')].map(i=>i.value);
+  if(!types.length){document.getElementById('qcard').innerHTML='<p class="feedback bad">Tick at least one conversion to start a round.</p>';return}
+  round=[];for(let i=0;i<10;i++)round.push(makeQ(types[i%types.length]));
+  round.sort(()=>Math.random()-.5);
+  qi=0;results=[];showQ();
+}
+function spaced(b){return b.replace(/\B(?=(\d{4})+(?!\d))/g,' ')}
+function art(n){return n===8||n===11||n===18?'an':'a'}
+function prompt(q){
+  if(SIGNED.includes(q.type)){
+    const reg=q.width+'-bit register';
+    switch(q.type){
+      case 'd2t':return 'Show how <span class="num">'+sgn(q.v)+'<sub>10</sub></span> is stored using two\'s complement in '+art(q.width)+' '+reg+'.';
+      case 't2d':return 'This '+reg+' uses two\'s complement. What denary value does <span class="num">'+spaced(q.pat)+'</span> represent?';
+      case 'd2s':return 'Show how <span class="num">'+sgn(q.v)+'<sub>10</sub></span> is stored using sign and magnitude in '+art(q.width)+' '+reg+'.';
+      case 's2d':return 'This '+reg+' uses sign and magnitude. What denary value does <span class="num">'+spaced(q.pat)+'</span> represent?';
+    }
+  }
+  const B=bin(q.v,q.width), H=q.v.toString(16).toUpperCase(), hw=Math.ceil(q.width/4);
+  const Hp=H.padStart(hw,'0');
+  switch(q.type){
+    case 'b2d':return 'Convert <span class="num">'+spaced(B)+'<sub>2</sub></span> into denary.';
+    case 'd2b':return 'Convert <span class="num">'+q.v+'<sub>10</sub></span> into '+art(q.width)+' '+q.width+'-bit binary number.';
+    case 'b2h':return 'Convert <span class="num">'+spaced(B)+'<sub>2</sub></span> into hexadecimal.';
+    case 'h2b':return 'Convert <span class="num">'+Hp+'<sub>16</sub></span> into '+art(hw*4)+' '+(hw*4)+'-bit binary number.';
+    case 'd2h':return 'Convert <span class="num">'+q.v+'<sub>10</sub></span> into hexadecimal.';
+    case 'h2d':return 'Convert <span class="num">'+Hp+'<sub>16</sub></span> into denary.';
+  }
+}
+
+function showQ(){
+  firstTry=true;stepsShown=0;
+  const q=round[qi], card=document.getElementById('qcard');
+  const dots=round.map((_,i)=>'<i class="'+(i<results.length?(results[i]?'ok':'no'):'')+(i===qi?' cur':'')+'"></i>').join('');
+  card.innerHTML=
+   '<div class="progress"><span>Question '+(qi+1)+' of 10</span><span class="dots" aria-hidden="true">'+dots+'</span></div>'+
+   '<div class="qtype">'+NAMES[q.type]+'</div>'+
+   '<div class="qtext">'+prompt(q)+'</div>'+
+   '<div class="answer"><input id="ans" autocomplete="off" spellcheck="false" aria-label="Your answer"><button class="btn primary" id="chk">Check</button></div>'+
+   '<div class="feedback" id="fb" aria-live="polite"></div>'+
+   '<div class="row"><button class="btn" id="hint">Show the next step</button><button class="btn" id="all">Show all working</button><button class="btn" id="next" style="display:none">Next question</button></div>'+
+   '<div class="steps" id="steps" style="display:none"></div>';
+  const ans=document.getElementById('ans');ans.focus();
+  ans.addEventListener('keydown',e=>{if(e.key==='Enter'){document.getElementById('next').style.display==='none'?check():advance()}});
+  document.getElementById('chk').onclick=check;
+  document.getElementById('hint').onclick=()=>revealSteps(stepsShown+1);
+  document.getElementById('all').onclick=()=>revealSteps(99);
+  document.getElementById('next').onclick=advance;
+}
+function check(){
+  const q=round[qi], raw=document.getElementById('ans').value.trim(), fb=document.getElementById('fb');
+  if(!raw){fb.className='feedback bad';fb.textContent='Type an answer first.';return}
+  const s=raw.replace(/[\s,]+/g,'').replace(/(₂|₁₀|₁₆)$/,'').replace(/^[−–]/,'-');
+  let ok=false, note='', hint=null;
+  if(q.type==='d2t'||q.type==='d2s'){
+    if(/^[01]+$/.test(s)){
+      if(s===q.pat)ok=true;
+      else if(s.length!==q.width&&s.padStart(q.width,'0')===q.pat)hint='Write all '+q.width+' bits. With negative numbers the MSB matters, so leading 0s cannot be left off.';
+      else if(s.length!==q.width)hint='Your answer should be exactly '+q.width+' bits long.';
+      else if(q.v<0&&q.type==='d2t'&&s===sm(q.v,q.width))hint='That is sign and magnitude. For two\'s complement, write the positive number, flip every bit, then add 1.';
+      else if(q.v<0&&q.type==='d2s'&&s===twos(q.v,q.width))hint='That is two\'s complement. Sign and magnitude only changes the MSB to 1 and keeps the magnitude bits as normal binary.';
+      else if(q.v<0&&s===bin(-q.v,q.width))hint='That is +'+(-q.v)+'. A negative number needs a 1 in the MSB.';
+      else if(q.v<0&&q.type==='d2t'&&s===bin(pow2(q.width)-1+q.v,q.width))hint='Close. You flipped the bits but did not add 1.';
+    }else hint='Answers here are binary, so only use 0 and 1.';
+  }else if(q.type==='t2d'||q.type==='s2d'){
+    if(/^[-+]?\d+$/.test(s)){
+      const n=parseInt(s,10);
+      if(n===q.v)ok=true;
+      else if(n===parseInt(q.pat,2))hint='You have read it as an unsigned number. Check the MSB: '+(q.type==='t2d'?'in two\'s complement it is worth '+MINUS+fmt(pow2(q.width-1))+'.':'in sign and magnitude it is the sign, not a place value.');
+      else if(n===-q.v&&q.v!==0)hint='Right size, wrong sign. Look at the MSB again.';
+      else if(q.type==='t2d'&&q.v<0&&n===-(parseInt(q.pat,2)^(pow2(q.width)-1)))hint='Close. After flipping the bits you also need to add 1 before reading the value.';
+    }else hint='Type a denary number. Use a minus sign for negatives.';
+  }else if(q.type==='d2b'||q.type==='h2b'){
+    const want=q.type==='d2b'?q.width:Math.ceil(q.width/4)*4;
+    if(/^[01]+$/.test(s)&&parseInt(s,2)===q.v){ok=true;if(s.length!==want)note=' In the exam, write all '+want+' bits: '+spaced(bin(q.v,want))+'.'}
+  }else if(q.type==='b2h'||q.type==='d2h'){
+    const t=s.replace(/^0x/i,'').replace(/h$/i,'');
+    if(/^[0-9a-f]+$/i.test(t)&&parseInt(t,16)===q.v)ok=true;
+  }else{
+    if(/^\d+$/.test(s)&&parseInt(s,10)===q.v)ok=true;
+  }
+  if(ok){
+    fb.className='feedback good';fb.textContent=(firstTry&&stepsShown===0?'Correct, first time.':'Correct.')+note;
+    if(results.length===qi)results.push(firstTry&&stepsShown===0);
+    document.getElementById('chk').style.display='none';document.getElementById('next').style.display='';
+    document.getElementById('next').textContent=qi===9?'See your score':'Next question';
+    revealSteps(99);
+  }else{
+    firstTry=false;fb.className='feedback bad';
+    fb.textContent=hint||wrongHint(q,s);
+  }
+}
+
+function wrongHint(q,s){
+  if((q.type==='d2b'||q.type==='h2b')&&/[^01]/.test(s))return 'Binary answers only use 0 and 1. Try again, or show the next step.';
+  if((q.type==='b2h'||q.type==='d2h')&&/[^0-9a-fx]/i.test(s.replace(/h$/i,'')))return 'Hex digits run 0 to 9 then A to F. Try again, or show the next step.';
+  if((q.type==='b2d'||q.type==='h2d')&&/[^0-9]/.test(s))return 'Denary answers only use the digits 0 to 9. Try again.';
+  return 'Not quite. Check your working and try again, or show the next step.';
+}
+function advance(){qi++;if(qi<10)showQ();else showSummary()}
+function showSummary(){
+  const n=results.filter(Boolean).length;
+  const msg= n>=9?'Excellent. Try the Stretch level or add the denary and hex conversions.'
+    : n>=6?'Good work. Look back at the ones that needed working and try another round.'
+    : 'Keep going. Use the working steps, then try another round on the same settings.';
+  document.getElementById('qcard').innerHTML='<div class="summary"><div class="big">'+n+' / 10</div><p>correct first time without the working</p><p>'+msg+'</p><button class="btn primary" id="again">Start a new round</button></div>';
+  document.getElementById('again').onclick=startRound;
+}
+
+/* ---- Working steps (one array of HTML strings per question) ---- */
+function pvTable(binStr,base){
+  const n=binStr.length;let r1='',r2='';
+  for(let i=0;i<n;i++){const p=n-1-i,pv=Math.pow(base,p);r1+='<td>'+fmt(pv)+'</td>';r2+='<td class="'+(binStr[i]!=='0'?'hit':'')+'">'+binStr[i]+'</td>'}
+  return '<div class="tablewrap"><table class="pvt"><tr>'+r1+'</tr><tr>'+r2+'</tr></table></div>';
+}
+function nibbles(B){const pad=B.padStart(Math.ceil(B.length/4)*4,'0');return pad.match(/.{4}/g)}
+function nibbleLine(nb){const v=parseInt(nb,2);const parts=[];[8,4,2,1].forEach((p,i)=>{if(nb[i]==='1')parts.push(p)});
+  return '<span class="mono">'+nb+'</span> = '+(parts.length?parts.join(' + ')+' = ':'')+v+' = <b class="mono">'+HEX[v]+'</b>'}
+function signedTable(pat,kind){
+  const n=pat.length;let r1='',r2='';
+  for(let i=0;i<n;i++){const p=n-1-i;
+    r1+='<td>'+(i===0?(kind==='t'?MINUS+fmt(pow2(p)):'sign'):fmt(pow2(p)))+'</td>';
+    r2+='<td class="'+(pat[i]==='1'?'hit':'')+'">'+pat[i]+'</td>'}
+  return '<div class="tablewrap"><table class="pvt"><tr>'+r1+'</tr><tr>'+r2+'</tr></table></div>';
+}
+function flipStr(b){return b.replace(/[01]/g,c=>c==='0'?'1':'0')}
+function buildSteps(q){
+  const S=[];
+  if(q.type==='d2t'){
+    const w=q.width, m=Math.abs(q.v);
+    if(q.v>=0){
+      S.push('This number is positive, so two\'s complement stores it as normal binary with a 0 in the MSB.');
+      S.push('Write '+m+' in '+w+' bits: <b class="mono">'+spaced(q.pat)+'</b>'+signedTable(q.pat,'t'));
+    }else{
+      const pos=bin(m,w), fl=flipStr(pos);
+      S.push('Write the positive version, +'+fmt(m)+', in '+w+' bits: <span class="mono">'+spaced(pos)+'</span>'+(m===pow2(w-1)?' (this only works as a stepping stone: +'+fmt(m)+' itself is outside the range)':''));
+      S.push('Flip every bit (0 becomes 1, 1 becomes 0): <span class="mono">'+spaced(fl)+'</span>');
+      S.push('Add 1: <span class="mono">'+spaced(fl)+' + 1 = </span><b class="mono">'+spaced(q.pat)+'</b>');
+      const rest=parseInt(q.pat.slice(1),2);
+      S.push('Check it: the MSB is worth '+MINUS+fmt(pow2(w-1))+', so '+MINUS+fmt(pow2(w-1))+' + '+fmt(rest)+' = '+sgn(q.v)+'.'+signedTable(q.pat,'t'));
+    }
+  }
+  if(q.type==='t2d'){
+    const w=q.width, rest=parseInt(q.pat.slice(1),2);
+    if(q.pat[0]==='0'){
+      S.push('The MSB is 0, so the number is positive. Read it as normal binary.'+signedTable(q.pat,'t'));
+      S.push('Answer: <b class="mono">'+q.v+'</b>');
+    }else{
+      S.push('The MSB is 1, so the number is negative. In two\'s complement the MSB is worth '+MINUS+fmt(pow2(w-1))+'.'+signedTable(q.pat,'t'));
+      const parts=[];for(let i=1;i<w;i++)if(q.pat[i]==='1')parts.push(fmt(pow2(w-1-i)));
+      S.push('Add the other place values: '+(parts.length?parts.join(' + ')+' = '+fmt(rest):'there are none, so 0')+'.');
+      S.push('Combine them: '+MINUS+fmt(pow2(w-1))+' + '+fmt(rest)+' = <b class="mono">'+sgn(q.v)+'</b>');
+      const fl=flipStr(q.pat);
+      S.push('Check another way: flip the bits (<span class="mono">'+spaced(fl)+'</span>) and add 1 to get <span class="mono">'+spaced(bin(parseInt(fl,2)+1,w))+'</span> = '+fmt(-q.v)+', so the original was '+sgn(q.v)+'.');
+    }
+  }
+  if(q.type==='d2s'){
+    const w=q.width, m=Math.abs(q.v);
+    S.push('The MSB is the sign bit: '+(q.v<0?'1 because the number is negative.':'0 because the number is positive.'));
+    S.push('Write the magnitude, '+fmt(m)+', in the remaining '+(w-1)+' bits: <span class="mono">'+spaced(bin(m,w-1))+'</span>');
+    S.push('Put them together: <b class="mono">'+spaced(q.pat)+'</b>'+signedTable(q.pat,'s'));
+  }
+  if(q.type==='s2d'){
+    const w=q.width, m=parseInt(q.pat.slice(1),2);
+    S.push('Look at the MSB first: it is '+q.pat[0]+', so the number is '+(q.pat[0]==='1'?'negative.':'positive.'));
+    const parts=[];for(let i=1;i<w;i++)if(q.pat[i]==='1')parts.push(fmt(pow2(w-1-i)));
+    S.push('Read the other '+(w-1)+' bits as normal binary: '+(parts.length>1?parts.join(' + ')+' = ':'')+fmt(m)+'.'+signedTable(q.pat,'s'));
+    S.push('Answer: <b class="mono">'+sgn(q.v)+'</b>');
+  }
+  if(S.length)return S;
+  const B=bin(q.v,q.width), H=q.v.toString(16).toUpperCase();
+  if(q.type==='b2d'){
+    S.push('Write the place values above each bit, starting with 1 on the right and doubling each time.'+pvTable(B,2));
+    const parts=[];for(let i=0;i<B.length;i++)if(B[i]==='1')parts.push(fmt(pow2(B.length-1-i)));
+    S.push('Add the place values where there is a 1: '+parts.join(' + ')+'.');
+    S.push('Answer: <b class="mono">'+q.v+'</b>');
+  }
+  if(q.type==='d2b'){
+    S.push('Write out the place values for '+q.width+' bits: '+Array.from({length:q.width},(_,i)=>fmt(pow2(q.width-1-i))).join(', ')+'.');
+    let r=q.v;const lines=[];
+    for(let i=0;i<q.width;i++){const pv=pow2(q.width-1-i);
+      if(r>=pv){lines.push(fmt(pv)+' fits into '+fmt(r)+', so write <b>1</b>. '+fmt(r)+' − '+fmt(pv)+' = '+fmt(r-pv)+'.');r-=pv}
+      else lines.push(fmt(pv)+' does not fit into '+fmt(r)+', so write <b>0</b>.');}
+    S.push('Work from the left. If the place value fits into what is left, write 1 and subtract it. If not, write 0.<ol><li>'+lines.join('</li><li>')+'</li></ol>');
+    S.push('Read the bits from left to right: <b class="mono">'+spaced(B)+'</b>'+pvTable(B,2));
+  }
+  if(q.type==='b2h'){
+    const nb=nibbles(B);
+    S.push('Split the binary into groups of four bits (nibbles), starting from the right'+(B.length%4?' and padding the left with 0s':'')+': <span class="mono">'+nb.join(' | ')+'</span>');
+    S.push('Convert each nibble using the place values 8, 4, 2, 1:<ol><li>'+nb.map(nibbleLine).join('</li><li>')+'</li></ol>');
+    S.push('Write the hex digits in order: <b class="mono">'+H+'</b>');
+  }
+  if(q.type==='h2b'){
+    const hw=Math.ceil(q.width/4), Hp=H.padStart(hw,'0');
+    S.push('Treat each hex digit separately. Each one becomes exactly four bits.');
+    S.push('Convert each digit to denary, then to four bits:<ol><li>'+[...Hp].map(d=>'<b class="mono">'+d+'</b> = '+parseInt(d,16)+' = <span class="mono">'+bin(parseInt(d,16),4)+'</span>').join('</li><li>')+'</li></ol>');
+    S.push('Join the groups together: <b class="mono">'+spaced(bin(q.v,hw*4))+'</b>');
+  }
+  if(q.type==='d2h'){
+    let r=q.v;const lines=[],rems=[];
+    do{const qq=Math.floor(r/16),rm=r%16;lines.push(fmt(r)+' ÷ 16 = '+qq+' remainder '+rm+(rm>9?' (= '+HEX[rm]+')':''));rems.push(HEX[rm]);r=qq}while(r>0);
+    S.push('Divide by 16 and write down the remainder. Keep dividing the answer by 16 until you reach 0.<ol><li>'+lines.join('</li><li>')+'</li></ol>');
+    S.push('Read the remainders from the bottom up: <b class="mono">'+rems.reverse().join('')+'</b>');
+    S.push('Check another way: '+q.v+' in binary is <span class="mono">'+spaced(bin(q.v,Math.ceil(q.v.toString(2).length/4)*4))+'</span>, and each nibble gives one hex digit.');
+  }
+  if(q.type==='h2d'){
+    S.push('Write the place values above each hex digit: 1 on the right, then multiply by 16 each time.'+pvTable(H,16));
+    const parts=[];[...H].forEach((d,i)=>{const p=H.length-1-i,dv=parseInt(d,16);if(dv)parts.push(dv+' × '+fmt(Math.pow(16,p))+(d>'9'?' ('+d+' = '+dv+')':''))});
+    let t=0;[...H].forEach((d,i)=>{t+=parseInt(d,16)*Math.pow(16,H.length-1-i)});
+    S.push('Multiply each digit by its place value: '+parts.join(' + ')+'.');
+    S.push('Add them up: <b class="mono">'+fmt(t)+'</b>');
+  }
+  return S;
+}
+
+function revealSteps(n){
+  const q=round[qi],S=buildSteps(q);stepsShown=Math.min(n,S.length);
+  const el=document.getElementById('steps');el.style.display='';
+  el.innerHTML='<b>Working</b><ol>'+S.slice(0,stepsShown).map(s=>'<li>'+s+'</li>').join('')+'</ol>';
+  if(stepsShown>=S.length){document.getElementById('hint').style.display='none';document.getElementById('all').style.display='none'}
+}
+startRound();
+</script>
+</body>
+</html>

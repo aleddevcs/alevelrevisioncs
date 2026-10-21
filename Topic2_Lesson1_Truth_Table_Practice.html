@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Truth Table Practice</title>
+<style>
+  :root{
+    --navy:#1B2A4A;
+    --navy-dark:#121C33;
+    --teal:#1C7293;
+    --teal-dark:#155a72;
+    --amber:#F2A541;
+    --amber-dark:#c97f1f;
+    --bg:#F3F6FB;
+    --card:#FFFFFF;
+    --text:#1B2A4A;
+    --muted:#5B6B85;
+    --border:#DCE3EE;
+    --green:#2E9E5B;
+    --green-bg:#E7F7EE;
+    --red:#D64545;
+    --red-bg:#FDEAEA;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Calibri','Segoe UI',system-ui,-apple-system,sans-serif;
+    padding: env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px) 0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{ max-width:980px; margin:0 auto; padding:2.2rem 1.3rem 3.5rem; }
+  h1{
+    font-family:Cambria,Georgia,'Times New Roman',serif;
+    font-size:clamp(1.6rem,4vw,2.2rem);
+    margin:0 0 .4rem; font-weight:700; color:var(--navy-dark);
+  }
+  .lede{ color:var(--muted); font-size:1.02rem; max-width:60ch; margin:0 0 1.6rem; }
+  .ol{ text-decoration:overline; text-decoration-thickness:1.5px; }
+
+  /* top-level tabs */
+  .tabs{ display:flex; gap:.4rem; margin-bottom:1.3rem; flex-wrap:wrap; border-bottom:2px solid var(--border); }
+  .tabs button{
+    border:none; background:none; font-family:inherit; font-size:.98rem; font-weight:700;
+    color:var(--muted); padding:.65rem .3rem; margin-right:1.2rem; cursor:pointer;
+    border-bottom:3px solid transparent; margin-bottom:-2px;
+  }
+  .tabs button.active{ color:var(--navy-dark); border-bottom-color:var(--amber); }
+  .badge{
+    display:inline-block; min-width:1.1rem; height:1.1rem; padding:0 .3rem; border-radius:999px;
+    background:var(--border); color:var(--muted); font-size:.68rem; font-weight:700;
+    line-height:1.1rem; text-align:center; margin-left:.4rem; vertical-align:middle;
+  }
+  .badge.done{ background:var(--green); color:#fff; }
+
+  .panel-view{ display:none; }
+  .panel-view.active{ display:block; }
+
+  /* pill selectors */
+  .pills{ display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.1rem; }
+  .pill{
+    border:2px solid var(--border); background:#fff; color:var(--navy);
+    font-family:inherit; font-weight:700; font-size:.88rem; padding:.5rem 1rem;
+    border-radius:999px; cursor:pointer; display:flex; align-items:center; gap:.4rem;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .pill:hover{ border-color:var(--teal); }
+  .pill.active{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .pill .tick{ display:none; font-size:.85rem; }
+  .pill.solved .tick{ display:inline; }
+  .pill.active .tick{ color:var(--amber); }
+  .pill:not(.active) .tick{ color:var(--green); }
+
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:1.3rem; margin-bottom:1.2rem;
+  }
+  .card .instructions{ color:var(--muted); font-size:.94rem; margin:0 0 1rem; line-height:1.5; }
+  .card .expr-line{
+    font-family:Cambria,Georgia,serif; font-size:1.25rem; font-weight:700; color:var(--navy-dark);
+    margin:0 0 1rem;
+  }
+
+  table.tt{ border-collapse:collapse; margin:0 auto; }
+  table.tt th, table.tt td{
+    border:1px solid var(--border); text-align:center; padding:.55rem .9rem; font-size:1rem; min-width:2.6rem;
+  }
+  table.tt thead th{ background:var(--navy); color:#fff; font-weight:700; font-size:.9rem; }
+  table.tt tbody tr:nth-child(even) td{ background:#F5F8FC; }
+  td.fixed{ color:var(--text); font-weight:600; }
+  td.cell-btn{ padding:0; }
+  .cellbtn{
+    width:100%; height:100%; min-height:2.5rem; border:none; background:transparent;
+    font-family:inherit; font-size:1rem; font-weight:700; color:var(--teal-dark); cursor:pointer;
+  }
+  .cellbtn:hover{ background:#EAF3FF; }
+  .cellbtn:focus-visible{ outline:2.5px solid var(--teal); outline-offset:-2px; }
+  .cellbtn.empty{ color:#B6C0D4; }
+  .cellbtn.correct{ background:var(--green-bg); color:var(--green); }
+  .cellbtn.incorrect{ background:var(--red-bg); color:var(--red); }
+  .cellbtn.revealed{ background:#FFF4E2; color:var(--amber-dark); font-style:italic; }
+
+  .table-scroll{ overflow-x:auto; padding-bottom:.3rem; }
+
+  .btn-row{ display:flex; gap:.6rem; margin-top:1.1rem; flex-wrap:wrap; align-items:center; }
+  .btn{
+    border:none; font-family:inherit; font-weight:700; font-size:.9rem; padding:.55rem 1.15rem;
+    border-radius:999px; cursor:pointer;
+  }
+  .btn.primary{ background:var(--teal); color:#fff; }
+  .btn.primary:hover{ background:var(--teal-dark); }
+  .btn.ghost{ background:#fff; border:1.5px solid var(--border); color:var(--muted); }
+  .btn.ghost:hover{ border-color:var(--teal); color:var(--teal-dark); }
+  .feedback{ font-size:.92rem; font-weight:600; }
+  .feedback.ok{ color:var(--green); }
+  .feedback.bad{ color:var(--red); }
+
+  .reference{
+    background:var(--navy-dark); border-radius:16px; padding:1.2rem 1.4rem; color:#fff; margin-top:1rem; display:none;
+  }
+  .reference.show{ display:block; }
+  .reference h2{ font-family:Cambria,Georgia,serif; font-size:1.05rem; margin:0 0 .8rem; color:var(--amber); }
+  .ref-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; }
+  @media (max-width:600px){ .ref-grid{ grid-template-columns:1fr; } }
+  .ref-grid table.tt th, .ref-grid table.tt td{ padding:.35rem .6rem; font-size:.88rem; }
+  .ref-grid table.tt thead th{ background:var(--teal); }
+  .ref-grid td{ background:#fff; color:var(--navy); }
+
+  /* Tab 3: find the expression */
+  .row-highlight-1{ background:#FFF4E2 !important; }
+  .row-highlight-1 td{ background:#FFF4E2 !important; }
+  .term-builder{ margin-top:1rem; display:flex; flex-direction:column; gap:.7rem; }
+  .term-row{
+    display:flex; align-items:center; gap:.8rem; flex-wrap:wrap;
+    border:1px solid var(--border); border-radius:12px; padding:.6rem .9rem;
+  }
+  .term-row .row-label{ font-size:.88rem; color:var(--muted); font-weight:600; min-width:9rem; }
+  .choice-pair{ display:inline-flex; border:2px solid var(--border); border-radius:8px; overflow:hidden; }
+  .choice-pair button{
+    border:none; background:#fff; font-family:Cambria,Georgia,serif; font-size:1.05rem; font-weight:700;
+    padding:.3rem .7rem; cursor:pointer; color:var(--navy);
+  }
+  .choice-pair button + button{ border-left:1.5px solid var(--border); }
+  .choice-pair button.selected{ background:var(--teal); color:#fff; }
+  .choice-pair button.selected.right{ background:var(--green); }
+  .choice-pair button.selected.wrong{ background:var(--red); }
+  .term-row .and-sep{ color:var(--muted); font-weight:700; }
+  .term-result{ margin-left:auto; font-family:Cambria,Georgia,serif; font-weight:700; color:var(--navy-dark); }
+
+  .assembled{
+    margin-top:1.1rem; padding:1rem 1.2rem; background:#EAF3FF; border:1px solid var(--teal);
+    border-radius:12px; display:none;
+  }
+  .assembled.show{ display:block; }
+  .assembled .assembled-title{ font-size:.82rem; font-weight:700; color:var(--teal-dark); margin:0 0 .4rem; }
+  .assembled .assembled-expr{ font-family:Cambria,Georgia,serif; font-size:1.5rem; font-weight:700; color:var(--navy-dark); }
+  .assembled .note{ margin-top:.6rem; font-size:.88rem; color:var(--muted); }
+
+  .sub-toggle{ display:inline-flex; background:#E7ECF5; border-radius:999px; padding:4px; gap:2px; margin-bottom:1.1rem; }
+  .sub-toggle button{
+    border:none; background:transparent; font-family:inherit; font-size:.88rem; font-weight:700;
+    color:var(--muted); padding:.45rem 1rem; border-radius:999px; cursor:pointer;
+  }
+  .sub-toggle button.active{ background:var(--navy); color:#fff; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Truth table practice</h1>
+  <p class="lede">Work through the three activities in order: the core operators, then 3-input tables, then reading a table back into an expression.</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="ops">Core operators <span class="badge" id="badge-ops">0/4</span></button>
+    <button class="tab-btn" data-tab="three">3-input tables <span class="badge" id="badge-three">0/4</span></button>
+    <button class="tab-btn" data-tab="find">Find the expression <span class="badge" id="badge-find">0/3</span></button>
+  </div>
+
+  <!-- ===================== TAB 1: CORE OPERATORS ===================== -->
+  <div class="panel-view active" id="panel-ops">
+    <div class="pills" id="ops-pills"></div>
+    <div class="card">
+      <p class="instructions" id="ops-instructions"></p>
+      <div class="table-scroll"><div id="ops-table"></div></div>
+      <div class="btn-row">
+        <button class="btn primary" id="ops-check">Check</button>
+        <button class="btn ghost" id="ops-reveal">Reveal answer</button>
+        <span class="feedback" id="ops-feedback"></span>
+      </div>
+    </div>
+    <div class="reference" id="ops-reference">
+      <h2>All four, together</h2>
+      <div class="ref-grid" id="ops-ref-grid"></div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB 2: 3-INPUT TABLES ===================== -->
+  <div class="panel-view" id="panel-three">
+    <div class="sub-toggle" id="three-mode-toggle">
+      <button class="active" data-mode="scaffold">Scaffolded</button>
+      <button data-mode="indep">Independent</button>
+    </div>
+
+    <div id="three-scaffold">
+      <div class="card">
+        <p class="instructions">Work left to right, one column at a time. A, B and C are already listed for you — fill in the two working columns.</p>
+        <div class="table-scroll"><div id="scaffold-table"></div></div>
+        <div class="btn-row">
+          <button class="btn primary" id="scaffold-check">Check</button>
+          <button class="btn ghost" id="scaffold-reveal">Reveal answer</button>
+          <span class="feedback" id="scaffold-feedback"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="three-indep" style="display:none;">
+      <div class="pills" id="indep-pills"></div>
+      <div class="card">
+        <p class="expr-line" id="indep-expr"></p>
+        <p class="instructions">A, B and C still aren't given — fill those in yourself, remembering to start at 000. The working columns are broken down for you so you can build up to the final answer one step at a time.</p>
+        <div class="table-scroll"><div id="indep-table"></div></div>
+        <div class="btn-row">
+          <button class="btn primary" id="indep-check">Check</button>
+          <button class="btn ghost" id="indep-reveal">Reveal answer</button>
+          <span class="feedback" id="indep-feedback"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB 3: FIND THE EXPRESSION ===================== -->
+  <div class="panel-view" id="panel-find">
+    <div class="pills" id="find-pills"></div>
+    <div class="card">
+      <p class="instructions">This table is already complete. The rows where the output is 1 are highlighted — for each one, build the term: choose the letter if the input is 1, or the crossed-out (NOT) version if it's 0.</p>
+      <div class="table-scroll"><div id="find-table"></div></div>
+      <div class="term-builder" id="find-terms"></div>
+      <div class="btn-row">
+        <button class="btn primary" id="find-check">Check</button>
+        <span class="feedback" id="find-feedback"></span>
+      </div>
+      <div class="assembled" id="find-assembled">
+        <p class="assembled-title">Expression</p>
+        <div class="assembled-expr" id="find-assembled-expr"></div>
+        <p class="note" id="find-note"></p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  function bar(letter){ return '<span class="ol">'+letter+'<\/span>'; }
+  function el(html){ var d=document.createElement('div'); d.innerHTML=html; return d.firstElementChild; }
+
+  /* ---------------- generic editable table builder ---------------- */
+  // columns: [{key,label,editable}]  rows: array of {values:{key:'0'/'1'/null fixed}, correct:{key: 0/1 for editable cols}}
+  function buildTable(container, columns, rowCount, fixedFn, correctFn, cellRefs){
+    var table = document.createElement('table');
+    table.className = 'tt';
+    var thead = document.createElement('thead');
+    var htr = document.createElement('tr');
+    columns.forEach(function(c){
+      var th = document.createElement('th');
+      th.innerHTML = c.label;
+      htr.appendChild(th);
+    });
+    thead.appendChild(htr);
+    table.appendChild(thead);
+    var tbody = document.createElement('tbody');
+    for(var r=0;r<rowCount;r++){
+      var tr = document.createElement('tr');
+      columns.forEach(function(c){
+        if(c.editable){
+          var td = document.createElement('td');
+          td.className = 'cell-btn';
+          var b = document.createElement('button');
+          b.className = 'cellbtn empty';
+          b.type = 'button';
+          b.textContent = '';
+          b.dataset.state = '';
+          b.addEventListener('click', function(){
+            if(this.classList.contains('locked')) return;
+            var cur = this.dataset.state;
+            var next = cur === '' ? '0' : (cur === '0' ? '1' : '');
+            this.dataset.state = next;
+            this.textContent = next;
+            this.classList.remove('correct','incorrect','revealed');
+            this.classList.toggle('empty', next==='');
+          });
+          td.appendChild(b);
+          tr.appendChild(td);
+          cellRefs.push({row:r, key:c.key, el:b});
+        } else {
+          var td2 = document.createElement('td');
+          td2.className = 'fixed';
+          td2.innerHTML = fixedFn(r, c.key);
+          tr.appendChild(td2);
+        }
+      });
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    container.innerHTML = '';
+    container.appendChild(table);
+  }
+
+  function checkCells(cellRefs, correctFn, feedbackEl){
+    var allFilled = true, allCorrect = true;
+    cellRefs.forEach(function(ref){
+      var val = ref.el.dataset.state;
+      if(val === ''){ allFilled = false; return; }
+      var correct = correctFn(ref.row, ref.key);
+      var ok = (parseInt(val,10) === correct);
+      ref.el.classList.remove('revealed');
+      ref.el.classList.toggle('correct', ok);
+      ref.el.classList.toggle('incorrect', !ok);
+      if(!ok) allCorrect = false;
+    });
+    if(!allFilled){
+      feedbackEl.textContent = 'Fill in every cell first.';
+      feedbackEl.className = 'feedback bad';
+      return false;
+    }
+    if(allCorrect){
+      feedbackEl.textContent = 'All correct \u2014 nice work.';
+      feedbackEl.className = 'feedback ok';
+    } else {
+      feedbackEl.textContent = 'Some cells aren\u2019t right yet \u2014 check the highlighted ones.';
+      feedbackEl.className = 'feedback bad';
+    }
+    return allCorrect;
+  }
+
+  function revealCells(cellRefs, correctFn){
+    cellRefs.forEach(function(ref){
+      var correct = correctFn(ref.row, ref.key);
+      ref.el.dataset.state = String(correct);
+      ref.el.textContent = String(correct);
+      ref.el.classList.remove('empty','correct','incorrect');
+      ref.el.classList.add('revealed');
+    });
+  }
+
+  /* =========================================================
+     TAB 1 — CORE OPERATORS
+     ========================================================= */
+  var OPS = {
+    AND: { label:'AND', rows:4, headers:['A','B','A.B'], out:function(a,b){return a&&b?1:0;} },
+    OR:  { label:'OR',  rows:4, headers:['A','B','A+B'], out:function(a,b){return a||b?1:0;} },
+    NOT: { label:'NOT', rows:2, headers:['A',bar('A')],   out:function(a){return a?0:1;} },
+    XOR: { label:'XOR', rows:4, headers:['A','B','A'+String.fromCharCode(8853)+'B'], out:function(a,b){return (a!==b)?1:0;} }
+  };
+  var opsOrder = ['AND','OR','NOT','XOR'];
+  var opsState = { current:'AND', solved:{AND:false,OR:false,NOT:false,XOR:false} };
+  var opsCellRefs = [];
+
+  function opsRowInputs(op, r){
+    if(op.rows === 2) return [r]; // A only: r=0->0, r=1->1
+    var combos = [[0,0],[0,1],[1,0],[1,1]];
+    return combos[r];
+  }
+
+  function renderOpsPills(){
+    var wrap = document.getElementById('ops-pills');
+    wrap.innerHTML = '';
+    opsOrder.forEach(function(key){
+      var p = document.createElement('button');
+      p.className = 'pill' + (key===opsState.current?' active':'') + (opsState.solved[key]?' solved':'');
+      p.innerHTML = '<span class="tick">\u2713<\/span>' + OPS[key].label;
+      p.addEventListener('click', function(){ opsState.current = key; renderOpsPills(); renderOpsTable(); });
+      wrap.appendChild(p);
+    });
+  }
+
+  function renderOpsTable(){
+    var op = OPS[opsState.current];
+    document.getElementById('ops-instructions').textContent =
+      op.label === 'NOT'
+        ? 'NOT only has one input, so there are just 2 rows. Fill in the output column.'
+        : 'Fill in the ' + op.label + ' column. Work systematically, top to bottom.';
+    var columns = op.headers.map(function(h,i){
+      var isLast = i === op.headers.length - 1;
+      return { key: 'c'+i, label: h, editable: isLast };
+    });
+    opsCellRefs = [];
+    buildTable(document.getElementById('ops-table'), columns, op.rows,
+      function(r, key){
+        var idx = parseInt(key.slice(1),10);
+        var inputs = opsRowInputs(op, r);
+        return String(inputs[idx]);
+      },
+      null, opsCellRefs
+    );
+    document.getElementById('ops-feedback').textContent = '';
+    document.getElementById('ops-feedback').className = 'feedback';
+  }
+
+  function opsCorrectFn(row, key){
+    var op = OPS[opsState.current];
+    var inputs = opsRowInputs(op, row);
+    return op.out.apply(null, inputs);
+  }
+
+  document.getElementById('ops-check').addEventListener('click', function(){
+    var ok = checkCells(opsCellRefs, opsCorrectFn, document.getElementById('ops-feedback'));
+    if(ok){
+      opsState.solved[opsState.current] = true;
+      renderOpsPills();
+      updateOpsBadge();
+      maybeShowOpsReference();
+    }
+  });
+  document.getElementById('ops-reveal').addEventListener('click', function(){
+    revealCells(opsCellRefs, opsCorrectFn);
+    document.getElementById('ops-feedback').textContent = 'Answer revealed.';
+    document.getElementById('ops-feedback').className = 'feedback';
+  });
+
+  function updateOpsBadge(){
+    var n = opsOrder.filter(function(k){return opsState.solved[k];}).length;
+    var badge = document.getElementById('badge-ops');
+    badge.textContent = n + '/4';
+    badge.classList.toggle('done', n===4);
+  }
+
+  function maybeShowOpsReference(){
+    var allDone = opsOrder.every(function(k){return opsState.solved[k];});
+    var ref = document.getElementById('ops-reference');
+    ref.classList.toggle('show', allDone);
+    if(!allDone) return;
+    var grid = document.getElementById('ops-ref-grid');
+    grid.innerHTML = '';
+    opsOrder.forEach(function(key){
+      var op = OPS[key];
+      var box = document.createElement('div');
+      var rowsHtml = '';
+      for(var r=0;r<op.rows;r++){
+        var inputs = opsRowInputs(op, r);
+        var outVal = op.out.apply(null, inputs);
+        rowsHtml += '<tr>' + inputs.map(function(v){return '<td>'+v+'<\/td>';}).join('') + '<td>'+outVal+'<\/td><\/tr>';
+      }
+      box.innerHTML = '<table class="tt"><thead><tr>' + op.headers.map(function(h){return '<th>'+h+'<\/th>';}).join('') + '<\/tr><\/thead><tbody>'+rowsHtml+'<\/tbody><\/table>';
+      grid.appendChild(box);
+    });
+  }
+
+  renderOpsPills();
+  renderOpsTable();
+  updateOpsBadge();
+
+  /* =========================================================
+     TAB 2 — 3-INPUT TABLES
+     ========================================================= */
+  var combos8 = [[0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1]];
+
+  // --- scaffolded ---
+  var scaffoldCellRefs = [];
+  function scaffoldCorrect(row, key){
+    var abc = combos8[row]; var a=abc[0],b=abc[1],c=abc[2];
+    if(key === 'ab') return (a&&b) ? 1:0;
+    if(key === 'final') return ((a&&b)||c) ? 1:0;
+  }
+  function renderScaffold(){
+    var columns = [
+      {key:'a', label:'A', editable:false},
+      {key:'b', label:'B', editable:false},
+      {key:'c', label:'C', editable:false},
+      {key:'ab', label:'A.B', editable:true},
+      {key:'final', label:'(A.B)+C', editable:true}
+    ];
+    scaffoldCellRefs = [];
+    buildTable(document.getElementById('scaffold-table'), columns, 8,
+      function(r,key){ var abc=combos8[r]; return {a:abc[0],b:abc[1],c:abc[2]}[key]; },
+      null, scaffoldCellRefs
+    );
+  }
+  var scaffoldSolved = false;
+  document.getElementById('scaffold-check').addEventListener('click', function(){
+    var ok = checkCells(scaffoldCellRefs, scaffoldCorrect, document.getElementById('scaffold-feedback'));
+    if(ok){ scaffoldSolved = true; updateThreeBadge(); }
+  });
+  document.getElementById('scaffold-reveal').addEventListener('click', function(){
+    revealCells(scaffoldCellRefs, scaffoldCorrect);
+  });
+  renderScaffold();
+
+  // --- independent ---
+  var XOR = function(a,b){ return (a!==b)?1:0; };
+  var INDEP = {
+    X: { label:'Expression 1', formula:'X = A '+String.fromCharCode(8853)+' B + C.(A + B)',
+         columns: [
+           {key:'s1', label:'A'+String.fromCharCode(8853)+'B', compute:function(a,b,c){ return XOR(a,b); }},
+           {key:'s2', label:'A+B', compute:function(a,b,c){ return (a||b)?1:0; }},
+           {key:'s3', label:'C.(A+B)', compute:function(a,b,c){ return (c && (a||b))?1:0; }},
+           {key:'final', label:'X', compute:function(a,b,c){ return (XOR(a,b) || (c && (a||b)))?1:0; }}
+         ] },
+    Y: { label:'Expression 2', formula:'Y = (A + C) . (B '+String.fromCharCode(8853)+' C)',
+         columns: [
+           {key:'s1', label:'A+C', compute:function(a,b,c){ return (a||c)?1:0; }},
+           {key:'s2', label:'B'+String.fromCharCode(8853)+'C', compute:function(a,b,c){ return XOR(b,c); }},
+           {key:'final', label:'Y', compute:function(a,b,c){ return ((a||c) && XOR(b,c))?1:0; }}
+         ] },
+    Z: { label:'Expression 3', formula:'Z = '+bar('A')+' . (B + C)',
+         columns: [
+           {key:'s1', label:bar('A'), compute:function(a,b,c){ return (!a)?1:0; }},
+           {key:'s2', label:'B+C', compute:function(a,b,c){ return (b||c)?1:0; }},
+           {key:'final', label:'Z', compute:function(a,b,c){ return ((!a) && (b||c))?1:0; }}
+         ] }
+  };
+  var indepOrder = ['X','Y','Z'];
+  var indepState = { current:'X', solved:{X:false,Y:false,Z:false} };
+  var indepCellRefs = [];
+
+  function renderIndepPills(){
+    var wrap = document.getElementById('indep-pills');
+    wrap.innerHTML = '';
+    indepOrder.forEach(function(key){
+      var p = document.createElement('button');
+      p.className = 'pill' + (key===indepState.current?' active':'') + (indepState.solved[key]?' solved':'');
+      p.innerHTML = '<span class="tick">\u2713<\/span>' + INDEP[key].label;
+      p.addEventListener('click', function(){ indepState.current = key; renderIndepPills(); renderIndepTable(); });
+      wrap.appendChild(p);
+    });
+  }
+  function indepCorrect(row, key){
+    var abc = combos8[row];
+    if(key==='a') return abc[0];
+    if(key==='b') return abc[1];
+    if(key==='c') return abc[2];
+    var col = INDEP[indepState.current].columns.filter(function(c){return c.key===key;})[0];
+    if(col) return col.compute(abc[0],abc[1],abc[2]);
+  }
+  function renderIndepTable(){
+    document.getElementById('indep-expr').innerHTML = INDEP[indepState.current].formula;
+    var columns = [
+      {key:'a', label:'A', editable:true},
+      {key:'b', label:'B', editable:true},
+      {key:'c', label:'C', editable:true}
+    ].concat(INDEP[indepState.current].columns.map(function(c){
+      return {key:c.key, label:c.label, editable:true};
+    }));
+    indepCellRefs = [];
+    buildTable(document.getElementById('indep-table'), columns, 8, null, null, indepCellRefs);
+    document.getElementById('indep-feedback').textContent = '';
+    document.getElementById('indep-feedback').className = 'feedback';
+  }
+  document.getElementById('indep-check').addEventListener('click', function(){
+    var ok = checkCells(indepCellRefs, indepCorrect, document.getElementById('indep-feedback'));
+    if(ok){ indepState.solved[indepState.current] = true; renderIndepPills(); updateThreeBadge(); }
+  });
+  document.getElementById('indep-reveal').addEventListener('click', function(){
+    revealCells(indepCellRefs, indepCorrect);
+  });
+  renderIndepPills();
+  renderIndepTable();
+
+  function updateThreeBadge(){
+    var n = (scaffoldSolved?1:0) + indepOrder.filter(function(k){return indepState.solved[k];}).length;
+    var badge = document.getElementById('badge-three');
+    badge.textContent = n + '/4';
+    badge.classList.toggle('done', n===4);
+  }
+  updateThreeBadge();
+
+  document.querySelectorAll('#three-mode-toggle button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('#three-mode-toggle button').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      var mode = btn.dataset.mode;
+      document.getElementById('three-scaffold').style.display = mode==='scaffold' ? '' : 'none';
+      document.getElementById('three-indep').style.display = mode==='indep' ? '' : 'none';
+    });
+  });
+
+  /* =========================================================
+     TAB 3 — FIND THE EXPRESSION
+     ========================================================= */
+  var FIND = {
+    T1: { label:'Table 1', out:[0,0,0,1] },
+    T2: { label:'Table 2', out:[1,1,0,0] },
+    T3: { label:'Table 3', out:[0,1,1,1] }
+  };
+  var findOrder = ['T1','T2','T3'];
+  var findState = { current:'T1', solved:{T1:false,T2:false,T3:false} };
+  var combos4 = [[0,0],[0,1],[1,0],[1,1]];
+  var findChoices = {}; // rowIndex -> {a: 'A'|'NA'|null, b:'B'|'NB'|null}
+
+  function renderFindPills(){
+    var wrap = document.getElementById('find-pills');
+    wrap.innerHTML = '';
+    findOrder.forEach(function(key){
+      var p = document.createElement('button');
+      p.className = 'pill' + (key===findState.current?' active':'') + (findState.solved[key]?' solved':'');
+      p.innerHTML = '<span class="tick">\u2713<\/span>' + FIND[key].label;
+      p.addEventListener('click', function(){ findState.current = key; renderFindPills(); renderFindTable(); });
+      wrap.appendChild(p);
+    });
+  }
+
+  function renderFindTable(){
+    var data = FIND[findState.current];
+    var table = document.createElement('table');
+    table.className = 'tt';
+    table.innerHTML = '<thead><tr><th>A<\/th><th>B<\/th><th>Output<\/th><\/tr><\/thead>';
+    var tbody = document.createElement('tbody');
+    combos4.forEach(function(pair, i){
+      var tr = document.createElement('tr');
+      if(data.out[i] === 1) tr.classList.add('row-highlight-1');
+      tr.innerHTML = '<td class="fixed">'+pair[0]+'<\/td><td class="fixed">'+pair[1]+'<\/td><td class="fixed">'+data.out[i]+'<\/td>';
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    var container = document.getElementById('find-table');
+    container.innerHTML = '';
+    container.appendChild(table);
+
+    // term builder
+    findChoices = {};
+    var termsWrap = document.getElementById('find-terms');
+    termsWrap.innerHTML = '';
+    combos4.forEach(function(pair, i){
+      if(data.out[i] !== 1) return;
+      findChoices[i] = { a:null, b:null };
+      var row = document.createElement('div');
+      row.className = 'term-row';
+      row.innerHTML =
+        '<span class="row-label">Row: A='+pair[0]+', B='+pair[1]+'<\/span>' +
+        '<span class="choice-pair" data-row="'+i+'" data-var="a">' +
+          '<button data-val="A">A<\/button><button data-val="NA">'+bar('A')+'<\/button>' +
+        '<\/span>' +
+        '<span class="and-sep">.<\/span>' +
+        '<span class="choice-pair" data-row="'+i+'" data-var="b">' +
+          '<button data-val="B">B<\/button><button data-val="NB">'+bar('B')+'<\/button>' +
+        '<\/span>';
+      termsWrap.appendChild(row);
+    });
+    termsWrap.querySelectorAll('.choice-pair button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var pairEl = btn.parentElement;
+        var row = parseInt(pairEl.dataset.row,10);
+        var varName = pairEl.dataset.var;
+        pairEl.querySelectorAll('button').forEach(function(b){ b.classList.remove('selected','right','wrong'); });
+        btn.classList.add('selected');
+        findChoices[row][varName] = btn.dataset.val;
+      });
+    });
+    document.getElementById('find-feedback').textContent = '';
+    document.getElementById('find-feedback').className = 'feedback';
+    document.getElementById('find-assembled').classList.remove('show');
+  }
+
+  document.getElementById('find-check').addEventListener('click', function(){
+    var data = FIND[findState.current];
+    var rows1 = Object.keys(findChoices).map(Number);
+    var allMade = true, allCorrect = true;
+    rows1.forEach(function(i){
+      var pair = combos4[i];
+      var correctA = pair[0]===1 ? 'A' : 'NA';
+      var correctB = pair[1]===1 ? 'B' : 'NB';
+      var choice = findChoices[i];
+      var pairEl = document.querySelector('.choice-pair[data-row="'+i+'"][data-var="a"]');
+      var pairElB = document.querySelector('.choice-pair[data-row="'+i+'"][data-var="b"]');
+      if(!choice.a || !choice.b){ allMade = false; return; }
+      var okA = choice.a === correctA, okB = choice.b === correctB;
+      pairEl.querySelectorAll('button').forEach(function(b){
+        if(b.classList.contains('selected')) b.classList.toggle('right', okA), b.classList.toggle('wrong', !okA);
+      });
+      pairElB.querySelectorAll('button').forEach(function(b){
+        if(b.classList.contains('selected')) b.classList.toggle('right', okB), b.classList.toggle('wrong', !okB);
+      });
+      if(!okA || !okB) allCorrect = false;
+    });
+    var fb = document.getElementById('find-feedback');
+    if(!allMade){
+      fb.textContent = 'Choose an option for every row first.';
+      fb.className = 'feedback bad';
+      return;
+    }
+    if(!allCorrect){
+      fb.textContent = 'Not quite \u2014 check the red ones.';
+      fb.className = 'feedback bad';
+      return;
+    }
+    fb.textContent = 'All correct!';
+    fb.className = 'feedback ok';
+    findState.solved[findState.current] = true;
+    renderFindPills();
+    updateFindBadge();
+
+    // assemble expression
+    var terms = rows1.map(function(i){
+      var c = findChoices[i];
+      var av = c.a==='A' ? 'A' : (bar('A'));
+      var bv = c.b==='B' ? 'B' : (bar('B'));
+      return av + '.' + bv;
+    });
+    document.getElementById('find-assembled-expr').innerHTML = terms.join(' + ');
+    var note = '';
+    if(findState.current === 'T2'){
+      note = 'Notice B never actually changes the result here \u2014 the output only depends on A. That\u2019s something you\u2019ll learn to simplify formally in a later lesson.';
+    }
+    document.getElementById('find-note').textContent = note;
+    document.getElementById('find-assembled').classList.add('show');
+  });
+
+  function updateFindBadge(){
+    var n = findOrder.filter(function(k){return findState.solved[k];}).length;
+    var badge = document.getElementById('badge-find');
+    badge.textContent = n + '/3';
+    badge.classList.toggle('done', n===3);
+  }
+
+  renderFindPills();
+  renderFindTable();
+  updateFindBadge();
+
+  /* =========================================================
+     TOP-LEVEL TAB SWITCHING
+     ========================================================= */
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+      document.querySelectorAll('.panel-view').forEach(function(p){p.classList.remove('active');});
+      btn.classList.add('active');
+      document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    });
+  });
+
+})();
+</script>
+</body>
+</html>

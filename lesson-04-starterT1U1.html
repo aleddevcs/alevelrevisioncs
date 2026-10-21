@@ -1,0 +1,346 @@
+<title>Lesson 4 Starter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --ink: #16202B;
+    --slate: #2B3A4A;
+    --copper: #D9822B;
+    --copper-lt: #F6E3CF;
+    --copper-ink: #7A4512;
+    --paper: #FFFFFF;
+    --mist: #EEF2F5;
+    --text: #1F2933;
+    --muted: #5C6B7A;
+    --line: #C9D3DC;
+    --green: #2F7A4E;
+    --green-lt: #DDEFE3;
+    --red: #B3412F;
+    --red-lt: #F4DCD7;
+
+    --bg: var(--mist);
+    --surface: var(--paper);
+    --surface-2: var(--mist);
+    --ink-on-surface: var(--ink);
+    --text-on-surface: var(--text);
+    --muted-on-surface: var(--muted);
+    --line-on-surface: var(--line);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E151D;
+      --surface: #182330;
+      --surface-2: #1F2C3A;
+      --ink-on-surface: #F3F6F8;
+      --text-on-surface: #DDE4EA;
+      --muted-on-surface: #93A2B0;
+      --line-on-surface: #33455A;
+      --copper-lt: #4A3620;
+      --copper-ink: #F0B274;
+      --green-lt: #1E3A2A;
+      --red-lt: #402420;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E151D;
+    --surface: #182330;
+    --surface-2: #1F2C3A;
+    --ink-on-surface: #F3F6F8;
+    --text-on-surface: #DDE4EA;
+    --muted-on-surface: #93A2B0;
+    --line-on-surface: #33455A;
+    --copper-lt: #4A3620;
+    --copper-ink: #F0B274;
+    --green-lt: #1E3A2A;
+    --red-lt: #402420;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-on-surface);
+    font-family: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+    padding: clamp(16px, 3vw, 40px);
+    padding-block: clamp(20px, 4vw, 48px);
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header.page { margin-bottom: 20px; }
+
+  .eyebrow-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", "Courier New", monospace;
+    font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--copper-ink); background: var(--copper-lt);
+    display: inline-block; padding: 4px 10px; border-radius: 999px;
+  }
+  .timer-pill {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+    color: var(--muted-on-surface); background: var(--surface-2);
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 999px;
+  }
+
+  h1 { font-size: clamp(22px, 3.2vw, 28px); margin: 0 0 6px; text-wrap: balance; color: var(--ink-on-surface); }
+  .sub { color: var(--muted-on-surface); font-size: 14px; max-width: 60ch; line-height: 1.5; margin: 0; }
+
+  .dots { display: flex; gap: 6px; margin: 16px 0 0; }
+  .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); border: 1.5px solid var(--line-on-surface);
+    display: flex; align-items: center; justify-content: center; font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--muted-on-surface); }
+  .dot.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .dot.wrong-done { background: var(--red); border-color: var(--red); color: #fff; }
+  .dot.active { background: var(--copper); border-color: var(--copper); color: #fff; }
+
+  .card { background: var(--surface); border: 1px solid var(--line-on-surface); border-radius: 14px; padding: clamp(18px, 3vw, 26px); margin-top: 16px; }
+
+  .q-tag { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-on-surface); margin-bottom: 8px; }
+  .q-text { font-size: 17px; font-weight: 700; color: var(--ink-on-surface); margin: 0 0 16px; line-height: 1.4; }
+
+  .options { display: grid; gap: 9px; }
+  .opt {
+    text-align: left; background: var(--surface-2); border: 1.5px solid var(--line-on-surface); border-radius: 9px;
+    padding: 12px 15px; font-family: inherit; font-size: 14.5px; cursor: pointer; color: var(--text-on-surface);
+  }
+  .opt:hover:not(:disabled) { border-color: var(--copper); }
+  .opt:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+  .opt:disabled { cursor: default; }
+  .opt.correct { border-color: var(--green); background: var(--green-lt); }
+  .opt.wrong { border-color: var(--red); background: var(--red-lt); }
+  .opt.dim { opacity: .5; }
+
+  .feedback { margin-top: 14px; padding: 12px 15px; border-radius: 9px; font-size: 13.5px; line-height: 1.5; }
+  .feedback.good { background: var(--green-lt); border-left: 3px solid var(--green); }
+  .feedback.bad { background: var(--red-lt); border-left: 3px solid var(--red); }
+
+  .controls { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  button.primary {
+    font-family: inherit; font-size: 14.5px; font-weight: 700; padding: 10px 20px; border-radius: 8px;
+    border: none; background: var(--copper); color: #2B1400; cursor: pointer;
+  }
+  button.primary:hover:not(:disabled) { filter: brightness(1.06); }
+  button.primary:disabled { opacity: .45; cursor: not-allowed; }
+
+  .summary-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 20px; }
+  .tile { background: var(--surface-2); border-radius: 10px; padding: 16px; text-align: center; }
+  .tile .num { font-family: "IBM Plex Mono", monospace; font-size: 26px; font-weight: 700; color: var(--copper-ink); }
+  .tile .lbl { font-size: 12px; color: var(--muted-on-surface); margin-top: 2px; }
+
+  .recap-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--line-on-surface); font-size: 13.5px; }
+  .recap-row:last-child { border-bottom: none; }
+  .recap-badge { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; margin-top: 1px; }
+  .recap-badge.good { background: var(--green); }
+  .recap-badge.bad { background: var(--red); }
+
+  footer.page { margin-top: 24px; font-size: 12px; color: var(--muted-on-surface); text-align: center; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap">
+
+<div class="wrap">
+  <header class="page">
+    <div class="eyebrow-row">
+      <span class="eyebrow">Starter · Lesson 04</span>
+      <span class="timer-pill">⏱ about 5 minutes</span>
+    </div>
+    <h1>Quick retrieval: last lesson</h1>
+    <p class="sub">Six quick questions on secondary storage, fragmentation and networks from Lesson 3. One go each — answer, check, move on.</p>
+    <div class="dots" id="dots"></div>
+  </header>
+
+  <main id="app"></main>
+
+  <footer class="page">AS Computer Science · Unit 1 · Topic 1 Hardware &amp; Communication · Lesson 04</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var QUESTIONS = [
+    {
+      tag: "1.5.1",
+      q: "A business needs to keep a huge, rarely-accessed archive of financial records as cheaply as possible. Best storage device?",
+      opts: ["SSD", "Magnetic tape", "Optical disc", "Flash / USB drive"],
+      correct: 1,
+      good: "Correct — tape is the cheapest per byte for huge archives that are rarely read back.",
+      bad: "Tape is the standard choice here — very cheap per byte, which is what matters most for a huge, rarely-touched archive."
+    },
+    {
+      tag: "1.6.1",
+      q: "Why does a fragmented file take longer to read from an HDD than an unfragmented one?",
+      opts: ["The file becomes larger when it's fragmented", "The read/write head has to move to more positions to collect all the pieces", "Fragmented files are automatically compressed", "The operating system re-checks the file for errors"],
+      correct: 1,
+      good: "Correct — more fragments means more physical head movement, and that's what slows access down.",
+      bad: "The issue is physical movement — the read/write head has to travel to more positions to collect every piece of a scattered file."
+    },
+    {
+      tag: "1.6.1",
+      q: "Why don't SSDs need traditional defragmentation the way HDDs do?",
+      opts: ["They have no moving parts, so access time doesn't depend on where data physically sits", "They automatically delete old files", "They're too small to ever become fragmented", "They only store one file at a time"],
+      correct: 0,
+      good: "Correct — with no read/write head to move, an SSD can reach any part of the drive equally fast, fragmented or not.",
+      bad: "It comes down to having no moving parts — an SSD can access any location just as fast, so fragmentation doesn't slow it down the way it does an HDD."
+    },
+    {
+      tag: "1.7.1",
+      q: "A network confined to a single room or building, owned and controlled by one organisation. What type of network is this?",
+      opts: ["WAN", "LAN", "The internet", "WLAN"],
+      correct: 1,
+      good: "Correct — a Local Area Network covers a small, single site under one organisation's control.",
+      bad: "That's a LAN — a small, single-site network. WAN spans a much wider area, often multiple sites or countries."
+    },
+    {
+      tag: "1.7.1",
+      q: "What's true of a peer-to-peer network that ISN'T true of a client-server network?",
+      opts: ["There's a central server managing resources and security", "Every device can act as both a client and a server", "It needs expensive dedicated server hardware", "Access is centrally controlled by one administrator"],
+      correct: 1,
+      good: "Correct — in peer-to-peer, there's no dedicated server; every device can both request and provide resources.",
+      bad: "The key difference is that peer-to-peer has no dedicated server — every device can act as both a client and a server, unlike client-server's centralised setup."
+    },
+    {
+      tag: "1.7.1",
+      q: "What specifically makes a WLAN different from a standard LAN?",
+      opts: ["It uses wireless connections instead of cables", "It can only connect one device at a time", "It spans multiple countries", "It doesn't need any addressing"],
+      correct: 0,
+      good: "Correct — a WLAN is simply a LAN that connects devices wirelessly instead of over cables.",
+      bad: "The 'W' is the whole difference — a WLAN is a LAN using wireless connections instead of cables."
+    }
+  ];
+
+  // Shuffle each question's options once at load, so the correct answer doesn't
+  // always land in the same position across questions.
+  function shuffleOptions(q) {
+    var idxs = q.opts.map(function (_, i) { return i; });
+    for (var i = idxs.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = idxs[i]; idxs[i] = idxs[j]; idxs[j] = t;
+    }
+    q.opts = idxs.map(function (i) { return q.opts[i]; });
+    q.correct = idxs.indexOf(q.correct);
+  }
+  QUESTIONS.forEach(shuffleOptions);
+
+  var state = { idx: 0, picked: null, locked: false, results: [] };
+
+  var app = document.getElementById("app");
+  var dotsEl = document.getElementById("dots");
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function renderDots() {
+    dotsEl.innerHTML = "";
+    QUESTIONS.forEach(function (q, i) {
+      var d = el("div", "dot");
+      if (i < state.results.length) {
+        d.classList.add(state.results[i].correct ? "done" : "wrong-done");
+        d.textContent = state.results[i].correct ? "✓" : "✕";
+      } else if (i === state.idx && i < QUESTIONS.length) {
+        d.classList.add("active");
+        d.textContent = i + 1;
+      } else {
+        d.textContent = i + 1;
+      }
+      dotsEl.appendChild(d);
+    });
+  }
+
+  function renderQuestion() {
+    var qData = QUESTIONS[state.idx];
+    var card = el("div", "card");
+    card.appendChild(el("div", "q-tag", "Question " + (state.idx + 1) + " of " + QUESTIONS.length + " · " + qData.tag));
+    card.appendChild(el("p", "q-text", qData.q));
+
+    var opts = el("div", "options");
+    qData.opts.forEach(function (optText, i) {
+      var b = el("button", "opt", optText);
+      b.type = "button";
+      b.disabled = state.locked;
+      if (state.locked) {
+        if (i === qData.correct) b.classList.add("correct");
+        else if (state.picked === i) b.classList.add("wrong");
+        else b.classList.add("dim");
+      } else if (state.picked === i) {
+        b.style.borderColor = "var(--copper)";
+      }
+      b.addEventListener("click", function () {
+        if (state.locked) return;
+        state.picked = i;
+        render();
+      });
+      opts.appendChild(b);
+    });
+    card.appendChild(opts);
+
+    var controls = el("div", "controls");
+    if (!state.locked) {
+      var check = el("button", "primary", "Check");
+      check.disabled = state.picked === null;
+      check.addEventListener("click", function () {
+        state.locked = true;
+        render();
+      });
+      controls.appendChild(check);
+      card.appendChild(controls);
+    } else {
+      var correct = state.picked === qData.correct;
+      card.appendChild(el("div", "feedback " + (correct ? "good" : "bad"), correct ? qData.good : qData.bad));
+      var next = el("button", "primary", state.idx === QUESTIONS.length - 1 ? "See results" : "Next question");
+      next.addEventListener("click", function () {
+        state.results.push({ correct: correct, q: qData.q });
+        state.idx++;
+        state.picked = null;
+        state.locked = false;
+        render();
+      });
+      var controls2 = el("div", "controls");
+      controls2.appendChild(next);
+      card.appendChild(controls2);
+    }
+
+    return card;
+  }
+
+  function renderSummary() {
+    var correctCount = state.results.filter(function (r) { return r.correct; }).length;
+    var card = el("div", "card");
+    card.appendChild(el("div", "q-tag", "Complete"));
+    card.appendChild(el("p", "q-text", "Nice work — starter done."));
+
+    var tiles = el("div", "summary-tiles");
+    var t1 = el("div", "tile");
+    t1.innerHTML = '<div class="num">' + correctCount + ' / ' + QUESTIONS.length + '</div><div class="lbl">correct</div>';
+    tiles.appendChild(t1);
+    card.appendChild(tiles);
+
+    state.results.forEach(function (r, i) {
+      var row = el("div", "recap-row");
+      row.innerHTML = '<span class="recap-badge ' + (r.correct ? "good" : "bad") + '">' + (r.correct ? "✓" : "✕") + '</span><span>' + (i + 1) + '. ' + r.q + '</span>';
+      card.appendChild(row);
+    });
+
+    card.appendChild(el("p", "sub", "Boards up — whole-class check on the ones the room got wrong, then straight into today's lesson."));
+
+    return card;
+  }
+
+  function render() {
+    app.innerHTML = "";
+    renderDots();
+    if (state.idx >= QUESTIONS.length) {
+      app.appendChild(renderSummary());
+    } else {
+      app.appendChild(renderQuestion());
+    }
+  }
+
+  render();
+})();
+</script>
