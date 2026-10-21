@@ -30,6 +30,18 @@
         docs.push({ kind: 'Tracing exercise', topicId: t.id, title: tr.title, text: strip(tr.intro + ' ' + tr.code), href: base + '/tracing#' + tr.id });
       });
     });
+    if (RS.course) {
+      RS.course.units().forEach(function (u) {
+        u.topics.forEach(function (t) {
+          var tHref = '#/unit/' + u.number + '/topic/' + t.number;
+          docs.push({ kind: 'Course topic', unitLabel: 'Unit ' + u.number, title: t.title, text: t.summary, href: tHref });
+          t.lessons.forEach(function (l) {
+            var res = l.resources.map(function (r) { return r.title + ' ' + r.file; }).join(' ');
+            docs.push({ kind: 'Lesson', unitLabel: 'Unit ' + u.number + ', Topic ' + t.number, title: l.title, text: (l.subtitle || '') + ' ' + (l.spec || '') + ' ' + res, href: tHref + '/lesson/' + l.number });
+          });
+        });
+      });
+    }
     docs.forEach(function (d) {
       d.titleLower = d.title.toLowerCase();
       d.all = (d.title + ' ' + d.text).toLowerCase();
@@ -52,7 +64,8 @@
       if (!words.every(function (w) { return d.all.indexOf(w) !== -1; })) return;
       var score = 0;
       words.forEach(function (w) { if (d.titleLower.indexOf(w) !== -1) score += 3; });
-      if (d.kind === 'Topic') score += 5;
+      if (d.kind === 'Topic' || d.kind === 'Course topic') score += 5;
+      if (d.kind === 'Lesson') score += 4;
       if (d.kind === 'Notes') score += 1;
       results.push({ doc: d, score: score });
     });

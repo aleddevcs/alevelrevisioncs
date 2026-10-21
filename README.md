@@ -8,6 +8,7 @@ paid services**, so it can be hosted free on GitHub Pages or opened straight fro
 
 | Feature | Where |
 | --- | --- |
+| Course pages by specification unit → topic → lesson, with your slides, worksheets and interactive activities | `#/units` |
 | Homepage with topic cards and progress bars | `#/` |
 | Notes, common misconceptions and exam technique for each topic | Topic → **Notes** |
 | Flashcards with reveal, “I know this” / “Still learning”, shuffle and filters | Topic → **Flashcards** |
@@ -39,6 +40,48 @@ answers), 132 flashcards, 30 exam-style questions and 13 tracing exercises. Ever
 Topics 1–9 follow the requested initial structure. **Boolean logic** was added because logical operations,
 De Morgan’s laws and masking appear in the WJEC specification that was supplied (AS Unit 1 section 2, A2 Unit 3
 section 2, and Appendix C).
+
+## Course units and lesson resources
+
+The **Units** section follows the WJEC specification: Unit → topic (specification section) → lesson. Each
+lesson page shows its resources in four groups:
+
+- **Interactive activities** (`.html` starters and activities): open full screen or shown inside the page.
+- **Lesson materials** (slides, notes, cheat sheets): downloads.
+- **Practice and assessment** (practice sheets, quizzes, assessments): downloads.
+- **Teacher resources** (mark schemes, lesson plans, Forms quiz questions, Gimkit sets): downloads.
+
+Every topic page links to the matching revision content (notes, flashcards and questions), and every
+revision topic links back to the course topics it supports. Topics without lessons yet show “coming soon”;
+a topic can declare how many lessons are planned so the remaining ones appear as placeholders.
+
+PowerPoint and Word files cannot be displayed by a browser, so they are offered as downloads. Note that
+everything in this repository, including mark schemes, is publicly accessible once the site is published.
+
+### Adding your lesson resources
+
+Files live in `resources/unit<U>/topic<T>/lesson<L>/` (or `resources/unit<U>/topic<T>/` for files that
+belong to the whole topic), and each unit's lessons are listed in `data/course/unit<U>.js`:
+
+```js
+{
+  number: 4,                                   // lesson number within the topic
+  title: 'Character sets and data types',
+  subtitle: 'ASCII and Unicode · Primitive data types',   // optional
+  spec: '4.2.1 · 4.3.1',                        // optional
+  resources: [
+    { file: 'T4L4_Starter.html', title: 'Starter: Lesson 3 recall', type: 'starter' },
+    { file: 'T4L4_Slides.pptx', title: 'Character sets and data types', type: 'slides' }
+  ]
+}
+```
+
+Resource types: `starter`, `interactive` (both must be `.html`), `slides`, `notes`, `cheat-sheet`,
+`worksheet`, `quiz`, `assessment`, `mark-scheme`, `lesson-plan`, `forms-quiz`, `gimkit`.
+
+The easiest route is to upload a lesson's files to the `uploads/` folder on GitHub and ask Claude to add them
+(see `uploads/README.md`). The tests check that every listed file exists **and** that every file in
+`resources/` is listed, so nothing is broken or forgotten.
 
 ## Important notes on the content
 
@@ -90,6 +133,8 @@ If you already have Chromium installed elsewhere, set `CHROMIUM_PATH=/path/to/ch
   answer index and an explanation of why each wrong option is wrong; typed-answer questions accept their own
   model answers; exam questions have at least as many indicative points as marks; HTML in content is well
   formed; British spellings; no wording that implies official status.
+- **Course tests** (`tests/unit/course.test.js`): every listed lesson file exists, every file in `resources/`
+  is listed, types are valid, lessons are numbered in order, and lessons appear in search.
 - **Logic tests** (`tests/unit/logic.test.js`): answer marking and normalisation, shuffling, quiz scoring of
   correct/incorrect/skipped/untouched questions, storage save and reload, corrupt or hand-edited storage,
   blocked storage, export/import, progress and mastery calculations, and search.
@@ -99,7 +144,8 @@ If you already have Chromium installed elsewhere, set `CHROMIUM_PATH=/path/to/ch
   through**, early finishing with unanswered questions, results, retrying, and dashboard history; exam
   self-assessment and saved drafts; trace-table marking; search (including escaping of HTML in search terms);
   export, reset and import of progress; theme persistence; no horizontal scrolling at phone width and the
-  mobile menu; and loading from `file://`.
+  mobile menu; loading from `file://`; and the course pages, including a check that every resource link on every lesson
+  page returns its file and that activities can be shown inside the page.
 
 ## Editing content
 
@@ -170,8 +216,9 @@ workflow that runs `npm ci && npm run check` can be added later.
   drafts) is saved in the browser’s `localStorage` on that device only.
 - It **does not synchronise between devices or browsers**, and clearing browsing data deletes it. Students can
   use **Export progress** and **Import progress** on the dashboard to move it between devices.
-- Nothing is sent to a server. There are no accounts, cookies, analytics or external requests (no web fonts or
-  CDNs), so the site also works offline once loaded.
+- Nothing is sent to a server. There are no accounts, cookies or analytics. The site itself makes no external
+  requests; some of the interactive lesson activities load Google Fonts, and fall back to standard fonts if
+  they cannot.
 - If a browser blocks local storage (some private browsing modes), the site still works and shows a warning that
   progress will be lost when the page closes.
 
@@ -183,15 +230,19 @@ css/styles.css              All styles, including light/dark themes
 assets/favicon.svg          Site icon
 js/utils.js                 Helpers (DOM builder, shuffle, answer normalisation)
 js/icons.js                 Topic icons (inline SVG)
-js/content.js               Content registry used by the topic files
+js/content.js               Content registry used by the revision topic files
+js/course.js                Course catalogue registry (units, topics, lessons, resources)
 js/storage.js               Progress storage (localStorage), export/import
 js/quiz-engine.js           Quiz building and marking (no DOM code)
 js/progress.js              Mastery, accuracy and suggestions (no DOM code)
 js/search.js                Search index (no DOM code)
 js/components.js            Shared UI: question cards, progress bars, badges
-js/views/*.js               Pages: home, topic, quiz, dashboard, search, about
+js/views/*.js               Pages: home, revision topic, course (units/topics/lessons), quiz, dashboard, search, about
 js/app.js                   Hash router, theme toggle, mobile menu
-data/topics/*.js            Content: one file per topic
+data/topics/*.js            Revision content: one file per revision topic
+data/course/unit*.js        Course catalogue: one file per specification unit
+resources/unit*/topic*/…    Your lesson files (slides, worksheets, interactive activities)
+uploads/                    Drop new lesson files here before they are added to the site
 scripts/serve.js            Tiny local web server (used by npm start and tests)
 tests/                      Unit, content and end-to-end tests
 ```

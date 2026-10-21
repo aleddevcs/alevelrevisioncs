@@ -20,16 +20,16 @@
     app.appendChild(form);
 
     if (!q.trim()) {
-      app.appendChild(h('p', { class: 'muted' }, 'Search notes, flashcards, practice questions and exam-style questions across every topic.'));
+      app.appendChild(h('p', { class: 'muted' }, 'Search lessons, notes, flashcards, practice questions and exam-style questions across the whole site.'));
       return;
     }
     var results = RS.search.search(q);
     app.appendChild(h('p', { class: 'muted', role: 'status' }, results.length ? RS.utils.plural(results.length, 'result') + ' for “' + q + '”' : 'No results for “' + q + '”. Try fewer or different words.'));
     var list = h('ul', { class: 'search-results' });
     results.forEach(function (d) {
-      var t = RS.content.topic(d.topicId);
+      var where = d.topicId ? RS.content.topic(d.topicId).title : d.unitLabel;
       list.appendChild(h('li', { class: 'card search-result' },
-        h('div', { class: 'question-meta' }, h('span', { class: 'badge' }, d.kind), h('span', { class: 'muted small' }, t.title)),
+        h('div', { class: 'question-meta' }, h('span', { class: 'badge' }, d.kind), h('span', { class: 'muted small' }, where)),
         h('a', { href: d.href }, d.title.length > 160 ? d.title.slice(0, 157) + '…' : d.title)));
     });
     app.appendChild(list);
