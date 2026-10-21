@@ -331,10 +331,17 @@ test('course units, topics and lessons link to working resources', async () => {
   await frame.locator('body').waitFor();
   assert.ok((await frame.locator('body').textContent()).length > 20);
 
-  // Topic resources; topics without revision content say so.
+  // Topic resources, and revision for Topics 2–4 in specification order.
   await go(page, '#/unit/1/topic/2');
   assert.match(await page.textContent('.resource-list'), /cheat sheet/i);
-  assert.match(await page.textContent('.revision-panel'), /coming soon/);
+  const specOrder = { 2: ['2.1.1', '2.1.2', '2.1.3'], 3: ['3.1.1', '3.1.2', '3.1.3', '3.2.1', '3.2.2', '3.2.3'], 4: ['4.1.1', '4.1.2', '4.4.1', '4.4.2', '4.4.3', '4.4.4', '4.4.5'] };
+  for (const [n, codes] of Object.entries(specOrder)) {
+    await go(page, `#/unit/1/topic/${n}`);
+    await page.click('.revision-panel a:has-text("Notes")');
+    await page.waitForFunction((id) => location.hash === `#/topic/${id}/notes`, `u1-t${n}`);
+    await page.waitForSelector('.spec-heading .spec-code');
+    assert.deepEqual(await page.$$eval('.spec-heading .spec-code', (els) => els.map((e) => e.textContent)), codes, `Topic ${n} notes follow specification order`);
+  }
 
   // Topic 1: revision built from the lessons, filtered by lesson.
   await go(page, '#/unit/1/topic/1');

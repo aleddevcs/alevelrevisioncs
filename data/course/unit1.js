@@ -75,6 +75,12 @@ RS.course.registerUnit({
       number: 2,
       title: 'Logical operations',
       summary: 'Truth tables for AND, OR, NOT and XOR; logical operations in programming, including clearing registers and masking; simplifying Boolean expressions using identities and rules.',
+      // The Topic 2 slides do not print spec codes; these follow the same topic.row.statement numbering as the other topics.
+      spec: [
+        { code: '2.1.1', lessons: [1], text: 'Draw truth tables for Boolean expressions consisting of AND, OR, NOT and XOR logical operations.' },
+        { code: '2.1.2', lessons: [2], text: 'Apply logical operations to combinations of conditions in programming, including clearing registers and masking.' },
+        { code: '2.1.3', lessons: [2, 3, 4], text: 'Simplify Boolean expressions using Boolean identities and rules.' }
+      ],
       resources: [
         { file: 'Topic2_Logical_Operations_Cheat_Sheet.docx', title: 'Logical operations cheat sheet', type: 'cheat-sheet' }
       ],
@@ -132,6 +138,14 @@ RS.course.registerUnit({
       number: 3,
       title: 'Data transmission',
       summary: 'Serial and parallel transmission; simplex, half duplex and full duplex; multiplexing and switching; packet contents; network collisions; routing.',
+      spec: [
+        { code: '3.1.1', lessons: [1], text: 'Describe serial and parallel transmission, their advantages and disadvantages.' },
+        { code: '3.1.2', lessons: [1], text: 'Describe simplex, half duplex and full duplex transmission methods.' },
+        { code: '3.1.3', lessons: [2], text: 'Explain the need for multiplexing and switching.' },
+        { code: '3.2.1', lessons: [2], text: 'Describe, using appropriate network protocols such as TCP/IP, the typical contents of a packet.' },
+        { code: '3.2.2', lessons: [2], text: 'Explain network collision, network collision detection and how these collisions are dealt with.' },
+        { code: '3.2.3', lessons: [2], text: 'Describe methods of routing traffic on a network.' }
+      ],
       plannedLessons: 3,
       lessons: [
         {
@@ -169,6 +183,16 @@ RS.course.registerUnit({
       number: 4,
       title: 'Data representation and data types',
       summary: 'Bits, bytes and words; binary and hexadecimal; character sets; primitive data types; binary arithmetic; two’s complement and sign and magnitude; floating point; truncation and rounding.',
+      // 4.4.4 is not worded on the slides; its statement is taken from the specification.
+      spec: [
+        { code: '4.1.1', lessons: [1], text: 'Explain the terms bit, byte and word.' },
+        { code: '4.1.2', lessons: [1], text: 'Describe and use the binary number system and the hexadecimal notation as shorthand for binary number patterns.' },
+        { code: '4.4.1', lessons: [2], text: 'Apply binary arithmetic techniques.' },
+        { code: '4.4.2', lessons: [1], text: 'Explain the representation of positive and negative integers in a fixed-length store using both two’s complement, and sign and magnitude representation.' },
+        { code: '4.4.3', lessons: [3], text: 'Describe the nature and uses of floating point form.' },
+        { code: '4.4.4', lessons: [3], text: 'State the advantages and disadvantages of representing numbers in integer and floating point forms, and convert between real number and floating point form.' },
+        { code: '4.4.5', lessons: [2], text: 'Describe truncation and rounding, and explain their effect upon accuracy.' }
+      ],
       plannedLessons: 4,
       lessons: [
         {
