@@ -34,7 +34,7 @@
     app.appendChild(RS.views.units.unitGrid());
 
     app.appendChild(h('h2', { class: 'section-title' }, 'Revision by topic'));
-    app.appendChild(h('p', { class: 'muted' }, 'Notes, flashcards, practice questions, exam-style questions and tracing exercises.'));
+    app.appendChild(h('p', { class: 'muted' }, 'Notes, flashcards, practice questions, exam-style questions and tracing exercises, written from the lessons. More topics are added as lessons are taught.'));
     var grid = h('ul', { class: 'topic-grid', role: 'list' });
     RS.content.topics().forEach(function (t) {
       var s = RS.progress.topicStats(t, state);
@@ -42,7 +42,7 @@
         h('a', { class: 'card topic-card', href: '#/topic/' + t.id },
           h('div', { class: 'topic-card-head' },
             RS.ui.topicIcon(t),
-            h('h3', null, t.title)),
+            h('div', null, h('p', { class: 'unit-kicker' }, 'Unit ' + t.unit + ' · Topic ' + t.topic), h('h3', null, t.title))),
           h('p', { class: 'topic-summary' }, t.summary),
           h('div', { class: 'topic-card-foot' },
             h('div', { class: 'topic-progress-label' },

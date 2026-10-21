@@ -30,7 +30,7 @@
       var id = 'qt-' + t.id;
       var cb = h('input', { type: 'checkbox', id: id, value: t.id, checked: !preselect || preselect.indexOf(t.id) !== -1 });
       topicBoxes.push(cb);
-      grid.appendChild(h('div', { class: 'check' }, cb, h('label', { for: id }, t.title + ' (' + t.questions.length + ')')));
+      grid.appendChild(h('div', { class: 'check' }, cb, h('label', { for: id }, 'Unit ' + t.unit + ' Topic ' + t.topic + ': ' + t.title + ' (' + t.questions.length + ')')));
     });
     topicFs.appendChild(h('div', { class: 'toolbar' },
       h('button', { type: 'button', class: 'btn btn-small', onclick: function () { setAll(true); } }, 'Select all'),
@@ -47,6 +47,28 @@
         h('label', { for: id }, pair[1])));
     });
     form.appendChild(skillFs);
+
+    // Lesson choice: available when exactly one topic is selected.
+    var lessonSel = h('select', { id: 'q-lesson' });
+    var lessonField = h('div', { class: 'field field-inline', hidden: true }, h('label', { for: 'q-lesson' }, 'Lesson'), lessonSel);
+    form.appendChild(lessonField);
+    var wantedLesson = params.query.lesson || '';
+    function refreshLessons() {
+      var picked = topicBoxes.filter(function (b) { return b.checked; });
+      var ct = picked.length === 1 ? (function () { var t = RS.content.topic(picked[0].value); return RS.course.topic(t.unit, t.topic); })() : null;
+      var keep = lessonSel.value || wantedLesson;
+      lessonSel.innerHTML = '';
+      lessonSel.appendChild(h('option', { value: '' }, 'All lessons'));
+      if (ct) {
+        var rev = RS.content.topic(picked[0].value);
+        ct.lessons.forEach(function (l) {
+          var n = RS.content.forLesson(rev, 'questions', l.number).length;
+          if (n) lessonSel.appendChild(h('option', { value: String(l.number), selected: String(l.number) === keep }, 'Lesson ' + l.number + ': ' + l.title + ' (' + n + ')'));
+        });
+      }
+      lessonField.hidden = !ct || lessonSel.options.length < 2;
+      wantedLesson = '';
+    }
 
     var countSel = h('select', { id: 'q-count' },
       h('option', { value: '5' }, '5 questions'),
@@ -66,6 +88,7 @@
       return {
         topics: topicBoxes.filter(function (b) { return b.checked; }).map(function (b) { return b.value; }),
         skill: form.querySelector('input[name=skill]:checked').value,
+        lesson: lessonField.hidden ? null : Number(lessonSel.value) || null,
         count: Number(countSel.value)
       };
     }
@@ -75,8 +98,9 @@
       available.textContent = RS.utils.plural(n, 'question') + ' available with these settings.';
       error.textContent = '';
     }
-    function setAll(v) { topicBoxes.forEach(function (b) { b.checked = v; }); update(); }
-    form.addEventListener('change', update);
+    function setAll(v) { topicBoxes.forEach(function (b) { b.checked = v; }); refreshLessons(); update(); }
+    form.addEventListener('change', function (e) { if (e.target !== lessonSel) refreshLessons(); update(); });
+    refreshLessons();
     update();
 
     form.addEventListener('submit', function (ev) {

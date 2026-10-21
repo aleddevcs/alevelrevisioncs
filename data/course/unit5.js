@@ -12,7 +12,7 @@ RS.course.registerUnit({
     { number: 4, title: 'Prototype', summary: 'Producing and evaluating a functioning prototype with realistic data.' },
     { number: 5, title: 'Post-prototype refinement of design', summary: 'Obtaining feedback and refining the designs.' },
     { number: 6, title: 'Software development', summary: 'Refining the prototype into a finished, functional system with annotated listings.' },
-    { number: 7, title: 'Testing', summary: 'Developmental testing, a test plan using typical, extreme and invalid data, and annotated test runs.', revision: ['systems'] },
+    { number: 7, title: 'Testing', summary: 'Developmental testing, a test plan using typical, extreme and invalid data, and annotated test runs.' },
     { number: 8, title: 'Evaluation', summary: 'Evaluating the system, the programming language and your own performance.' }
   ]
 });

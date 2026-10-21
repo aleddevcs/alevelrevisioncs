@@ -46,7 +46,6 @@
       t.unit = unit.number;
       t.lessons = t.lessons || [];
       t.resources = t.resources || [];
-      t.revision = t.revision || [];
       t.folder = 'resources/unit' + unit.number + '/topic' + t.number + '/';
       t.resources.forEach(function (r) { r.path = t.folder + r.file; });
       t.lessons.forEach(function (l) {
@@ -96,13 +95,9 @@
     return u.topics.reduce(function (n, t) { return n + t.lessons.length; }, 0);
   }
 
-  /** Units and topics that list a given revision topic id (for "Where this appears"). */
-  function topicsUsingRevision(id) {
-    var out = [];
-    units.forEach(function (u) {
-      u.topics.forEach(function (t) { if (t.revision.indexOf(id) !== -1) out.push(t); });
-    });
-    return out;
+  /** The revision content written for a course topic, or null if there is none yet. */
+  function revisionFor(t) {
+    return RS.content ? RS.content.forCourseTopic(t.unit, t.number) : null;
   }
 
   RS.course = {
@@ -118,6 +113,6 @@
     url: url,
     allLessons: allLessons,
     countLessons: countLessons,
-    topicsUsingRevision: topicsUsingRevision
+    revisionFor: revisionFor
   };
 })(typeof window !== 'undefined' ? window : globalThis);

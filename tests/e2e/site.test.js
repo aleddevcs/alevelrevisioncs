@@ -62,10 +62,12 @@ test('every page and topic tab renders without JavaScript errors', async () => {
   const page = await openPage();
   await go(page, '#/');
   const topics = await page.evaluate(() => window.RS.content.topics().map((t) => ({ id: t.id, traces: t.traces.length })));
-  assert.equal(topics.length, 10);
-  assert.equal(await page.locator('.topic-grid:not(.unit-grid) .topic-card').count(), 10);
+  assert.ok(topics.length >= 1);
+  const revisionCount = await page.evaluate(() => window.RS.content.topics().length);
+  assert.equal(await page.locator('.topic-grid:not(.unit-grid) .topic-card').count(), revisionCount);
 
-  const hashes = ['#/quiz', '#/dashboard', '#/about', '#/search?q=cache', '#/question/proc-q1'];
+  const hashes = ['#/quiz', '#/dashboard', '#/about', '#/search?q=cache', '#/question/u1t1-q1'];
+  for (let l = 1; l <= 4; l++) hashes.push(`#/topic/u1-t1/notes?lesson=${l}`, `#/topic/u1-t1/questions?lesson=${l}`);
   for (const t of topics) {
     for (const tab of ['notes', 'flashcards', 'questions', 'exam']) hashes.push(`#/topic/${t.id}/${tab}`);
     if (t.traces) hashes.push(`#/topic/${t.id}/tracing`);
@@ -86,7 +88,7 @@ test('navigation links, breadcrumbs and the not-found page work', async () => {
   assert.equal(await page.getAttribute('.site-nav a[data-nav="dashboard"]', 'aria-current'), 'page');
 
   await go(page, '#/');
-  await page.click('.topic-grid:not(.unit-grid) .topic-card >> nth=2');
+  await page.click('.topic-grid:not(.unit-grid) .topic-card >> nth=0');
   await page.waitForSelector('.topic-header h1');
   await page.click('.tab:has-text("Flashcards")');
   await page.waitForSelector('.flashcard');
@@ -101,7 +103,7 @@ test('navigation links, breadcrumbs and the not-found page work', async () => {
 
 test('flashcards reveal and their status persists after a refresh', async () => {
   const page = await openPage();
-  await go(page, '#/topic/processor/flashcards');
+  await go(page, '#/topic/u1-t1/flashcards');
   const card = page.locator('.flashcard');
   assert.equal(await card.getAttribute('aria-expanded'), 'false');
   await card.press('Enter'); // keyboard operable
@@ -117,17 +119,17 @@ test('flashcards reveal and their status persists after a refresh', async () => 
 
 test('question bank gives instant feedback, rejects empty answers and can be retried', async () => {
   const page = await openPage();
-  await go(page, '#/question/dr-q1'); // typed-answer question: 10110110 → 182
+  await go(page, '#/question/u1t1-q42'); // typed-answer question: 4 + 3 + 2 + 1 = 10
   await page.click('button:has-text("Check answer")');
   assert.match(await page.textContent('.feedback'), /Type an answer first/);
   assert.equal(await page.evaluate(() => Object.keys(window.RS.store.state.questions).length), 0, 'empty answer is not recorded');
 
-  await page.fill('.text-input', '181');
+  await page.fill('.text-input', '9');
   await page.click('button:has-text("Check answer")');
   assert.match(await page.textContent('.feedback-title'), /Not quite/);
-  assert.match(await page.textContent('.feedback'), /Accepted answer:\s*182/);
+  assert.match(await page.textContent('.feedback'), /Accepted answer:\s*10/);
 
-  await go(page, '#/topic/processor/questions');
+  await go(page, '#/topic/u1-t1/questions');
   const first = page.locator('.bank-item:has(.option)').first(); // the bank is shuffled
   await first.locator('.option label').first().click();
   await first.locator('button[type=submit]').click();
@@ -147,7 +149,7 @@ test('a quiz survives a refresh, handles unanswered questions and shows a summar
   await page.click('button:has-text("Start quiz")');
   assert.match(await page.textContent('.form-error'), /Choose at least one topic/);
 
-  await page.check('#qt-algorithms');
+  await page.check('#qt-u1-t1');
   await page.selectOption('#q-count', '5');
   await page.click('button:has-text("Start quiz")');
   await page.waitForSelector('.question-card');
@@ -195,7 +197,7 @@ test('a quiz survives a refresh, handles unanswered questions and shows a summar
 
 test('exam-style self-assessment and drafts are saved', async () => {
   const page = await openPage();
-  await go(page, '#/topic/processor/exam');
+  await go(page, '#/topic/u1-t1/exam');
   const card = page.locator('.exam-card').first();
   await card.locator('textarea').fill('The PC is copied to the MAR...');
   await card.locator('button:has-text("Show indicative answer")').click();
@@ -212,23 +214,23 @@ test('exam-style self-assessment and drafts are saved', async () => {
 
 test('trace tables mark each cell', async () => {
   const page = await openPage();
-  await go(page, '#/topic/programming/tracing');
+  await go(page, '#/topic/u1-t1/tracing');
   const card = page.locator('.trace-card').first();
   await card.locator('button:has-text("Show answers")').click();
   await card.locator('button:has-text("Check table")').click();
-  assert.match(await card.locator('.mark-result').textContent(), /18 of 18 cells correct/);
+  assert.match(await card.locator('.mark-result').textContent(), /20 of 20 cells correct/);
   await card.locator('button:has-text("Clear")').click();
-  await card.locator('.cell-input').first().fill('99');
+  await card.locator('.cell-input:not([readonly])').first().fill('99');
   await card.locator('button:has-text("Check table")').click();
-  assert.match(await card.locator('.mark-result').textContent(), /0 of 18 cells correct/);
-  assert.equal(await card.locator('.cell-bad').count(), 18);
+  assert.match(await card.locator('.mark-result').textContent(), /0 of 20 cells correct/);
+  assert.equal(await card.locator('.cell-bad').count(), 20);
   await page.context().close();
 });
 
 test('search from the header finds and links to content', async () => {
   const page = await openPage();
   await go(page, '#/');
-  await page.fill('#search-input', 'binary search');
+  await page.fill('#search-input', 'cache');
   await page.press('#search-input', 'Enter');
   await page.waitForSelector('.search-result');
   assert.ok((await page.locator('.search-result').count()) > 3);
@@ -242,8 +244,8 @@ test('search from the header finds and links to content', async () => {
 
 test('dashboard export downloads progress and reset clears it', async () => {
   const page = await openPage();
-  await go(page, '#/question/proc-q4');
-  await page.fill('.text-input', '65536');
+  await go(page, '#/question/u1t1-q42');
+  await page.fill('.text-input', '10');
   await page.click('button:has-text("Check answer")');
   await go(page, '#/dashboard');
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('button:has-text("Export progress")')]);
@@ -259,7 +261,7 @@ test('dashboard export downloads progress and reset clears it', async () => {
   await page.waitForSelector('.mark-result:has-text("not a progress export")');
   // Importing the exported file restores the progress.
   await page.setInputFiles('#import-file', exportedFile);
-  await page.waitForFunction(() => window.RS.store.state.questions['proc-q4'] && window.RS.store.state.questions['proc-q4'].correct === 1);
+  await page.waitForFunction(() => window.RS.store.state.questions['u1t1-q42'] && window.RS.store.state.questions['u1t1-q42'].correct === 1);
   await page.context().close();
 });
 
@@ -278,7 +280,7 @@ test('theme toggle switches to dark mode and is remembered', async () => {
 
 test('layout fits a phone screen and the mobile menu works', async () => {
   const page = await openPage({ viewport: { width: 375, height: 740 }, isMobile: true, hasTouch: true });
-  for (const h of ['#/', '#/topic/databases/notes', '#/topic/boolean-logic/tracing', '#/quiz', '#/dashboard', '#/unit/1', '#/unit/1/topic/4', '#/unit/1/topic/3/lesson/1']) {
+  for (const h of ['#/', '#/topic/u1-t1/notes', '#/topic/u1-t1/tracing?lesson=2', '#/quiz', '#/dashboard', '#/unit/1', '#/unit/1/topic/4', '#/unit/1/topic/3/lesson/1']) {
     await go(page, h);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     assert.ok(overflow <= 0, `${h} scrolls horizontally by ${overflow}px`);
@@ -328,12 +330,31 @@ test('course units, topics and lessons link to working resources', async () => {
   await frame.locator('body').waitFor();
   assert.ok((await frame.locator('body').textContent()).length > 20);
 
-  // Topic resources and links to revision content.
+  // Topic resources; topics without revision content say so.
   await go(page, '#/unit/1/topic/2');
   assert.match(await page.textContent('.resource-list'), /cheat sheet/i);
-  await page.click('.revision-links a.chip');
-  await page.waitForSelector('.topic-header h1:has-text("Boolean logic")');
-  assert.match(await page.textContent('.course-links'), /Unit 1, Topic 2/);
+  assert.match(await page.textContent('.revision-panel'), /coming soon/);
+
+  // Topic 1: revision built from the lessons, filtered by lesson.
+  await go(page, '#/unit/1/topic/1');
+  await page.click('.revision-panel a:has-text("Notes")');
+  await page.waitForSelector('.topic-header h1:has-text("Hardware and communication")');
+  assert.equal(await page.locator('.lesson-heading').count(), 4, 'notes are grouped under the four lessons');
+  await page.selectOption('#lesson-filter', '3');
+  await page.waitForFunction(() => location.hash === '#/topic/u1-t1/notes?lesson=3');
+  assert.equal(await page.locator('.lesson-heading').count(), 1);
+  assert.match(await page.textContent('.lesson-heading'), /Lesson 3: Storage, fragmentation and networks/);
+
+  // "Quiz this lesson" from a lesson page gives a quiz on that lesson only.
+  await go(page, '#/unit/1/topic/1/lesson/2');
+  await page.click('.revision-panel a:has-text("Quiz this lesson")');
+  await page.waitForSelector('#q-lesson');
+  assert.equal(await page.inputValue('#q-lesson'), '2');
+  await page.selectOption('#q-count', '0');
+  await page.click('button:has-text("Start quiz")');
+  await page.waitForSelector('.question-card');
+  const lessonsInQuiz = await page.evaluate(() => [...new Set(window.RS.store.getActiveQuiz().ids.map((id) => window.RS.content.question(id).lesson))]);
+  assert.deepEqual(lessonsInQuiz, [2]);
 
   await go(page, '#/unit/9');
   assert.equal(await page.textContent('#app h1'), 'Page not found');
@@ -345,7 +366,7 @@ test('the site works when opened directly from disk (file://)', async () => {
   const page = await openPage();
   await page.goto('file://' + path.resolve(__dirname, '..', '..', 'index.html'));
   await page.waitForSelector('.topic-card');
-  assert.equal(await page.locator('.topic-grid:not(.unit-grid) .topic-card').count(), 10);
+  assert.ok(await page.locator('.topic-grid:not(.unit-grid) .topic-card').count() >= 1);
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });

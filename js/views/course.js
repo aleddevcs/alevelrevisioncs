@@ -28,15 +28,44 @@
     return parts.join(' · ');
   }
 
-  function revisionLinks(ids) {
-    if (!ids || !ids.length) return null;
-    return h('section', { class: 'card revision-links' },
-      h('h2', null, 'Revise this topic'),
-      h('p', { class: 'muted' }, 'Notes, flashcards, practice questions and exam-style questions on this site that cover this topic:'),
-      h('ul', { class: 'chip-list' }, ids.map(function (id) {
-        var t = RS.content.topic(id);
-        return t ? h('li', null, h('a', { class: 'chip', href: '#/topic/' + id }, RS.ui.topicIcon(t), t.title)) : null;
-      })));
+  /**
+   * Links into the revision content for a course topic, optionally filtered to one lesson.
+   * Shows "coming soon" when no revision content has been written for the topic yet.
+   */
+  function revisionPanel(t, l) {
+    var rev = course.revisionFor(t);
+    var scope = l ? 'this lesson' : 'this topic';
+    var panel = h('section', { class: 'card revision-panel' }, h('h2', null, 'Revise ' + scope));
+    if (!rev) {
+      panel.appendChild(h('p', { class: 'muted' }, 'Revision notes, flashcards and practice questions for this topic are coming soon.'));
+      return panel;
+    }
+    var lesson = l ? l.number : null;
+    var q = lesson ? '?lesson=' + lesson : '';
+    var base = '#/topic/' + rev.id + '/';
+    var count = function (kind) { return RS.content.forLesson(rev, kind, lesson).length; };
+    if (!count('notes') && !count('flashcards') && !count('questions')) {
+      panel.appendChild(h('p', { class: 'muted' }, 'Revision for this lesson is coming soon. You can still revise the whole topic.'));
+      panel.appendChild(h('a', { class: 'btn', href: base + 'notes' }, 'Revise the whole topic'));
+      return panel;
+    }
+    var links = [
+      ['notes', 'Notes', count('notes')],
+      ['flashcards', 'Flashcards', count('flashcards')],
+      ['questions', 'Question bank', count('questions')],
+      ['exam', 'Exam-style', count('exam')],
+      ['tracing', 'Tracing', count('traces')]
+    ].filter(function (x) { return x[2] > 0; });
+    panel.appendChild(h('p', { class: 'muted' }, l
+      ? 'Notes, flashcards and practice questions based on this lesson.'
+      : 'Notes, flashcards and practice questions based on the lessons in this topic.'));
+    panel.appendChild(h('ul', { class: 'revise-links', role: 'list' }, links.map(function (x) {
+      return h('li', null, h('a', { class: 'btn', href: base + x[0] + q }, x[1], h('span', { class: 'revise-count' }, String(x[2]))));
+    })));
+    if (count('questions')) {
+      panel.appendChild(h('a', { class: 'btn btn-primary', href: '#/quiz?topic=' + rev.id + (lesson ? '&lesson=' + lesson : '') }, l ? 'Quiz this lesson' : 'Quiz the whole topic'));
+    }
+    return panel;
   }
 
   /* ---------- All units ---------- */
@@ -124,7 +153,7 @@
       app.appendChild(h('h2', { class: 'section-title' }, 'Topic resources'));
       app.appendChild(downloadList(t.resources));
     }
-    app.appendChild(revisionLinks(t.revision));
+    app.appendChild(revisionPanel(t));
   }
 
   /* ---------- One lesson ---------- */
@@ -151,7 +180,7 @@
     });
     if (!l.resources.length) app.appendChild(h('div', { class: 'card empty-state' }, h('p', null, 'Resources for this lesson are coming soon.')));
 
-    app.appendChild(revisionLinks(t.revision));
+    app.appendChild(revisionPanel(t, l));
 
     var all = course.allLessons();
     var i = all.indexOf(l);

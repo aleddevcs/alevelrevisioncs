@@ -1,6 +1,8 @@
 /*
- * Content registry. Each file in data/topics/ calls RS.content.registerTopic({...}).
- * See README.md ("Editing content") for the full topic format.
+ * Revision content registry. Each file in data/revision/ calls RS.content.registerTopic({...})
+ * for one course topic (unit + topic number). Every note, flashcard, question, exam-style
+ * question and trace has a `lesson` number so revision can be filtered by lesson.
+ * See README.md ("Writing revision content") for the full format.
  */
 (function (root) {
   'use strict';
@@ -23,7 +25,7 @@
     topic.traces = topic.traces || [];
     topic.specRefs = topic.specRefs || [];
     topics.push(topic);
-    topics.sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+    topics.sort(function (a, b) { return (a.unit - b.unit) || (a.topic - b.topic); });
     index = null;
   }
 
@@ -41,6 +43,16 @@
     return index;
   }
 
+  /** The revision topic for a course topic (unit and topic numbers), or null. */
+  function forCourseTopic(unit, topic) {
+    return topics.filter(function (t) { return t.unit === Number(unit) && t.topic === Number(topic); })[0] || null;
+  }
+
+  /** Items of one kind ('notes', 'flashcards', 'questions', 'exam', 'traces') for a lesson (all lessons if none given). */
+  function forLesson(topic, kind, lesson) {
+    return topic[kind].filter(function (item) { return !lesson || item.lesson === Number(lesson); });
+  }
+
   function lookup(kind, id) {
     return (index || buildIndex())[kind][id] || null;
   }
@@ -50,6 +62,8 @@
     registerTopic: registerTopic,
     topics: function () { if (!index) buildIndex(); return topics; },
     topic: function (id) { return lookup('topics', id); },
+    forCourseTopic: forCourseTopic,
+    forLesson: forLesson,
     question: function (id) { return lookup('questions', id); },
     flashcard: function (id) { return lookup('flashcards', id); },
     examQuestion: function (id) { return lookup('exam', id); },

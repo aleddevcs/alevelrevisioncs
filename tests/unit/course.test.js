@@ -72,10 +72,9 @@ test('a file is listed only once', () => {
   }
 });
 
-test('revision links point to existing revision topics', () => {
-  for (const u of units) for (const t of u.topics) for (const id of t.revision) {
-    assert.ok(RS.content.topic(id), `Unit ${u.number} Topic ${t.number}: unknown revision topic "${id}"`);
-  }
+test('course topics find the revision content written for them', () => {
+  assert.equal(RS.course.revisionFor(RS.course.topic(1, 1)).id, 'u1-t1');
+  assert.equal(RS.course.revisionFor(RS.course.topic(3, 1)), null);
 });
 
 test('resource URLs encode spaces in file names', () => {
